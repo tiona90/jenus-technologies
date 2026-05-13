@@ -2,15 +2,19 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
+import AccessAlarmRoundedIcon from '@mui/icons-material/AccessAlarmRounded'
 import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRounded'
 import ApartmentRoundedIcon from '@mui/icons-material/ApartmentRounded'
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded'
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded'
 import EditRoundedIcon from '@mui/icons-material/EditRounded'
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded'
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded'
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded'
+import EventRoundedIcon from '@mui/icons-material/EventRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
+import NoteAddRoundedIcon from '@mui/icons-material/NoteAddRounded'
 import PeopleRoundedIcon from '@mui/icons-material/PeopleRounded'
 import UploadRoundedIcon from '@mui/icons-material/UploadRounded'
 import Alert from '@mui/material/Alert'
@@ -167,13 +171,16 @@ const Sidebar = observer(function Sidebar() {
             { kind: 'item', label: 'Dashboard', icon: <DashboardRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToDashboard(), active: onPage('dashboard') && uiStore.adminSection === 'dashboard' },
             { kind: 'section', label: 'Annual Leave' },
             { kind: 'item', label: 'All Leave', icon: <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToTeamLeave(), active: onPage('team-leave') },
+            { kind: 'section', label: 'Time' },
+            { kind: 'item', label: 'Company Attendance', icon: <ApartmentRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToCompanyAttendance(), active: onPage('company-attendance') },
             { kind: 'section', label: 'Timesheets' },
             { kind: 'item', label: 'All Timesheets', icon: <AccessTimeRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToTeamTimesheets(), active: onPage('team-timesheets') },
             { kind: 'section', label: 'Administration' },
             { kind: 'item', label: 'Users', icon: <PeopleRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAdminSection('users'), active: onAdminSection('users') },
             { kind: 'item', label: 'Departments', icon: <ApartmentRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAdminSection('departments'), active: onAdminSection('departments') },
-            { kind: 'item', label: 'Leave Types', icon: <LabelRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAdminSection('leave-types'), active: onAdminSection('leave-types', 'settings', 'leave') },
+            { kind: 'item', label: 'Leave Types', icon: <LabelRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAdminSection('leave-types'), active: onAdminSection('leave-types', 'leave') },
             { kind: 'item', label: 'Projects', icon: <FolderRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAdminSection('projects'), active: onAdminSection('projects') },
+            { kind: 'item', label: 'Leave Settings', icon: <EventRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAdminSection('settings'), active: onAdminSection('settings') },
         ]
     } else if (isManagerUser) {
         navEntries = [
@@ -183,7 +190,10 @@ const Sidebar = observer(function Sidebar() {
             { kind: 'item', label: 'My Leave', icon: <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToMyLeave('requests'), active: onPage('my-leave') },
             { kind: 'item', label: 'Team Leave', icon: <GroupRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToTeamLeave(), active: onPage('team-leave') },
             { kind: 'item', label: 'Apply Leave', icon: <AddCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToApplyLeave(), active: onPage('apply-leave') },
-            { kind: 'section', label: 'Timesheets' },
+            { kind: 'section', label: 'Time' },
+            { kind: 'item', label: 'My Attendance', icon: <AccessAlarmRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAttendance(), active: onPage('attendance') },
+            { kind: 'item', label: 'Team Attendance', icon: <VisibilityRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToTeamAttendance(), active: onPage('team-attendance') },
+            { kind: 'item', label: 'Apply Timesheet', icon: <NoteAddRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToNewTimesheet(), active: onPage('new-timesheet') },
             { kind: 'item', label: 'My Timesheets', icon: <AccessTimeRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToTimesheets(), active: onPage('timesheets') },
             { kind: 'item', label: 'Team Timesheets', icon: <GroupRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToTeamTimesheets(), active: onPage('team-timesheets') },
         ]
@@ -194,7 +204,9 @@ const Sidebar = observer(function Sidebar() {
             { kind: 'section', label: 'Annual Leave' },
             { kind: 'item', label: 'My Leave', icon: <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToMyLeave('requests'), active: onPage('my-leave') },
             { kind: 'item', label: 'Apply Leave', icon: <AddCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToApplyLeave(), active: onPage('apply-leave') },
-            { kind: 'section', label: 'Timesheets' },
+            { kind: 'section', label: 'Time' },
+            { kind: 'item', label: 'My Attendance', icon: <AccessAlarmRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToAttendance(), active: onPage('attendance') },
+            { kind: 'item', label: 'Apply Timesheet', icon: <NoteAddRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToNewTimesheet(), active: onPage('new-timesheet') },
             { kind: 'item', label: 'My Timesheets', icon: <AccessTimeRoundedIcon sx={{ fontSize: 18 }} />, onClick: () => uiStore.navigateToTimesheets(), active: onPage('timesheets') },
         ]
     }

@@ -13,38 +13,32 @@ internal static class AnnualLeaveBalanceCalculator
         string? excludeLeaveId,
         CancellationToken cancellationToken)
     {
-        if (!await IsAnnualLeaveAsync(context, annualLeave.LeaveTypeId, cancellationToken))
-        {
+        if (!await AffectsBalanceAsync(context, annualLeave.LeaveTypeId, cancellationToken))
             return;
-        }
 
         // Entitlement of 0 means it has not been configured yet — skip the check.
         if (employeeProfile.AnnualLeaveEntitlement <= 0)
-        {
             return;
-        }
 
-        foreach (var year in GetCoveredYears(annualLeave))
+        var startMonth = await GetLeaveYearStartMonthAsync(context, cancellationToken);
+        var holidays = await GetHolidaySetAsync(context, annualLeave.StartDate, annualLeave.EndDate, cancellationToken);
+
+        foreach (var leaveYearKey in GetCoveredLeaveYears(annualLeave, startMonth))
         {
-            var requestedDays = GetBusinessDaysInYear(annualLeave, year);
+            var requestedDays = GetBusinessDaysInLeaveYear(annualLeave, leaveYearKey, startMonth, holidays);
             if (requestedDays <= 0)
-            {
                 continue;
-            }
 
-            var usedDays = await GetApprovedAnnualLeaveDaysForYearAsync(
-                context,
-                annualLeave.EmployeeId,
-                year,
-                excludeLeaveId,
-                cancellationToken);
+            var usedDays = await GetApprovedDaysForLeaveYearAsync(
+                context, annualLeave.EmployeeId, leaveYearKey, startMonth, excludeLeaveId, cancellationToken);
 
             var remainingBalance = Math.Max(0, employeeProfile.AnnualLeaveEntitlement - usedDays);
             if (remainingBalance < requestedDays)
             {
+                var (lyStart, lyEnd) = GetLeaveYearBounds(leaveYearKey, startMonth);
                 throw new InvalidOperationException(
-                    $"Insufficient leave balance for {year}. Remaining balance: {remainingBalance} day(s)."
-                );
+                    $"Insufficient leave balance for the leave year {lyStart:dd MMM yyyy} – {lyEnd:dd MMM yyyy}. " +
+                    $"Remaining balance: {remainingBalance} day(s).");
             }
         }
     }
@@ -54,101 +48,135 @@ internal static class AnnualLeaveBalanceCalculator
         EmployeeProfile employeeProfile,
         CancellationToken cancellationToken)
     {
-        var currentYear = DateTime.UtcNow.Year;
-        var usedDays = await GetApprovedAnnualLeaveDaysForYearAsync(
-            context,
-            employeeProfile.UserId,
-            currentYear,
-            excludeLeaveId: null,
-            cancellationToken);
+        var startMonth = await GetLeaveYearStartMonthAsync(context, cancellationToken);
+        var currentLeaveYearKey = GetLeaveYearKey(DateTime.UtcNow, startMonth);
+
+        var usedDays = await GetApprovedDaysForLeaveYearAsync(
+            context, employeeProfile.UserId, currentLeaveYearKey, startMonth,
+            excludeLeaveId: null, cancellationToken);
 
         employeeProfile.LeaveBalance = Math.Max(0, employeeProfile.AnnualLeaveEntitlement - usedDays);
     }
 
-    private static IEnumerable<int> GetCoveredYears(AnnualLeave annualLeave)
-    {
-        var startYear = annualLeave.StartDate.Year;
-        var endYear = annualLeave.EndDate.Year;
+    // ── Leave year helpers ────────────────────────────────────────────────────
 
-        for (var year = startYear; year <= endYear; year++)
-        {
-            yield return year;
-        }
+    /// <summary>
+    /// Returns the start year of the leave year that contains <paramref name="date"/>.
+    /// E.g. if startMonth=4 (April): Jan–Mar 2026 → key 2025; Apr–Dec 2026 → key 2026.
+    /// </summary>
+    private static int GetLeaveYearKey(DateTime date, int startMonth) =>
+        date.Month >= startMonth ? date.Year : date.Year - 1;
+
+    private static (DateTime Start, DateTime End) GetLeaveYearBounds(int leaveYearKey, int startMonth)
+    {
+        var start = new DateTime(leaveYearKey, startMonth, 1);
+        var end = start.AddYears(1).AddDays(-1);
+        return (start, end);
     }
 
-    private static async Task<bool> IsAnnualLeaveAsync(
-        AppDbContext context,
-        int? leaveTypeId,
-        CancellationToken cancellationToken)
+    private static IEnumerable<int> GetCoveredLeaveYears(AnnualLeave annualLeave, int startMonth)
     {
-        if (!leaveTypeId.HasValue)
-        {
-            return false;
-        }
-
-        return await context.LeaveTypes
-            .AsNoTracking()
-            .AnyAsync(
-                leaveType => leaveType.Id == leaveTypeId.Value && leaveType.Name == "Annual Leave",
-                cancellationToken);
+        var startKey = GetLeaveYearKey(annualLeave.StartDate, startMonth);
+        var endKey = GetLeaveYearKey(annualLeave.EndDate, startMonth);
+        for (var key = startKey; key <= endKey; key++)
+            yield return key;
     }
 
-    private static async Task<int> GetApprovedAnnualLeaveDaysForYearAsync(
-        AppDbContext context,
-        string employeeId,
-        int year,
-        string? excludeLeaveId,
-        CancellationToken cancellationToken)
+    private static int GetBusinessDaysInLeaveYear(AnnualLeave annualLeave, int leaveYearKey, int startMonth, HashSet<DateTime>? holidays = null)
     {
-        var annualLeaveTypeIds = await context.LeaveTypes
-            .AsNoTracking()
-            .Where(leaveType => leaveType.Name == "Annual Leave")
-            .Select(leaveType => leaveType.Id)
-            .ToListAsync(cancellationToken);
+        var (lyStart, lyEnd) = GetLeaveYearBounds(leaveYearKey, startMonth);
 
-        if (annualLeaveTypeIds.Count == 0)
-        {
-            return 0;
-        }
-
-        var approvedLeaves = await context.AnnualLeaves
-            .AsNoTracking()
-            .Where(leave =>
-                leave.EmployeeId == employeeId
-                && leave.Status == AnnualLeaveStatus.Approved
-                && leave.StartDate.Year <= year
-                && leave.EndDate.Year >= year
-                && leave.LeaveTypeId.HasValue
-                && annualLeaveTypeIds.Contains(leave.LeaveTypeId.Value)
-                && (excludeLeaveId == null || leave.Id != excludeLeaveId))
-            .ToListAsync(cancellationToken);
-
-        return approvedLeaves.Sum(leave => GetBusinessDaysInYear(leave, year));
-    }
-
-    private static int GetBusinessDaysInYear(AnnualLeave annualLeave, int year)
-    {
-        var start = annualLeave.StartDate.Date > new DateTime(year, 1, 1)
-            ? annualLeave.StartDate.Date
-            : new DateTime(year, 1, 1);
-        var end = annualLeave.EndDate.Date < new DateTime(year, 12, 31)
-            ? annualLeave.EndDate.Date
-            : new DateTime(year, 12, 31);
+        var start = annualLeave.StartDate.Date > lyStart ? annualLeave.StartDate.Date : lyStart;
+        var end = annualLeave.EndDate.Date < lyEnd ? annualLeave.EndDate.Date : lyEnd;
 
         if (end < start)
-        {
             return 0;
-        }
 
         var days = 0;
         for (var date = start; date <= end; date = date.AddDays(1))
         {
-            if (date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday)
-            {
-                days++;
-            }
+            if (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday) continue;
+            if (holidays is not null && holidays.Contains(date)) continue;
+            days++;
         }
-
         return days;
+    }
+
+    private static async Task<HashSet<DateTime>> GetHolidaySetAsync(
+        AppDbContext context, DateTime rangeStart, DateTime rangeEnd, CancellationToken cancellationToken)
+    {
+        var settings = await context.AppSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken);
+        var code = settings?.HolidayCountryCode?.Trim().ToUpperInvariant();
+        if (string.IsNullOrEmpty(code))
+            return [];
+
+        var startDate = rangeStart.Date;
+        var endDate = rangeEnd.Date;
+
+        var dates = await context.PublicHolidays
+            .AsNoTracking()
+            .Where(h => h.CountryCode == code && h.Date >= startDate && h.Date <= endDate)
+            .Select(h => h.Date)
+            .ToListAsync(cancellationToken);
+
+        return dates.Select(d => d.Date).ToHashSet();
+    }
+
+    // ── DB helpers ────────────────────────────────────────────────────────────
+
+    private static async Task<int> GetLeaveYearStartMonthAsync(
+        AppDbContext context, CancellationToken cancellationToken)
+    {
+        var settings = await context.AppSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+        return settings?.LeaveYearStartMonth ?? 1;
+    }
+
+    private static async Task<bool> AffectsBalanceAsync(
+        AppDbContext context, int? leaveTypeId, CancellationToken cancellationToken)
+    {
+        if (!leaveTypeId.HasValue)
+            return false;
+        return await context.LeaveTypes
+            .AsNoTracking()
+            .AnyAsync(lt => lt.Id == leaveTypeId.Value && lt.AffectsBalance, cancellationToken);
+    }
+
+    private static async Task<int> GetApprovedDaysForLeaveYearAsync(
+        AppDbContext context,
+        string employeeId,
+        int leaveYearKey,
+        int startMonth,
+        string? excludeLeaveId,
+        CancellationToken cancellationToken)
+    {
+        var balanceTypeIds = await context.LeaveTypes
+            .AsNoTracking()
+            .Where(lt => lt.AffectsBalance)
+            .Select(lt => lt.Id)
+            .ToListAsync(cancellationToken);
+
+        if (balanceTypeIds.Count == 0)
+            return 0;
+
+        var (lyStart, lyEnd) = GetLeaveYearBounds(leaveYearKey, startMonth);
+
+        var approvedLeaves = await context.AnnualLeaves
+            .AsNoTracking()
+            .Where(l =>
+                l.EmployeeId == employeeId
+                && l.Status == AnnualLeaveStatus.Approved
+                && l.StartDate <= lyEnd
+                && l.EndDate >= lyStart
+                && l.LeaveTypeId.HasValue
+                && balanceTypeIds.Contains(l.LeaveTypeId.Value)
+                && (excludeLeaveId == null || l.Id != excludeLeaveId))
+            .ToListAsync(cancellationToken);
+
+        if (approvedLeaves.Count == 0) return 0;
+
+        var holidays = await GetHolidaySetAsync(context, lyStart, lyEnd, cancellationToken);
+        return approvedLeaves.Sum(l => GetBusinessDaysInLeaveYear(l, leaveYearKey, startMonth, holidays));
     }
 }

@@ -1,83 +1,42 @@
+using Application.Projects.Commands;
+using Application.Projects.DTOs;
+using Application.Projects.Queries;
 using Domain;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Persistence;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ProjectsController : ControllerBase
+public class ProjectsController : BaseApiController
 {
-    private readonly AppDbContext _context;
-    public ProjectsController(AppDbContext context)
-    {
-        _context = context;
-    }
-
-    // GET: api/projects
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
+    [Authorize]
+    public async Task<ActionResult<List<ProjectDto>>> GetProjects()
     {
-        return await _context.Projects.ToListAsync();
+        return await Mediator.Send(new GetProjectList.Query());
     }
 
-    // GET: api/projects/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Project>> GetProject(int id)
-    {
-        var project = await _context.Projects.FindAsync(id);
-        if (project == null) return NotFound();
-        return project;
-    }
-
-    // GET: api/projects/active
-    [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<Project>>> GetActiveProjects()
-    {
-        return await _context.Projects.Where(p => p.IsActive).ToListAsync();
-    }
-
-    // POST: api/projects
     [HttpPost]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<Project>> CreateProject(Project project)
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<ActionResult<ProjectDto>> CreateProject(UpsertProjectRequest request)
     {
-        _context.Projects.Add(project);
-        await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetProject), new { id = project.Id }, project);
+        var result = await Mediator.Send(new CreateProject.Command { Project = request });
+        return HandleResult(result);
     }
 
-    // PUT: api/projects/{id}
-    [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UpdateProject(int id, Project project)
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<ActionResult<ProjectDto>> UpdateProject(int id, UpsertProjectRequest request)
     {
-        if (id != project.Id) return BadRequest();
-        _context.Entry(project).State = EntityState.Modified;
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_context.Projects.Any(e => e.Id == id))
-                return NotFound();
-            throw;
-        }
-        return NoContent();
+        var result = await Mediator.Send(new UpdateProject.Command { Id = id, Project = request });
+        return HandleResult(result);
     }
 
-    // DELETE: api/projects/{id}
-    [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteProject(int id)
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<ActionResult> DeleteProject(int id)
     {
-        var project = await _context.Projects.FindAsync(id);
-        if (project == null) return NotFound();
-        _context.Projects.Remove(project);
-        await _context.SaveChangesAsync();
-        return NoContent();
+        var result = await Mediator.Send(new DeleteProject.Command { Id = id });
+        return HandleResult(result);
     }
 }

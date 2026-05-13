@@ -6,6 +6,14 @@ using Persistence;
 
 namespace API.Controllers;
 
+public class CreateEntryRequest
+{
+    public int ProjectId { get; set; }
+    public DateTime Date { get; set; }
+    public decimal HoursWorked { get; set; }
+    public string? Notes { get; set; }
+}
+
 [ApiController]
 [Route("api/timesheets/{timesheetId}/entries")]
 [Authorize]
@@ -33,10 +41,17 @@ public class TimesheetEntriesController : ControllerBase
 
     // POST: api/timesheets/{timesheetId}/entries
     [HttpPost]
-    public async Task<ActionResult<TimesheetEntry>> AddEntry(string timesheetId, TimesheetEntry entry)
+    public async Task<ActionResult<TimesheetEntry>> AddEntry(string timesheetId, CreateEntryRequest request)
     {
-        if (timesheetId != entry.TimesheetId)
-            return BadRequest("TimesheetId mismatch");
+        var entry = new TimesheetEntry
+        {
+            Id = Guid.NewGuid().ToString(),
+            TimesheetId = timesheetId,
+            ProjectId = request.ProjectId,
+            Date = request.Date,
+            HoursWorked = request.HoursWorked,
+            Notes = request.Notes,
+        };
 
         _context.TimesheetEntries.Add(entry);
         try

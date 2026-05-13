@@ -21,12 +21,14 @@ public class DbInitializer
         await SeedAnnualLeaves(context);
         await SeedTimesheets(context);
         await SeedLeaveTypes(context);
+        await BackfillLeaveTypeDesignFields(context);
         await SeedDepartments(context);
         await SeedProjects(context);
         await SeedUserDepartments(context);
         await SeedEmployeeProfiles(context);
         await SeedTimesheetEntries(context);
         await FixZeroEntitlementProfiles(context);
+        await SeedAppSettings(context);
     }
 
     private static async Task SeedTimesheets(AppDbContext context)
@@ -88,23 +90,85 @@ public class DbInitializer
     }
     private static async Task SeedProjects(AppDbContext context)
     {
-        if (context.Projects.Any()) return;
+        if (context.Projects.Any())
+        {
+            await BackfillProjectMetadata(context);
+            return;
+        }
 
         var engineering = context.Departments.FirstOrDefault(d => d.Code == "ENG");
         var hr = context.Departments.FirstOrDefault(d => d.Code == "HR");
         var finance = context.Departments.FirstOrDefault(d => d.Code == "FIN");
         if (engineering is null || hr is null || finance is null) return;
 
+        var admin = context.Users.FirstOrDefault(u => u.Email == "admin@annualleave.com");
+        var manager1 = context.Users.FirstOrDefault(u => u.Email == "manager1@annualleave.com");
+        var manager2 = context.Users.FirstOrDefault(u => u.Email == "manager2@annualleave.com");
 
         var projects = new List<Project>
         {
-            new Project { Name = "Intranet Redesign", Code = "INTRA-001", DepartmentId = engineering.Id, IsActive = true },
-            new Project { Name = "Payroll Automation", Code = "PAY-002", DepartmentId = finance.Id, IsActive = true },
-            new Project { Name = "Recruitment Portal", Code = "REC-003", DepartmentId = hr.Id, IsActive = true }
+            new Project
+            {
+                Name = "Intranet Redesign", Code = "INTRA-001",
+                Description = "Modernise the corporate intranet experience.",
+                DepartmentId = engineering.Id, OwnerId = manager1?.Id ?? admin?.Id,
+                Status = ProjectStatus.Active, IsActive = true,
+                ColorKey = "p1", TargetWeeklyHours = 120, TargetMonthlyHours = 480
+            },
+            new Project
+            {
+                Name = "Payroll Automation", Code = "PAY-002",
+                Description = "Automate payroll generation and approval flow.",
+                DepartmentId = finance.Id, OwnerId = manager2?.Id ?? admin?.Id,
+                Status = ProjectStatus.Active, IsActive = true,
+                ColorKey = "p2", TargetWeeklyHours = 100, TargetMonthlyHours = 400
+            },
+            new Project
+            {
+                Name = "Recruitment Portal", Code = "REC-003",
+                Description = "Candidate-facing portal for job applications.",
+                DepartmentId = hr.Id, OwnerId = admin?.Id,
+                Status = ProjectStatus.OnHold, IsActive = true,
+                ColorKey = "p3", TargetWeeklyHours = 60, TargetMonthlyHours = 240
+            }
         };
 
         await context.Projects.AddRangeAsync(projects);
         await context.SaveChangesAsync();
+    }
+
+    private static async Task BackfillProjectMetadata(AppDbContext context)
+    {
+        // Enrich pre-existing project rows that pre-date the metadata migration.
+        var rows = await context.Projects.ToListAsync();
+        var colors = new[] { "p1", "p2", "p3", "p4", "p5" };
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@annualleave.com");
+        var changed = false;
+        var idx = 0;
+
+        foreach (var p in rows)
+        {
+            var needsColor = string.IsNullOrEmpty(p.ColorKey) || p.ColorKey == "p1";
+            var needsTargets = p.TargetWeeklyHours == 0 && p.TargetMonthlyHours == 0;
+            var needsOwner = string.IsNullOrEmpty(p.OwnerId) && admin is not null;
+            var needsStatus = p.Status == ProjectStatus.Active && !p.IsActive; // mismatch fix
+
+            if (!needsColor && !needsTargets && !needsOwner && !needsStatus)
+            {
+                idx++;
+                continue;
+            }
+
+            if (needsColor) p.ColorKey = colors[idx % colors.Length];
+            if (needsTargets) { p.TargetWeeklyHours = 80; p.TargetMonthlyHours = 320; }
+            if (needsOwner) p.OwnerId = admin!.Id;
+            if (!p.IsActive) p.Status = ProjectStatus.Inactive;
+
+            changed = true;
+            idx++;
+        }
+
+        if (changed) await context.SaveChangesAsync();
     }
 
     private static async Task SeedRoles(RoleManager<Role> roleManager, UserManager<User> userManager)
@@ -412,16 +476,144 @@ public class DbInitializer
 
         var leaveTypes = new List<LeaveType>
         {
-            new LeaveType { Name = "Annual Leave",       RequiresApproval = true,  IsActive = true },
-            new LeaveType { Name = "Sick Leave",         RequiresApproval = false, IsActive = true },
-            new LeaveType { Name = "Maternity Leave",    RequiresApproval = true,  IsActive = true },
-            new LeaveType { Name = "Paternity Leave",    RequiresApproval = true,  IsActive = true },
-            new LeaveType { Name = "Unpaid Leave",       RequiresApproval = true,  IsActive = true },
-            new LeaveType { Name = "Compassionate Leave",RequiresApproval = false, IsActive = true },
+            new LeaveType
+            {
+                Name = "Annual Leave", Icon = "🌴", ColorKey = "annual",
+                Description = "Vacation days, holidays, and personal time off.",
+                RequiresApproval = true, IsActive = true, AffectsBalance = true, Paid = true,
+                AttachmentPolicy = AttachmentPolicy.None,
+                DefaultAllowance = 25, AllowanceUnit = "days/year",
+                AccrualNotes = "Resets 1 Jan · No carryover",
+                MinNoticeDays = 7, MaxConsecutiveDays = 15, HalfDayAllowed = true,
+                EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All
+            },
+            new LeaveType
+            {
+                Name = "Sick Leave", Icon = "🤒", ColorKey = "sick",
+                Description = "Time off due to illness or medical appointments.",
+                RequiresApproval = true, IsActive = true, AffectsBalance = false, Paid = true,
+                AttachmentPolicy = AttachmentPolicy.Optional,
+                DefaultAllowance = 10, AllowanceUnit = "days/year",
+                AccrualNotes = "Resets 1 Jan · 5 days carryover allowed",
+                MinNoticeDays = 0, MaxConsecutiveDays = 30, HalfDayAllowed = true,
+                EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All
+            },
+            new LeaveType
+            {
+                Name = "Personal Days", Icon = "🏠", ColorKey = "personal",
+                Description = "Family matters, errands, or personal appointments.",
+                RequiresApproval = true, IsActive = true, AffectsBalance = false, Paid = true,
+                AttachmentPolicy = AttachmentPolicy.None,
+                DefaultAllowance = 3, AllowanceUnit = "days/year",
+                AccrualNotes = "Resets 1 Jan · No carryover",
+                MinNoticeDays = 1, MaxConsecutiveDays = 3, HalfDayAllowed = true,
+                EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All
+            },
+            new LeaveType
+            {
+                Name = "Bereavement", Icon = "🕊️", ColorKey = "bereavement",
+                Description = "Time off following the loss of a loved one.",
+                RequiresApproval = true, IsActive = true, AffectsBalance = false, Paid = true,
+                AttachmentPolicy = AttachmentPolicy.Optional,
+                DefaultAllowance = 5, AllowanceUnit = "days/event",
+                AccrualNotes = "Granted per event · No annual limit",
+                MinNoticeDays = 0, MaxConsecutiveDays = 5, HalfDayAllowed = false,
+                EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All
+            },
+            new LeaveType
+            {
+                Name = "Maternity Leave", Icon = "👶", ColorKey = "maternity",
+                Description = "Time off for new mothers around the birth of a child.",
+                RequiresApproval = true, IsActive = true, AffectsBalance = false, Paid = true,
+                AttachmentPolicy = AttachmentPolicy.Required,
+                DefaultAllowance = 90, AllowanceUnit = "days/event",
+                AccrualNotes = "Granted per event · Once per pregnancy",
+                MinNoticeDays = 30, MaxConsecutiveDays = 90, HalfDayAllowed = false,
+                EligibilityNotes = "Female employees", EligibilityScope = EligibilityScope.Limited
+            },
+            new LeaveType
+            {
+                Name = "Paternity Leave", Icon = "👨‍👶", ColorKey = "paternity",
+                Description = "Time off for new fathers around the birth of a child.",
+                RequiresApproval = true, IsActive = true, AffectsBalance = false, Paid = true,
+                AttachmentPolicy = AttachmentPolicy.Required,
+                DefaultAllowance = 14, AllowanceUnit = "days/event",
+                AccrualNotes = "Granted per event · Once per child",
+                MinNoticeDays = 30, MaxConsecutiveDays = 14, HalfDayAllowed = false,
+                EligibilityNotes = "Male employees", EligibilityScope = EligibilityScope.Limited
+            },
+            new LeaveType
+            {
+                Name = "Unpaid Leave", Icon = "💼", ColorKey = "unpaid",
+                Description = "Extended time off without pay or balance deduction.",
+                RequiresApproval = true, IsActive = true, AffectsBalance = false, Paid = false,
+                AttachmentPolicy = AttachmentPolicy.None,
+                DefaultAllowance = 30, AllowanceUnit = "days/year",
+                AccrualNotes = "No annual limit · Manager + HR approval",
+                MinNoticeDays = 14, MaxConsecutiveDays = 30, HalfDayAllowed = false,
+                EligibilityNotes = "Employees after 1yr", EligibilityScope = EligibilityScope.Limited
+            },
+            new LeaveType
+            {
+                Name = "Sabbatical", Icon = "🎓", ColorKey = "default",
+                Description = "Extended career break for study, travel, or research.",
+                RequiresApproval = true, IsActive = false, AffectsBalance = false, Paid = false,
+                AttachmentPolicy = AttachmentPolicy.None,
+                DefaultAllowance = 90, AllowanceUnit = "days/5 years",
+                AccrualNotes = "After 5 years of service · Once per period",
+                MinNoticeDays = 60, MaxConsecutiveDays = 90, HalfDayAllowed = false,
+                EligibilityNotes = "Tenured employees (5+ years)", EligibilityScope = EligibilityScope.Limited
+            },
         };
 
         await context.LeaveTypes.AddRangeAsync(leaveTypes);
         await context.SaveChangesAsync();
+    }
+
+    private static async Task BackfillLeaveTypeDesignFields(AppDbContext context)
+    {
+        // Enrich existing rows that pre-date the design-fields migration with realistic defaults.
+        var defaults = new Dictionary<string, LeaveType>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Annual Leave"] = new() { Icon = "🌴", ColorKey = "annual", Description = "Vacation days, holidays, and personal time off.", Paid = true, AttachmentPolicy = AttachmentPolicy.None, DefaultAllowance = 25, AllowanceUnit = "days/year", AccrualNotes = "Resets 1 Jan · No carryover", MinNoticeDays = 7, MaxConsecutiveDays = 15, HalfDayAllowed = true, EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All },
+            ["Sick Leave"] = new() { Icon = "🤒", ColorKey = "sick", Description = "Time off due to illness or medical appointments.", Paid = true, AttachmentPolicy = AttachmentPolicy.Optional, DefaultAllowance = 10, AllowanceUnit = "days/year", AccrualNotes = "Resets 1 Jan · 5 days carryover allowed", MinNoticeDays = 0, MaxConsecutiveDays = 30, HalfDayAllowed = true, EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All },
+            ["Personal Days"] = new() { Icon = "🏠", ColorKey = "personal", Description = "Family matters, errands, or personal appointments.", Paid = true, AttachmentPolicy = AttachmentPolicy.None, DefaultAllowance = 3, AllowanceUnit = "days/year", AccrualNotes = "Resets 1 Jan · No carryover", MinNoticeDays = 1, MaxConsecutiveDays = 3, HalfDayAllowed = true, EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All },
+            ["Bereavement"] = new() { Icon = "🕊️", ColorKey = "bereavement", Description = "Time off following the loss of a loved one.", Paid = true, AttachmentPolicy = AttachmentPolicy.Optional, DefaultAllowance = 5, AllowanceUnit = "days/event", AccrualNotes = "Granted per event · No annual limit", MinNoticeDays = 0, MaxConsecutiveDays = 5, HalfDayAllowed = false, EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All },
+            ["Compassionate Leave"] = new() { Icon = "🕊️", ColorKey = "bereavement", Description = "Time off following the loss of a loved one.", Paid = true, AttachmentPolicy = AttachmentPolicy.Optional, DefaultAllowance = 5, AllowanceUnit = "days/event", AccrualNotes = "Granted per event · No annual limit", MinNoticeDays = 0, MaxConsecutiveDays = 5, HalfDayAllowed = false, EligibilityNotes = "All employees", EligibilityScope = EligibilityScope.All },
+            ["Maternity Leave"] = new() { Icon = "👶", ColorKey = "maternity", Description = "Time off for new mothers around the birth of a child.", Paid = true, AttachmentPolicy = AttachmentPolicy.Required, DefaultAllowance = 90, AllowanceUnit = "days/event", AccrualNotes = "Granted per event · Once per pregnancy", MinNoticeDays = 30, MaxConsecutiveDays = 90, HalfDayAllowed = false, EligibilityNotes = "Female employees", EligibilityScope = EligibilityScope.Limited },
+            ["Paternity Leave"] = new() { Icon = "👨‍👶", ColorKey = "paternity", Description = "Time off for new fathers around the birth of a child.", Paid = true, AttachmentPolicy = AttachmentPolicy.Required, DefaultAllowance = 14, AllowanceUnit = "days/event", AccrualNotes = "Granted per event · Once per child", MinNoticeDays = 30, MaxConsecutiveDays = 14, HalfDayAllowed = false, EligibilityNotes = "Male employees", EligibilityScope = EligibilityScope.Limited },
+            ["Unpaid Leave"] = new() { Icon = "💼", ColorKey = "unpaid", Description = "Extended time off without pay or balance deduction.", Paid = false, AttachmentPolicy = AttachmentPolicy.None, DefaultAllowance = 30, AllowanceUnit = "days/year", AccrualNotes = "No annual limit · Manager + HR approval", MinNoticeDays = 14, MaxConsecutiveDays = 30, HalfDayAllowed = false, EligibilityNotes = "Employees after 1yr", EligibilityScope = EligibilityScope.Limited },
+            ["Sabbatical"] = new() { Icon = "🎓", ColorKey = "default", Description = "Extended career break for study, travel, or research.", Paid = false, AttachmentPolicy = AttachmentPolicy.None, DefaultAllowance = 90, AllowanceUnit = "days/5 years", AccrualNotes = "After 5 years of service · Once per period", MinNoticeDays = 60, MaxConsecutiveDays = 90, HalfDayAllowed = false, EligibilityNotes = "Tenured employees (5+ years)", EligibilityScope = EligibilityScope.Limited },
+        };
+
+        var rows = await context.LeaveTypes.ToListAsync();
+        var changed = false;
+
+        foreach (var row in rows)
+        {
+            // Only fill rows that look uninitialised (still on schema defaults).
+            var looksEmpty = string.IsNullOrEmpty(row.Description) && row.DefaultAllowance == 0;
+            if (!looksEmpty) continue;
+
+            if (!defaults.TryGetValue(row.Name, out var preset)) continue;
+
+            row.Icon = preset.Icon;
+            row.ColorKey = preset.ColorKey;
+            row.Description = preset.Description;
+            row.Paid = preset.Paid;
+            row.AttachmentPolicy = preset.AttachmentPolicy;
+            row.DefaultAllowance = preset.DefaultAllowance;
+            row.AllowanceUnit = preset.AllowanceUnit;
+            row.AccrualNotes = preset.AccrualNotes;
+            row.MinNoticeDays = preset.MinNoticeDays;
+            row.MaxConsecutiveDays = preset.MaxConsecutiveDays;
+            row.HalfDayAllowed = preset.HalfDayAllowed;
+            row.EligibilityNotes = preset.EligibilityNotes;
+            row.EligibilityScope = preset.EligibilityScope;
+            changed = true;
+        }
+
+        if (changed) await context.SaveChangesAsync();
     }
 
     private static async Task SeedDepartments(AppDbContext context)
@@ -573,6 +765,18 @@ public class DbInitializer
             profile.LeaveBalance = profile.AnnualLeaveEntitlement;
         }
 
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedAppSettings(AppDbContext context)
+    {
+        if (await context.AppSettings.AnyAsync()) return;
+        context.AppSettings.Add(new AppSettings
+        {
+            LeaveYearStartMonth = 1,
+            HolidayCountryCode = "CY",
+            HolidayCountryName = "Cyprus",
+        });
         await context.SaveChangesAsync();
     }
 

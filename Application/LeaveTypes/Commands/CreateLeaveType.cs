@@ -24,23 +24,54 @@ public class CreateLeaveType
             if (context.LeaveTypes.Any(lt => lt.Name.ToLower() == normalizedName.ToLower()))
                 return Result<LeaveTypeDto>.Failure("A leave type with that name already exists.");
 
+            var dto = request.LeaveType;
             var leaveType = new Domain.LeaveType
             {
                 Name = normalizedName,
-                RequiresApproval = request.LeaveType.RequiresApproval,
-                IsActive = request.LeaveType.IsActive
+                RequiresApproval = dto.RequiresApproval,
+                IsActive = dto.IsActive,
+                AffectsBalance = dto.AffectsBalance,
+                Icon = string.IsNullOrWhiteSpace(dto.Icon) ? "🏷️" : dto.Icon.Trim(),
+                ColorKey = string.IsNullOrWhiteSpace(dto.ColorKey) ? "default" : dto.ColorKey.Trim(),
+                Description = (dto.Description ?? string.Empty).Trim(),
+                Paid = dto.Paid,
+                AttachmentPolicy = dto.AttachmentPolicy,
+                DefaultAllowance = dto.DefaultAllowance,
+                AllowanceUnit = string.IsNullOrWhiteSpace(dto.AllowanceUnit) ? "days/year" : dto.AllowanceUnit.Trim(),
+                AccrualNotes = (dto.AccrualNotes ?? string.Empty).Trim(),
+                MinNoticeDays = dto.MinNoticeDays,
+                MaxConsecutiveDays = dto.MaxConsecutiveDays,
+                HalfDayAllowed = dto.HalfDayAllowed,
+                EligibilityNotes = string.IsNullOrWhiteSpace(dto.EligibilityNotes) ? "All employees" : dto.EligibilityNotes.Trim(),
+                EligibilityScope = dto.EligibilityScope
             };
 
             context.LeaveTypes.Add(leaveType);
             await context.SaveChangesAsync(cancellationToken);
 
-            return Result<LeaveTypeDto>.Success(new LeaveTypeDto
-            {
-                Id = leaveType.Id,
-                Name = leaveType.Name,
-                RequiresApproval = leaveType.RequiresApproval,
-                IsActive = leaveType.IsActive
-            });
+            return Result<LeaveTypeDto>.Success(ToDto(leaveType));
         }
+
+        private static LeaveTypeDto ToDto(Domain.LeaveType lt) => new()
+        {
+            Id = lt.Id,
+            Name = lt.Name,
+            RequiresApproval = lt.RequiresApproval,
+            IsActive = lt.IsActive,
+            AffectsBalance = lt.AffectsBalance,
+            Icon = lt.Icon,
+            ColorKey = lt.ColorKey,
+            Description = lt.Description,
+            Paid = lt.Paid,
+            AttachmentPolicy = lt.AttachmentPolicy,
+            DefaultAllowance = lt.DefaultAllowance,
+            AllowanceUnit = lt.AllowanceUnit,
+            AccrualNotes = lt.AccrualNotes,
+            MinNoticeDays = lt.MinNoticeDays,
+            MaxConsecutiveDays = lt.MaxConsecutiveDays,
+            HalfDayAllowed = lt.HalfDayAllowed,
+            EligibilityNotes = lt.EligibilityNotes,
+            EligibilityScope = lt.EligibilityScope
+        };
     }
 }

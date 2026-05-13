@@ -7,6 +7,13 @@ export type TimesheetStatus =
   | 'Rejected'
   | 'Resubmitted';
 
+export interface TimesheetProjectSummary {
+  projectId: number;
+  code: string;
+  name: string;
+  hours: number;
+}
+
 export interface Timesheet {
   id: string;
   employeeId: string;
@@ -22,4 +29,7 @@ export interface Timesheet {
   createdAt: string;
   entries?: any[];
   statusHistory?: TimesheetStatusHistory[];
+  projectSummaries?: TimesheetProjectSummary[];
+  /** Hours per weekday — index 0 = Monday … 4 = Friday. */
+  dailyHours?: number[];
 }

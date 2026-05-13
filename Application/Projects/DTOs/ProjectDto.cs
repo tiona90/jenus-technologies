@@ -1,0 +1,34 @@
+using Domain;
+
+namespace Application.Projects.DTOs;
+
+public class ProjectDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public ProjectStatus Status { get; set; }
+    public int? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; }
+    public string? OwnerId { get; set; }
+    public string? OwnerName { get; set; }
+    public string ColorKey { get; set; } = "p1";
+    public int TargetWeeklyHours { get; set; }
+    public int TargetMonthlyHours { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    public decimal HoursThisWeek { get; set; }
+    public decimal HoursThisMonth { get; set; }
+    public decimal HoursYTD { get; set; }
+    public int TeamSize { get; set; }
+    public List<ProjectTeamMemberDto> Team { get; set; } = new();
+}
+
+public class ProjectTeamMemberDto
+{
+    public string UserId { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public decimal HoursThisWeek { get; set; }
+}

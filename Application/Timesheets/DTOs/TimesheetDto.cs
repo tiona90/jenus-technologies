@@ -1,7 +1,16 @@
 using System;
+using System.Collections.Generic;
 
 namespace Application.Timesheets.DTOs
 {
+    public class TimesheetProjectSummaryDto
+    {
+        public int ProjectId { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public decimal Hours { get; set; }
+    }
+
     public class TimesheetDto
     {
         public string Id { get; set; } = string.Empty;
@@ -15,5 +24,9 @@ namespace Application.Timesheets.DTOs
         public DateTime? SubmittedAt { get; set; }
         public DateTime? ApprovedAt { get; set; }
         public DateTime CreatedAt { get; set; }
+        public List<TimesheetProjectSummaryDto> ProjectSummaries { get; set; } = new();
+
+        /// <summary>Hours per weekday — index 0 = Monday … 4 = Friday.</summary>
+        public List<decimal> DailyHours { get; set; } = new() { 0, 0, 0, 0, 0 };
     }
 }

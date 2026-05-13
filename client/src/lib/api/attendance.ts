@@ -1,0 +1,42 @@
+import apiClient from './client'
+import type { AttendanceHistoryDay, AttendanceToday, CompanyAttendance, TeamAttendance } from '../types/attendance'
+
+export async function getAttendanceToday(): Promise<AttendanceToday> {
+    const res = await apiClient.get<AttendanceToday>('/attendance/me/today')
+    return res.data
+}
+
+export async function checkIn(): Promise<AttendanceToday> {
+    const res = await apiClient.post<AttendanceToday>('/attendance/check-in')
+    return res.data
+}
+
+export async function checkOut(): Promise<AttendanceToday> {
+    const res = await apiClient.post<AttendanceToday>('/attendance/check-out')
+    return res.data
+}
+
+export async function startBreak(): Promise<AttendanceToday> {
+    const res = await apiClient.post<AttendanceToday>('/attendance/break/start')
+    return res.data
+}
+
+export async function endBreak(): Promise<AttendanceToday> {
+    const res = await apiClient.post<AttendanceToday>('/attendance/break/end')
+    return res.data
+}
+
+export async function getAttendanceHistory(days = 30): Promise<AttendanceHistoryDay[]> {
+    const res = await apiClient.get<AttendanceHistoryDay[]>('/attendance/me/history', { params: { days } })
+    return res.data
+}
+
+export async function getTeamAttendance(): Promise<TeamAttendance> {
+    const res = await apiClient.get<TeamAttendance>('/attendance/team')
+    return res.data
+}
+
+export async function getCompanyAttendance(): Promise<CompanyAttendance> {
+    const res = await apiClient.get<CompanyAttendance>('/attendance/company')
+    return res.data
+}

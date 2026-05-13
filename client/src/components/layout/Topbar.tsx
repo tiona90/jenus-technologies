@@ -13,11 +13,13 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
-import { getAnnualLeaves, getLeaveStatusHistories } from '../../lib/api'
+import { getAnnualLeaves, getLeaveStatusHistories, getTimesheets } from '../../lib/api'
 import { useStore } from '../../lib/mobx'
+import AttendanceWidget from './AttendanceWidget'
 
 const recentWindowDays = 7
 const managerReadPrefix = 'manager-read-leave-notifications:'
+const managerTsReadPrefix = 'manager-read-timesheet-notifications:'
 const employeeReadPrefix = 'employee-read-status-notifications:'
 const notificationRefreshMs = 15000
 
@@ -54,10 +56,12 @@ const Topbar = observer(function Topbar() {
     const shouldUseManagerNotifications = isManagerUser && !isAdminUser
 
     const managerKey = `${managerReadPrefix}${authStore.user?.id ?? ''}`
+    const managerTsKey = `${managerTsReadPrefix}${authStore.user?.id ?? ''}`
     const employeeKey = `${employeeReadPrefix}${authStore.user?.id ?? ''}`
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
     const [readManagerIds, setReadManagerIds] = useState<string[]>(() => getStoredIds(managerKey))
+    const [readManagerTsIds, setReadManagerTsIds] = useState<string[]>(() => getStoredIds(managerTsKey))
     const [readEmployeeIds, setReadEmployeeIds] = useState<string[]>(() => getStoredIds(employeeKey))
 
     const { data: statusHistories, isLoading: isLoadingStatus } = useQuery({
@@ -76,6 +80,14 @@ const Topbar = observer(function Topbar() {
         refetchIntervalInBackground: true,
     })
 
+    const { data: timesheets, isLoading: isLoadingTimesheets } = useQuery({
+        queryKey: ['timesheets'],
+        queryFn: getTimesheets,
+        enabled: authStore.isAuthenticated && shouldUseManagerNotifications,
+        refetchInterval: authStore.isAuthenticated && shouldUseManagerNotifications ? notificationRefreshMs : false,
+        refetchIntervalInBackground: true,
+    })
+
     const sortedStatusNotifs = (statusHistories ?? [])
         .slice()
         .sort((a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime())
@@ -86,20 +98,32 @@ const Topbar = observer(function Topbar() {
         .filter((l) => l.status === 'Pending' && l.employeeId !== authStore.user?.id)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
+    const managerPendingTimesheets = (timesheets ?? [])
+        .filter((t) => t.status === 'Submitted' || t.status === 'Resubmitted')
+        .sort((a, b) => {
+            const aDate = a.submittedAt ?? a.createdAt
+            const bDate = b.submittedAt ?? b.createdAt
+            return new Date(bDate).getTime() - new Date(aDate).getTime()
+        })
+
     const readManagerSet = useMemo(() => new Set(readManagerIds), [readManagerIds])
+    const readManagerTsSet = useMemo(() => new Set(readManagerTsIds), [readManagerTsIds])
     const readEmployeeSet = useMemo(() => new Set(readEmployeeIds), [readEmployeeIds])
 
     const unreadManagerRequests = managerPendingRequests.filter((item) => !readManagerSet.has(item.id))
+    const unreadManagerTimesheets = managerPendingTimesheets.filter((item) => !readManagerTsSet.has(item.id))
     const unreadEmployeeNotifs = employeeNotifications.filter((item) => !readEmployeeSet.has(item.id))
     const recentThreshold = Date.now() - recentWindowDays * 24 * 60 * 60 * 1000
     const unreadCount = shouldUseManagerNotifications
-        ? unreadManagerRequests.length
+        ? unreadManagerRequests.length + unreadManagerTimesheets.length
         : unreadEmployeeNotifs.filter((item) => new Date(item.changedAt).getTime() >= recentThreshold).length
 
     const managerNotifications = unreadManagerRequests.slice(0, 6)
-    const isLoading = shouldUseManagerNotifications ? isLoadingLeaves : isLoadingStatus
+    const managerTsNotifications = unreadManagerTimesheets.slice(0, 6)
+    const isLoading = shouldUseManagerNotifications ? (isLoadingLeaves || isLoadingTimesheets) : isLoadingStatus
 
     useEffect(() => { setReadManagerIds(getStoredIds(managerKey)) }, [managerKey])
+    useEffect(() => { setReadManagerTsIds(getStoredIds(managerTsKey)) }, [managerTsKey])
     useEffect(() => { setReadEmployeeIds(getStoredIds(employeeKey)) }, [employeeKey])
 
     useEffect(() => {
@@ -111,6 +135,16 @@ const Topbar = observer(function Topbar() {
             window.localStorage.setItem(managerKey, JSON.stringify(pruned))
         }
     }, [annualLeaves, isLoadingLeaves, managerPendingRequests, managerKey, readManagerIds, shouldUseManagerNotifications])
+
+    useEffect(() => {
+        if (!shouldUseManagerNotifications || isLoadingTimesheets || !timesheets) return
+        const pendingIds = new Set(managerPendingTimesheets.map((t) => t.id))
+        const pruned = readManagerTsIds.filter((id) => pendingIds.has(id))
+        if (pruned.length !== readManagerTsIds.length) {
+            setReadManagerTsIds(pruned)
+            window.localStorage.setItem(managerTsKey, JSON.stringify(pruned))
+        }
+    }, [timesheets, isLoadingTimesheets, managerPendingTimesheets, managerTsKey, readManagerTsIds, shouldUseManagerNotifications])
 
     useEffect(() => {
         if (!statusHistories) return
@@ -132,6 +166,14 @@ const Topbar = observer(function Topbar() {
         window.dispatchEvent(new HashChangeEvent('hashchange'))
     }
 
+    const handleManagerTimesheetClick = (timesheetId: string) => {
+        const updated = Array.from(new Set([...readManagerTsIds, timesheetId]))
+        setReadManagerTsIds(updated)
+        window.localStorage.setItem(managerTsKey, JSON.stringify(updated))
+        setAnchorEl(null)
+        uiStore.navigateToTeamTimesheets()
+    }
+
     const handleEmployeeClick = (notifId: string, leaveId: string) => {
         const updated = Array.from(new Set([...readEmployeeIds, notifId]))
         setReadEmployeeIds(updated)
@@ -148,11 +190,18 @@ const Topbar = observer(function Topbar() {
     else if (uiStore.currentPage === 'apply-leave') pageTitle = 'Apply for Leave'
     else if (uiStore.currentPage === 'team-leave') pageTitle = isAdminUser ? 'All Leave Requests' : 'Team Leave'
     else if (uiStore.currentPage === 'timesheets') pageTitle = isAdminUser ? 'All Timesheets' : 'My Timesheets'
+    else if (uiStore.currentPage === 'team-timesheets') pageTitle = isAdminUser ? 'All Timesheets' : 'Team Timesheets'
+    else if (uiStore.currentPage === 'new-timesheet') pageTitle = 'Apply Timesheet'
+    else if (uiStore.currentPage === 'attendance') pageTitle = 'My Attendance'
+    else if (uiStore.currentPage === 'team-attendance') pageTitle = 'Team Attendance'
+    else if (uiStore.currentPage === 'company-attendance') pageTitle = 'Company Attendance'
     else if (uiStore.currentPage === 'dashboard') {
         const s = uiStore.adminSection
         if (s === 'users') pageTitle = 'User Management'
         else if (s === 'departments') pageTitle = 'Departments'
-        else if (s === 'leave-types' || s === 'settings' || s === 'leave') pageTitle = 'Leave Types'
+        else if (s === 'leave-types' || s === 'leave') pageTitle = 'Leave Types'
+        else if (s === 'projects') pageTitle = 'Projects'
+        else if (s === 'settings') pageTitle = 'Leave Settings'
         else pageTitle = 'Dashboard'
     }
 
@@ -177,13 +226,16 @@ const Topbar = observer(function Topbar() {
                 {pageTitle}
             </Typography>
 
-            <Tooltip title="Notifications">
-                <IconButton size="small" onClick={(e) => setAnchorEl(e.currentTarget)}>
-                    <Badge badgeContent={unreadCount} color="error">
-                        <NotificationsNoneRoundedIcon />
-                    </Badge>
-                </IconButton>
-            </Tooltip>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <AttendanceWidget enabled={!!authStore.user && !isAdminUser} />
+                <Tooltip title="Notifications">
+                    <IconButton size="small" onClick={(e) => setAnchorEl(e.currentTarget)}>
+                        <Badge badgeContent={unreadCount} color="error">
+                            <NotificationsNoneRoundedIcon />
+                        </Badge>
+                    </IconButton>
+                </Tooltip>
+            </Box>
 
             <Menu
                 anchorEl={anchorEl}
@@ -200,7 +252,7 @@ const Topbar = observer(function Topbar() {
                 {isLoading && (
                     <MenuItem disabled><ListItemText primary="Loading notifications..." /></MenuItem>
                 )}
-                {!isLoading && shouldUseManagerNotifications && managerNotifications.length === 0 && (
+                {!isLoading && shouldUseManagerNotifications && managerNotifications.length === 0 && managerTsNotifications.length === 0 && (
                     <MenuItem disabled><ListItemText primary="No notifications yet" /></MenuItem>
                 )}
                 {!isLoading && !shouldUseManagerNotifications && employeeNotifications.length === 0 && (
@@ -214,6 +266,17 @@ const Topbar = observer(function Topbar() {
                         <ListItemText
                             primary={`New leave request from ${item.employeeName}`}
                             secondary={`Submitted ${formatChangedAt(item.createdAt)}`}
+                        />
+                    </MenuItem>
+                ))}
+                {!isLoading && shouldUseManagerNotifications && managerTsNotifications.map((item) => (
+                    <MenuItem key={item.id} onClick={() => handleManagerTimesheetClick(item.id)}>
+                        <ListItemIcon>
+                            <CircleRoundedIcon sx={{ fontSize: 10, color: 'error.main' }} />
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={`${item.status === 'Resubmitted' ? 'Resubmitted' : 'New'} timesheet from ${item.employeeName}`}
+                            secondary={`Submitted ${formatChangedAt(item.submittedAt ?? item.createdAt)}`}
                         />
                     </MenuItem>
                 ))}

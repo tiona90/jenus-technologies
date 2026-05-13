@@ -90,6 +90,76 @@ namespace Persistence.Migrations
                     b.ToTable("AnnualLeaves");
                 });
 
+            modelBuilder.Entity("Domain.AppSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AutoRunRollover")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("BlockLeaveSpanningIntoNextYear")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("DefaultAnnualEntitlement")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FinalWarningDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HolidayCountryCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HolidayCountryName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LeaveYearStartMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCarryoverDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("NotifyManagersOfTeamExpiries")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SendYearEndWarningEmails")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("YearEndWarningDays")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppSettings");
+                });
+
+            modelBuilder.Entity("Domain.AttendanceEvent", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "At");
+
+                    b.ToTable("AttendanceEvents");
+                });
+
             modelBuilder.Entity("Domain.Department", b =>
                 {
                     b.Property<int>("Id")
@@ -198,12 +268,93 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccrualNotes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasDefaultValue("");
+
+                    b.Property<bool>("AffectsBalance")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AllowanceUnit")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("days/year");
+
+                    b.Property<int>("AttachmentPolicy")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ColorKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("default");
+
+                    b.Property<int>("DefaultAllowance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("EligibilityNotes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasDefaultValue("All employees");
+
+                    b.Property<int>("EligibilityScope")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("HalfDayAllowed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)")
+                        .HasDefaultValue("🏷️");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("MaxConsecutiveDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("MinNoticeDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("Paid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("RequiresApproval")
                         .HasColumnType("bit");
@@ -226,6 +377,13 @@ namespace Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("ColorKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)")
+                        .HasDefaultValue("p1");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -233,6 +391,13 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasDefaultValue("");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -244,6 +409,25 @@ namespace Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("OwnerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("TargetMonthlyHours")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("TargetWeeklyHours")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
@@ -254,7 +438,51 @@ namespace Persistence.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
+                    b.HasIndex("OwnerId");
+
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Domain.PublicHoliday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CachedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnglishName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("LocalName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryCode", "Date")
+                        .IsUnique();
+
+                    b.HasIndex("CountryCode", "Year");
+
+                    b.ToTable("PublicHolidays");
                 });
 
             modelBuilder.Entity("Domain.Role", b =>
@@ -661,6 +889,17 @@ namespace Persistence.Migrations
                     b.Navigation("LeaveType");
                 });
 
+            modelBuilder.Entity("Domain.AttendanceEvent", b =>
+                {
+                    b.HasOne("Domain.EmployeeProfile", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("Domain.EmployeeProfile", b =>
                 {
                     b.HasOne("Domain.Department", "Department")
@@ -712,7 +951,14 @@ namespace Persistence.Migrations
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Domain.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Department");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Domain.Timesheet", b =>

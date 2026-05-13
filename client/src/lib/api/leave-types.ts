@@ -1,10 +1,24 @@
 import apiClient from './client'
-import type { LeaveType } from '../types'
+import type { AttachmentPolicy, EligibilityScope, LeaveType } from '../types'
 
 export interface UpsertLeaveTypeRequest {
     name: string
     requiresApproval: boolean
     isActive: boolean
+    affectsBalance: boolean
+    icon: string
+    colorKey: string
+    description: string
+    paid: boolean
+    attachmentPolicy: AttachmentPolicy
+    defaultAllowance: number
+    allowanceUnit: string
+    accrualNotes: string
+    minNoticeDays: number
+    maxConsecutiveDays: number
+    halfDayAllowed: boolean
+    eligibilityNotes: string
+    eligibilityScope: EligibilityScope
 }
 
 export async function getLeaveTypes() {

@@ -4,6 +4,11 @@ import { observer } from 'mobx-react-lite'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import Divider from '@mui/material/Divider'
 import MenuItem from '@mui/material/MenuItem'
 import Paper from '@mui/material/Paper'
 import Select from '@mui/material/Select'
@@ -16,8 +21,9 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
-import { approveTimesheet, getDepartments, getTimesheets, rejectTimesheet } from '../../lib/api'
-import type { TimesheetStatus, UserInfo } from '../../lib/types'
+import { approveTimesheet, getDepartments, getProjects, getTimesheet, getTimesheets, rejectTimesheet } from '../../lib/api'
+import type { TimesheetEntry, TimesheetStatus, UserInfo } from '../../lib/types'
+import type { Timesheet } from '../../lib/types/timesheet'
 
 const C_BORDER = '#E4E6EA'
 const C_HEADING = '#1A1A2E'
@@ -80,6 +86,10 @@ function formatPeriod(start: string, end: string) {
     return `${s} – ${e}`
 }
 
+function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 type StatusTab = 'all' | 'pending' | 'approved' | 'rejected'
 
 const TH = {
@@ -110,6 +120,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
     const [statusTab, setStatusTab] = useState<StatusTab>('pending')
     const [deptFilter, setDeptFilter] = useState('all')
     const [actionTarget, setActionTarget] = useState<string | null>(null)
+    const [viewTs, setViewTs] = useState<Timesheet | null>(null)
 
     const { data: timesheets = [], isLoading } = useQuery({
         queryKey: ['timesheets'],
@@ -122,6 +133,20 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
         enabled: isAdmin,
     })
 
+    const { data: projects = [] } = useQuery({
+        queryKey: ['projects'],
+        queryFn: getProjects,
+    })
+
+    const { data: tsDetail, isLoading: isDetailLoading } = useQuery({
+        queryKey: ['timesheet', viewTs?.id],
+        queryFn: () => getTimesheet(viewTs!.id),
+        enabled: !!viewTs?.id,
+    })
+
+    const activeProjects = projects.filter((p) => p.isActive)
+    const entries = (tsDetail?.entries as TimesheetEntry[] | undefined) ?? []
+
     const deptById = useMemo(
         () => new Map(departments.map((d) => [d.id, d.name])),
         [departments]
@@ -129,13 +154,19 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
 
     const approveMutation = useMutation({
         mutationFn: (id: string) => approveTimesheet(id),
-        onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['timesheets'] }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['timesheets'] })
+            setViewTs(null)
+        },
         onSettled: () => setActionTarget(null),
     })
 
     const rejectMutation = useMutation({
         mutationFn: (id: string) => rejectTimesheet(id),
-        onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['timesheets'] }),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['timesheets'] })
+            setViewTs(null)
+        },
         onSettled: () => setActionTarget(null),
     })
 
@@ -177,6 +208,9 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
         () => Array.from(new Set(departments.map((d) => d.name))).sort(),
         [departments]
     )
+
+    const isPendingView = viewTs ? needsAction(viewTs.status) : false
+    const isActioning = viewTs ? actionTarget === viewTs.id : false
 
     return (
         <Stack spacing={2.5}>
@@ -299,6 +333,23 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                                     <Stack direction="row" spacing={0.75}>
                                                         <Button
                                                             size="small"
+                                                            variant="outlined"
+                                                            onClick={() => setViewTs(ts)}
+                                                            sx={{
+                                                                fontSize: 12,
+                                                                py: '5px',
+                                                                px: 1.5,
+                                                                minWidth: 'unset',
+                                                                color: '#6B7280',
+                                                                borderColor: C_BORDER,
+                                                                textTransform: 'none',
+                                                                '&:hover': { bgcolor: '#F4F5F7', borderColor: C_BORDER },
+                                                            }}
+                                                        >
+                                                            View
+                                                        </Button>
+                                                        <Button
+                                                            size="small"
                                                             variant="contained"
                                                             disabled={isWorking}
                                                             onClick={() => {
@@ -344,6 +395,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                                     <Button
                                                         size="small"
                                                         variant="outlined"
+                                                        onClick={() => setViewTs(ts)}
                                                         sx={{
                                                             fontSize: 12,
                                                             py: '5px',
@@ -367,6 +419,137 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                     </Box>
                 )}
             </Paper>
+
+            {/* Timesheet detail dialog */}
+            <Dialog
+                open={!!viewTs}
+                onClose={() => setViewTs(null)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{ sx: { borderRadius: '12px' } }}
+            >
+                {viewTs && (
+                    <>
+                        <DialogTitle sx={{ pb: 1 }}>
+                            <Stack direction="row" alignItems="center" spacing={1.5}>
+                                <Typography sx={{ fontSize: 15, fontWeight: 700, color: C_HEADING }}>
+                                    {viewTs.employeeName} — {formatPeriod(viewTs.periodStart, viewTs.periodEnd)}
+                                </Typography>
+                                <StatusBadge status={viewTs.status} />
+                            </Stack>
+                        </DialogTitle>
+
+                        <Divider />
+
+                        <DialogContent sx={{ pt: 2 }}>
+                            {isDetailLoading ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                                    <CircularProgress size={24} />
+                                </Box>
+                            ) : (
+                                <Stack spacing={2}>
+                                    <Box sx={{ border: `1px solid ${C_BORDER}`, borderRadius: '8px', overflow: 'hidden' }}>
+                                        <Table sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell sx={TH}>Project</TableCell>
+                                                    <TableCell sx={TH}>Date</TableCell>
+                                                    <TableCell sx={TH}>Hours</TableCell>
+                                                    <TableCell sx={TH}>Notes</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {entries.length === 0 ? (
+                                                    <TableRow>
+                                                        <TableCell colSpan={4} sx={{ ...TD, textAlign: 'center', color: '#9CA3AF', py: 3 }}>
+                                                            No entries.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : (
+                                                    entries.map((entry) => {
+                                                        const projectName = activeProjects.find((p) => p.id === entry.projectId)?.name
+                                                            ?? `Project #${entry.projectId}`
+                                                        return (
+                                                            <TableRow
+                                                                key={entry.id}
+                                                                sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}
+                                                            >
+                                                                <TableCell sx={TD}>{projectName}</TableCell>
+                                                                <TableCell sx={TD}>{formatDate(entry.date)}</TableCell>
+                                                                <TableCell sx={TD}>{Number(entry.hoursWorked).toFixed(1)}</TableCell>
+                                                                <TableCell sx={{ ...TD, color: C_MUTED }}>{entry.notes ?? '—'}</TableCell>
+                                                            </TableRow>
+                                                        )
+                                                    })
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>
+                                            Total:{' '}
+                                            <span style={{ color: '#4F8EF7' }}>
+                                                {entries.reduce((sum, e) => sum + Number(e.hoursWorked), 0).toFixed(1)} hrs
+                                            </span>
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            )}
+                        </DialogContent>
+
+                        <Divider />
+
+                        <DialogActions sx={{ px: 3, py: 1.5, gap: 1 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => setViewTs(null)}
+                                sx={{ textTransform: 'none', borderColor: C_BORDER, color: C_MUTED }}
+                            >
+                                Close
+                            </Button>
+                            {isPendingView && (isAdmin || isManager) && (
+                                <>
+                                    <Button
+                                        variant="contained"
+                                        disabled={isActioning}
+                                        onClick={() => {
+                                            setActionTarget(viewTs.id)
+                                            rejectMutation.mutate(viewTs.id)
+                                        }}
+                                        startIcon={isActioning && rejectMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
+                                        sx={{
+                                            textTransform: 'none',
+                                            bgcolor: '#FF4D4F',
+                                            '&:hover': { bgcolor: '#E03C3E' },
+                                            boxShadow: 'none',
+                                        }}
+                                    >
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        disabled={isActioning}
+                                        onClick={() => {
+                                            setActionTarget(viewTs.id)
+                                            approveMutation.mutate(viewTs.id)
+                                        }}
+                                        startIcon={isActioning && approveMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
+                                        sx={{
+                                            textTransform: 'none',
+                                            bgcolor: '#22C47A',
+                                            '&:hover': { bgcolor: '#18A867' },
+                                            boxShadow: 'none',
+                                        }}
+                                    >
+                                        Approve
+                                    </Button>
+                                </>
+                            )}
+                        </DialogActions>
+                    </>
+                )}
+            </Dialog>
         </Stack>
     )
 })

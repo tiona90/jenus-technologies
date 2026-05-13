@@ -1,0 +1,36 @@
+using System.ComponentModel.DataAnnotations;
+using Domain;
+
+namespace Application.Projects.DTOs;
+
+public class UpsertProjectRequest
+{
+    [Required]
+    [StringLength(150, MinimumLength = 1)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(20, MinimumLength = 1)]
+    public string Code { get; set; } = string.Empty;
+
+    [StringLength(500)]
+    public string Description { get; set; } = string.Empty;
+
+    public int? DepartmentId { get; set; }
+
+    [StringLength(450)]
+    public string? OwnerId { get; set; }
+
+    public ProjectStatus Status { get; set; } = ProjectStatus.Active;
+
+    public bool IsActive { get; set; } = true;
+
+    [StringLength(8)]
+    public string ColorKey { get; set; } = "p1";
+
+    [Range(0, 1000)]
+    public int TargetWeeklyHours { get; set; }
+
+    [Range(0, 5000)]
+    public int TargetMonthlyHours { get; set; }
+}

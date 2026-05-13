@@ -23,7 +23,21 @@ public class GetLeaveTypeList
                     Id = lt.Id,
                     Name = lt.Name,
                     RequiresApproval = lt.RequiresApproval,
-                    IsActive = lt.IsActive
+                    IsActive = lt.IsActive,
+                    AffectsBalance = lt.AffectsBalance,
+                    Icon = lt.Icon,
+                    ColorKey = lt.ColorKey,
+                    Description = lt.Description,
+                    Paid = lt.Paid,
+                    AttachmentPolicy = lt.AttachmentPolicy,
+                    DefaultAllowance = lt.DefaultAllowance,
+                    AllowanceUnit = lt.AllowanceUnit,
+                    AccrualNotes = lt.AccrualNotes,
+                    MinNoticeDays = lt.MinNoticeDays,
+                    MaxConsecutiveDays = lt.MaxConsecutiveDays,
+                    HalfDayAllowed = lt.HalfDayAllowed,
+                    EligibilityNotes = lt.EligibilityNotes,
+                    EligibilityScope = lt.EligibilityScope
                 })
                 .ToListAsync(cancellationToken);
         }

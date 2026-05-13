@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     IdentityRoleClaim<string>,
     IdentityUserToken<string>>(options)
 {
+    public DbSet<AppSettings> AppSettings { get; set; }
     public DbSet<AnnualLeave> AnnualLeaves { get; set; }
     public DbSet<LeaveType> LeaveTypes { get; set; }
     public DbSet<Department> Departments { get; set; }
@@ -25,6 +26,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Timesheet> Timesheets { get; set; }
     public DbSet<TimesheetEntry> TimesheetEntries { get; set; }
     public DbSet<TimesheetStatusHistory> TimesheetStatusHistories { get; set; }
+    public DbSet<AttendanceEvent> AttendanceEvents { get; set; }
+    public DbSet<PublicHoliday> PublicHolidays { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -152,6 +155,46 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<AttendanceEvent>(entity =>
+        {
+            entity.Property(e => e.Id).HasMaxLength(450).IsRequired();
+            entity.Property(e => e.EmployeeId).HasMaxLength(450).IsRequired();
+            entity.Property(e => e.At).IsRequired();
+            entity.Property(e => e.Type).IsRequired();
+            entity.HasIndex(e => new { e.EmployeeId, e.At });
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PublicHoliday>(entity =>
+        {
+            entity.Property(e => e.CountryCode).HasMaxLength(2).IsRequired();
+            entity.Property(e => e.LocalName).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.EnglishName).HasMaxLength(200).IsRequired();
+            entity.HasIndex(e => new { e.CountryCode, e.Year });
+            entity.HasIndex(e => new { e.CountryCode, e.Date }).IsUnique();
+        });
+
+        builder.Entity<LeaveType>(entity =>
+        {
+            entity.Property(lt => lt.Name).IsRequired().HasMaxLength(100);
+            entity.Property(lt => lt.Icon).HasMaxLength(16).HasDefaultValue("🏷️");
+            entity.Property(lt => lt.ColorKey).HasMaxLength(30).HasDefaultValue("default");
+            entity.Property(lt => lt.Description).HasMaxLength(300).HasDefaultValue(string.Empty);
+            entity.Property(lt => lt.Paid).HasDefaultValue(true);
+            entity.Property(lt => lt.AttachmentPolicy).HasDefaultValue(AttachmentPolicy.None);
+            entity.Property(lt => lt.DefaultAllowance).HasDefaultValue(0);
+            entity.Property(lt => lt.AllowanceUnit).HasMaxLength(30).HasDefaultValue("days/year");
+            entity.Property(lt => lt.AccrualNotes).HasMaxLength(250).HasDefaultValue(string.Empty);
+            entity.Property(lt => lt.MinNoticeDays).HasDefaultValue(0);
+            entity.Property(lt => lt.MaxConsecutiveDays).HasDefaultValue(0);
+            entity.Property(lt => lt.HalfDayAllowed).HasDefaultValue(false);
+            entity.Property(lt => lt.EligibilityNotes).HasMaxLength(250).HasDefaultValue("All employees");
+            entity.Property(lt => lt.EligibilityScope).HasDefaultValue(EligibilityScope.All);
+        });
+
         builder.Entity<Project>(entity =>
         {
             entity.Property(p => p.Name)
@@ -179,6 +222,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(p => p.Department)
                 .WithMany(d => d.Projects)
                 .HasForeignKey(p => p.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(p => p.Description).HasMaxLength(500).HasDefaultValue(string.Empty);
+            entity.Property(p => p.Status).HasDefaultValue(ProjectStatus.Active);
+            entity.Property(p => p.ColorKey).HasMaxLength(8).HasDefaultValue("p1");
+            entity.Property(p => p.TargetWeeklyHours).HasDefaultValue(0);
+            entity.Property(p => p.TargetMonthlyHours).HasDefaultValue(0);
+            entity.Property(p => p.OwnerId).HasMaxLength(450);
+
+            entity.HasOne(p => p.Owner)
+                .WithMany()
+                .HasForeignKey(p => p.OwnerId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

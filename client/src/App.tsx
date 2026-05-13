@@ -9,7 +9,7 @@ import Container from '@mui/material/Container'
 import Snackbar from '@mui/material/Snackbar'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import { AuthPage, DashboardHome, MyLeavePage, ApplyLeavePage, TeamLeavePage, TeamTimesheetPage, MyTimesheetPage } from './components'
+import { AuthPage, DashboardHome, MyLeavePage, ApplyLeavePage, TeamLeavePage, AllLeaveAdminPage, TeamTimesheetPage, MyTimesheetPage, NewTimesheetPage, AttendancePage, TeamAttendancePage, CompanyAttendancePage, AllTimesheetsPage } from './components'
 import { API_ERROR_EVENT } from './lib/api/error-events'
 import { apiBaseUrl } from './lib/api/client'
 import { useStore } from './lib/mobx'
@@ -253,14 +253,26 @@ const App = observer(function App() {
           >
             {uiStore.currentPage === 'my-leave' && <MyLeavePage user={authStore.user} />}
             {uiStore.currentPage === 'apply-leave' && <ApplyLeavePage user={authStore.user} />}
-            {uiStore.currentPage === 'team-leave' && <TeamLeavePage user={authStore.user} />}
+            {uiStore.currentPage === 'team-leave' && (
+                authStore.user.roles.includes('Admin')
+                    ? <AllLeaveAdminPage user={authStore.user} />
+                    : <TeamLeavePage user={authStore.user} />
+            )}
             {uiStore.currentPage === 'dashboard' && <DashboardHome user={authStore.user} />}
             {uiStore.currentPage === 'timesheets' && (
                 authStore.user.roles.includes('Admin')
                     ? <TeamTimesheetPage user={authStore.user} />
                     : <MyTimesheetPage user={authStore.user} />
             )}
-            {uiStore.currentPage === 'team-timesheets' && <TeamTimesheetPage user={authStore.user} />}
+            {uiStore.currentPage === 'team-timesheets' && (
+                authStore.user.roles.includes('Admin')
+                    ? <AllTimesheetsPage />
+                    : <TeamTimesheetPage user={authStore.user} />
+            )}
+            {uiStore.currentPage === 'new-timesheet' && <NewTimesheetPage user={authStore.user} />}
+            {uiStore.currentPage === 'attendance' && <AttendancePage />}
+            {uiStore.currentPage === 'team-attendance' && <TeamAttendancePage />}
+            {uiStore.currentPage === 'company-attendance' && <CompanyAttendancePage />}
           </Container>
         ) : (
           <AuthPage

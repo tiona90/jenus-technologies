@@ -34,9 +34,24 @@ public class UpdateLeaveType
 
             var wasRequiringApproval = leaveType.RequiresApproval;
 
+            var dto = request.LeaveType;
             leaveType.Name = normalizedName;
-            leaveType.RequiresApproval = request.LeaveType.RequiresApproval;
-            leaveType.IsActive = request.LeaveType.IsActive;
+            leaveType.RequiresApproval = dto.RequiresApproval;
+            leaveType.IsActive = dto.IsActive;
+            leaveType.AffectsBalance = dto.AffectsBalance;
+            leaveType.Icon = string.IsNullOrWhiteSpace(dto.Icon) ? "🏷️" : dto.Icon.Trim();
+            leaveType.ColorKey = string.IsNullOrWhiteSpace(dto.ColorKey) ? "default" : dto.ColorKey.Trim();
+            leaveType.Description = (dto.Description ?? string.Empty).Trim();
+            leaveType.Paid = dto.Paid;
+            leaveType.AttachmentPolicy = dto.AttachmentPolicy;
+            leaveType.DefaultAllowance = dto.DefaultAllowance;
+            leaveType.AllowanceUnit = string.IsNullOrWhiteSpace(dto.AllowanceUnit) ? "days/year" : dto.AllowanceUnit.Trim();
+            leaveType.AccrualNotes = (dto.AccrualNotes ?? string.Empty).Trim();
+            leaveType.MinNoticeDays = dto.MinNoticeDays;
+            leaveType.MaxConsecutiveDays = dto.MaxConsecutiveDays;
+            leaveType.HalfDayAllowed = dto.HalfDayAllowed;
+            leaveType.EligibilityNotes = string.IsNullOrWhiteSpace(dto.EligibilityNotes) ? "All employees" : dto.EligibilityNotes.Trim();
+            leaveType.EligibilityScope = dto.EligibilityScope;
 
             var affectedProfiles = new Dictionary<string, EmployeeProfile>();
 
@@ -97,7 +112,21 @@ public class UpdateLeaveType
                 Id = leaveType.Id,
                 Name = leaveType.Name,
                 RequiresApproval = leaveType.RequiresApproval,
-                IsActive = leaveType.IsActive
+                IsActive = leaveType.IsActive,
+                AffectsBalance = leaveType.AffectsBalance,
+                Icon = leaveType.Icon,
+                ColorKey = leaveType.ColorKey,
+                Description = leaveType.Description,
+                Paid = leaveType.Paid,
+                AttachmentPolicy = leaveType.AttachmentPolicy,
+                DefaultAllowance = leaveType.DefaultAllowance,
+                AllowanceUnit = leaveType.AllowanceUnit,
+                AccrualNotes = leaveType.AccrualNotes,
+                MinNoticeDays = leaveType.MinNoticeDays,
+                MaxConsecutiveDays = leaveType.MaxConsecutiveDays,
+                HalfDayAllowed = leaveType.HalfDayAllowed,
+                EligibilityNotes = leaveType.EligibilityNotes,
+                EligibilityScope = leaveType.EligibilityScope
             });
         }
     }

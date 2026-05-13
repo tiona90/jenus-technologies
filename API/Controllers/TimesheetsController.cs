@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Domain;
+using Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,17 +23,21 @@ namespace API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMediator _mediator;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<TimesheetsController> _logger;
 
-        public TimesheetsController(AppDbContext context, IMediator mediator)
+        public TimesheetsController(AppDbContext context, IMediator mediator, IEmailService emailService, ILogger<TimesheetsController> logger)
         {
             _context = context;
             _mediator = mediator;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         // GET: api/timesheets
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<List<TimesheetDto>>> GetTimesheets()
+        public async Task<ActionResult<List<TimesheetDto>>> GetTimesheets([FromQuery] bool myOnly = false)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
                          ?? User.FindFirstValue("sub")
@@ -44,8 +49,8 @@ namespace API.Controllers
             return await _mediator.Send(new GetTimesheetList.Query
             {
                 RequestingUserId = userId,
-                IsAdmin = isAdmin,
-                IsManager = isManager,
+                IsAdmin = !myOnly && isAdmin,
+                IsManager = !myOnly && isManager,
             });
         }
 
@@ -111,21 +116,109 @@ namespace API.Controllers
             return CreatedAtAction(nameof(GetTimesheet), new { id = timesheet.Id }, dto);
         }
 
+        // DELETE: api/timesheets/{id}
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteTimesheet(string id)
+        {
+            var timesheet = await _context.Timesheets
+                .Include(t => t.Entries)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (timesheet == null) return NotFound();
+
+            if (timesheet.Status != TimesheetStatus.Draft)
+                return BadRequest("Only Draft timesheets can be deleted.");
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                         ?? User.FindFirstValue("sub")
+                         ?? User.Identity?.Name
+                         ?? string.Empty;
+
+            var employeeProfile = await _context.EmployeeProfiles
+                .FirstOrDefaultAsync(ep => ep.UserId == userId);
+
+            if (employeeProfile == null || timesheet.EmployeeId != employeeProfile.Id)
+                return Forbid();
+
+            _context.Timesheets.Remove(timesheet);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
         // PATCH: api/timesheets/{id}/submit
         [HttpPatch("{id}/submit")]
         [Authorize]
         public async Task<IActionResult> SubmitTimesheet(string id)
         {
-            var timesheet = await _context.Timesheets.FindAsync(id);
+            var timesheet = await _context.Timesheets
+                .Include(t => t.Employee).ThenInclude(e => e!.User)
+                .FirstOrDefaultAsync(t => t.Id == id);
             if (timesheet == null) return NotFound();
 
-            if (timesheet.Status == TimesheetStatus.Rejected)
-                timesheet.Status = TimesheetStatus.Resubmitted;
-            else
-                timesheet.Status = TimesheetStatus.Submitted;
-
+            var isResubmission = timesheet.Status == TimesheetStatus.Rejected;
+            timesheet.Status = isResubmission ? TimesheetStatus.Resubmitted : TimesheetStatus.Submitted;
             timesheet.SubmittedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+
+            // Notify the employee's manager (mirrors Apply Leave flow)
+            if (timesheet.Employee == null)
+            {
+                _logger.LogWarning("Timesheet {Id}: Employee not loaded, skipping manager notification", timesheet.Id);
+            }
+            else if (string.IsNullOrWhiteSpace(timesheet.Employee.ManagerId))
+            {
+                _logger.LogInformation("Timesheet {Id}: Employee {EmployeeId} has no ManagerId set, skipping notification", timesheet.Id, timesheet.EmployeeId);
+            }
+            else
+            {
+                var managerProfile = await _context.EmployeeProfiles
+                    .Include(mp => mp.User)
+                    .FirstOrDefaultAsync(mp => mp.Id == timesheet.Employee.ManagerId);
+
+                if (managerProfile == null)
+                {
+                    _logger.LogWarning("Timesheet {Id}: Manager profile {ManagerId} not found", timesheet.Id, timesheet.Employee.ManagerId);
+                }
+                else if (managerProfile.User == null || string.IsNullOrWhiteSpace(managerProfile.User.Email))
+                {
+                    _logger.LogWarning("Timesheet {Id}: Manager {ManagerId} has no email", timesheet.Id, timesheet.Employee.ManagerId);
+                }
+                else
+                {
+                    var employeeName = timesheet.Employee.User?.DisplayName
+                                       ?? timesheet.Employee.User?.Email
+                                       ?? "Employee";
+                    var period = $"{timesheet.PeriodStart:dd MMM yyyy} to {timesheet.PeriodEnd:dd MMM yyyy}";
+                    var verb = isResubmission ? "resubmitted" : "submitted";
+                    var subject = $"Timesheet {verb} by {employeeName}";
+                    var htmlBody = $"""
+            <p>Hello {managerProfile.User.DisplayName ?? managerProfile.User.Email},</p>
+            <p><strong>{employeeName}</strong> has {verb} a timesheet for <strong>{period}</strong> ({timesheet.TotalHours:0.##} hours).</p>
+            <p>Please log in to WorkTrack to review and take action.</p>
+            """;
+                    var textBody = $"""
+            Hello {managerProfile.User.DisplayName ?? managerProfile.User.Email},
+            {employeeName} has {verb} a timesheet for {period} ({timesheet.TotalHours:0.##} hours).
+            Please log in to WorkTrack to review and take action.
+            """;
+
+                    try
+                    {
+                        await _emailService.SendEmailAsync(
+                            managerProfile.User.Email,
+                            subject,
+                            htmlBody,
+                            textBody);
+                        _logger.LogInformation("Timesheet {Id}: notification email sent to manager {Email}", timesheet.Id, managerProfile.User.Email);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Timesheet {Id}: failed to send notification email to {Email}", timesheet.Id, managerProfile.User.Email);
+                    }
+                }
+            }
+
             return NoContent();
         }
 

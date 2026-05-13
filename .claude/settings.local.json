@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(Start-Process -WindowStyle Hidden -FilePath \"cmd\" -ArgumentList \"/c npm run dev > vite-restart.log 2>&1\")"
+      "Bash(Start-Process -WindowStyle Hidden -FilePath \"cmd\" -ArgumentList \"/c npm run dev > vite-restart.log 2>&1\")",
+      "Bash(dotnet ef *)",
+      "PowerShell(Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd 'c:\\\\Practice\\\\Own\\\\2026\\\\WorkTrack'; dotnet run --project API\" -WindowStyle Minimized; Start-Sleep -Seconds 8; Test-NetConnection -ComputerName localhost -Port 5000 -WarningAction SilentlyContinue | Select-Object TcpTestSucceeded)",
+      "PowerShell(Start-Sleep -Seconds 8; \\(Test-NetConnection -ComputerName localhost -Port 5000 -WarningAction SilentlyContinue\\).TcpTestSucceeded)"
     ]
   }
 }

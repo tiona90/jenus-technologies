@@ -9,144 +9,233 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import MenuItem from '@mui/material/MenuItem'
-import Paper from '@mui/material/Paper'
 import Stack from '@mui/material/Stack'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import {
     createAdminUser,
     deleteAdminUser,
-    getDepartments,
     getAdminUsers,
+    getAnnualLeaves,
+    getCompanyAttendance,
+    getDepartments,
     getEmployeeProfiles,
+    getLeaveStatusHistories,
+    getTimesheetStatusHistories,
     setAdminUserRoles,
-    updateEmployeeProfile,
     updateAdminUser,
+    updateEmployeeProfile,
 } from '../../lib/api'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
-import type { AdminUser, Department, EmployeeProfile, UserRole } from '../../lib/types'
+import type {
+    AdminUser, Department, EmployeeProfile, LeaveStatusHistory, TimesheetStatusHistory, UserRole,
+} from '../../lib/types'
 
 const C_BORDER = '#E4E6EA'
 const C_HEADING = '#1A1A2E'
 const C_MUTED = '#6B7280'
+const C_BLUE = '#4F8EF7'
 
-const TH = {
-    py: '10px',
-    px: '14px',
-    fontSize: 11,
-    fontWeight: 600,
-    color: C_MUTED,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB',
-    borderBottom: `1px solid ${C_BORDER}`,
+const PROTECTED_ADMIN_EMAIL = 'admin@annualleave.com'
+const ALL_ROLES: UserRole[] = ['Admin', 'Manager', 'Employee']
+
+type StatusTab = 'all' | 'active' | 'admins' | 'managers' | 'employees' | 'online'
+
+type Presence = 'online' | 'away' | 'offline'
+
+interface DerivedUser {
+    user: AdminUser
+    profile?: EmployeeProfile
+    departmentName: string | null
+    primaryRole: 'Admin' | 'Manager' | 'Employee'
+    presence: Presence
+    lastSeenLabel: string
+    leaveBalance: number
+    leaveTotal: number
+    leavePct: number
+    isProtected: boolean
 }
 
-const TD = {
-    py: '11px',
-    px: '14px',
-    fontSize: 13,
-    color: '#374151',
-    borderBottom: `1px solid #F3F4F6`,
+interface ActivityItem {
+    iconEl: string
+    color: 'green' | 'amber' | 'blue' | 'red' | 'gray'
+    text: string
+    age: string
+    timestamp: number
 }
 
-const ROLE_COLORS: Record<UserRole, { bg: string; color: string }> = {
-    Admin:    { bg: '#FEE2E2', color: '#991B1B' },
-    Manager:  { bg: '#FEF3C7', color: '#92400E' },
-    Employee: { bg: '#EFF6FF', color: '#1D4ED8' },
+function initials(name: string) {
+    const parts = (name ?? '').trim().split(/\s+/)
+    return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?'
 }
 
-function RoleBadge({ role }: { role: UserRole }) {
-    const s = ROLE_COLORS[role] ?? { bg: '#F3F4F6', color: '#6B7280' }
-    return (
-        <Box
-            component="span"
-            sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                px: 1.25,
-                py: 0.35,
-                borderRadius: '20px',
-                fontSize: 11,
-                fontWeight: 500,
-                bgcolor: s.bg,
-                color: s.color,
-                whiteSpace: 'nowrap',
-                mr: 0.5,
-            }}
-        >
-            {role}
-        </Box>
-    )
+function avatarBg(seed: string) {
+    const palette = ['#4F8EF7', '#22C47A', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#FF4D4F']
+    let hash = 0
+    for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
+    return palette[Math.abs(hash) % palette.length]
 }
 
-function DeptBadge({ dept }: { dept: string }) {
-    return (
-        <Box
-            component="span"
-            sx={{
-                display: 'inline-block',
-                bgcolor: '#EFF6FF',
-                color: '#1D4ED8',
-                borderRadius: '4px',
-                px: 1,
-                py: 0.25,
-                fontSize: 11,
-                fontWeight: 500,
-            }}
-        >
-            {dept}
-        </Box>
-    )
+function primaryRoleOf(roles: UserRole[]): 'Admin' | 'Manager' | 'Employee' {
+    if (roles.includes('Admin')) return 'Admin'
+    if (roles.includes('Manager')) return 'Manager'
+    return 'Employee'
 }
 
-const allRoles: UserRole[] = ['Admin', 'Manager', 'Employee']
-const protectedSeedAdminEmail = 'admin@annualleave.com'
-
-function getErrorMessage(error: unknown) {
-    return getApiErrorMessage(error, 'Something went wrong. Please try again.')
+function fmtRelative(ts: number) {
+    const diff = Date.now() - ts
+    const m = Math.floor(diff / 60_000)
+    if (m < 1) return 'Just now'
+    if (m < 60) return `${m}m ago`
+    const h = Math.floor(m / 60)
+    if (h < 24) return `${h}h ago`
+    const d = Math.floor(h / 24)
+    if (d < 7) return `${d}d ago`
+    return new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-function isReadOnlyAdminUser(user: AdminUser) {
-    return user.email.trim().toLowerCase() === protectedSeedAdminEmail
+function fmtJoined(iso?: string | null) {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
 }
 
-type EditData = { user: AdminUser; profile: EmployeeProfile | undefined }
+/* ════════════════════════════════════════════════════════════════════════ */
 
 function AdminUsersPanel() {
     const queryClient = useQueryClient()
-    const [createOpen, setCreateOpen] = useState(false)
-    const [editData, setEditData] = useState<EditData | null>(null)
 
-    const { data: users, isLoading, isError, error } = useQuery({
+    const [statusTab, setStatusTab] = useState<StatusTab>('all')
+    const [searchText, setSearchText] = useState('')
+    const [deptFilter, setDeptFilter] = useState<string>('all')
+    const [roleFilter, setRoleFilter] = useState<string>('all')
+    const [selected, setSelected] = useState<Set<string>>(new Set())
+    const [expanded, setExpanded] = useState<Set<string>>(new Set())
+    const [createOpen, setCreateOpen] = useState(false)
+    const [editData, setEditData] = useState<{ user: AdminUser; profile?: EmployeeProfile } | null>(null)
+    const [apiError, setApiError] = useState('')
+
+    const { data: users = [], isLoading, isError, error } = useQuery({
         queryKey: ['adminUsers'],
         queryFn: getAdminUsers,
     })
+    const { data: profiles = [] } = useQuery({ queryKey: ['employeeProfiles'], queryFn: getEmployeeProfiles })
+    const { data: departments = [] } = useQuery({ queryKey: ['departments'], queryFn: getDepartments })
+    const { data: company } = useQuery({ queryKey: ['attendance', 'company'], queryFn: getCompanyAttendance })
+    const { data: leaveHistories = [] } = useQuery({ queryKey: ['leaveStatusHistories'], queryFn: getLeaveStatusHistories })
+    const { data: timesheetHistories = [] } = useQuery({ queryKey: ['timesheetStatusHistories'], queryFn: getTimesheetStatusHistories })
+    const { data: leaves = [] } = useQuery({ queryKey: ['annualLeaves'], queryFn: getAnnualLeaves })
 
-    const { data: employeeProfiles = [] } = useQuery({
-        queryKey: ['employeeProfiles'],
-        queryFn: getEmployeeProfiles,
-    })
+    const profilesByUserId = useMemo(() => new Map(profiles.map((p) => [p.userId, p])), [profiles])
+    const deptById = useMemo(() => new Map(departments.map((d) => [d.id, d])), [departments])
+    const userByName = useMemo(() => new Map(users.map((u) => [u.displayName, u])), [users])
 
-    const { data: departments = [] } = useQuery({
-        queryKey: ['departments'],
-        queryFn: getDepartments,
-    })
+    // Presence map: name → status (from CompanyAttendance.recent + departments list)
+    const presenceByName = useMemo(() => {
+        const map = new Map<string, Presence>()
+        if (!company) return map
+        // CompanyAttendance.departments only has counts; we infer per-user presence from the recent activity feed.
+        for (const r of company.recent) {
+            if (!r.action) continue
+            const action = r.action.toLowerCase()
+            if (action.includes('check-in') || action.includes('checked in')) map.set(r.employeeName, 'online')
+            else if (action.includes('break start')) map.set(r.employeeName, 'away')
+            else if (action.includes('break end')) map.set(r.employeeName, 'online')
+            else if (action.includes('check-out') || action.includes('checked out')) map.set(r.employeeName, 'offline')
+        }
+        return map
+    }, [company])
 
+    // Last-seen label per user (best effort)
+    const lastSeenByName = useMemo(() => {
+        const map = new Map<string, string>()
+        if (!company) return map
+        for (const r of company.recent) {
+            if (!r.employeeName) continue
+            if (map.has(r.employeeName)) continue
+            map.set(r.employeeName, r.minutesAgo != null && r.minutesAgo < 1 ? 'Just now'
+                : r.minutesAgo != null ? `${r.minutesAgo}m ago`
+                : '—')
+        }
+        return map
+    }, [company])
+
+    /* Derive a unified user list */
+    const derivedAll: DerivedUser[] = useMemo(() => {
+        const currentYear = new Date().getFullYear()
+        return users.map((u) => {
+            const profile = profilesByUserId.get(u.id)
+            const departmentName = profile?.departmentId ? deptById.get(profile.departmentId)?.name ?? null : null
+            const presence = presenceByName.get(u.displayName) ?? 'offline'
+            const lastSeenLabel = presence === 'online' ? 'Online now'
+                : presence === 'away' ? 'On break'
+                : (lastSeenByName.get(u.displayName) ?? 'No activity')
+            const used = leaves
+                .filter((l) => l.employeeId === u.id && l.status === 'Approved' && new Date(l.startDate).getFullYear() === currentYear)
+                .reduce((s, l) => s + l.totalDays, 0)
+            const entitled = profile?.annualLeaveEntitlement ?? 0
+            const leaveBalance = Math.max(0, entitled - used)
+            const leavePct = entitled > 0 ? Math.min(100, (used / entitled) * 100) : 0
+            return {
+                user: u,
+                profile,
+                departmentName,
+                primaryRole: primaryRoleOf(u.roles),
+                presence,
+                lastSeenLabel,
+                leaveBalance,
+                leaveTotal: entitled,
+                leavePct,
+                isProtected: u.email.trim().toLowerCase() === PROTECTED_ADMIN_EMAIL,
+            }
+        })
+    }, [users, profilesByUserId, deptById, presenceByName, lastSeenByName, leaves])
+
+    /* Stats */
+    const counts = useMemo(() => {
+        const c = {
+            all: derivedAll.length,
+            admins: derivedAll.filter((d) => d.primaryRole === 'Admin').length,
+            managers: derivedAll.filter((d) => d.primaryRole === 'Manager').length,
+            employees: derivedAll.filter((d) => d.primaryRole === 'Employee').length,
+            online: derivedAll.filter((d) => d.presence === 'online').length,
+            withProfile: derivedAll.filter((d) => d.profile).length,
+        }
+        return c
+    }, [derivedAll])
+
+    /* Filtering */
+    const filtered = useMemo(() => {
+        let out = derivedAll
+        if (statusTab === 'admins') out = out.filter((d) => d.primaryRole === 'Admin')
+        else if (statusTab === 'managers') out = out.filter((d) => d.primaryRole === 'Manager')
+        else if (statusTab === 'employees') out = out.filter((d) => d.primaryRole === 'Employee')
+        else if (statusTab === 'online') out = out.filter((d) => d.presence === 'online')
+
+        if (roleFilter !== 'all') out = out.filter((d) => d.primaryRole === roleFilter)
+        if (deptFilter !== 'all') out = out.filter((d) => d.departmentName === deptFilter)
+
+        if (searchText.trim()) {
+            const q = searchText.trim().toLowerCase()
+            out = out.filter((d) =>
+                d.user.email.toLowerCase().includes(q) ||
+                (d.user.displayName ?? '').toLowerCase().includes(q)
+            )
+        }
+        return out.sort((a, b) => (a.user.displayName ?? a.user.email).localeCompare(b.user.displayName ?? b.user.email))
+    }, [derivedAll, statusTab, roleFilter, deptFilter, searchText])
+
+    /* Mutations */
     const createMutation = useMutation({
         mutationFn: createAdminUser,
         onSuccess: () => {
             void queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+            void queryClient.invalidateQueries({ queryKey: ['employeeProfiles'] })
             setCreateOpen(false)
         },
+        onError: (err) => setApiError(getApiErrorMessage(err, 'Could not create user.')),
     })
 
-    const combinedEditMutation = useMutation({
+    const editMutation = useMutation({
         mutationFn: async (payload: {
             userId: string
             email: string
@@ -175,6 +264,7 @@ function AdminUsersPanel() {
             void queryClient.invalidateQueries({ queryKey: ['employeeProfiles'] })
             setEditData(null)
         },
+        onError: (err) => setApiError(getApiErrorMessage(err, 'Could not update user.')),
     })
 
     const deleteMutation = useMutation({
@@ -183,185 +273,259 @@ function AdminUsersPanel() {
             void queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
             void queryClient.invalidateQueries({ queryKey: ['employeeProfiles'] })
         },
+        onError: (err) => setApiError(getApiErrorMessage(err, 'Could not delete user.')),
     })
 
-    const sortedUsers = useMemo(
-        () => [...(users ?? [])].sort((a, b) => a.email.localeCompare(b.email)),
-        [users]
-    )
+    function toggleSelected(id: string) {
+        setSelected((prev) => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id); else next.add(id)
+            return next
+        })
+    }
+    function toggleExpanded(id: string) {
+        setExpanded((prev) => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id); else next.add(id)
+            return next
+        })
+    }
+    async function bulkDelete() {
+        const ids = Array.from(selected).filter((id) => {
+            const u = users.find((u) => u.id === id)
+            return u && u.email.trim().toLowerCase() !== PROTECTED_ADMIN_EMAIL
+        })
+        if (ids.length === 0) return
+        const result = await SweetAlert.fire({
+            title: `Delete ${ids.length} user${ids.length === 1 ? '' : 's'}?`,
+            text: 'This cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#EF4444',
+            reverseButtons: true,
+        })
+        if (!result.isConfirmed) return
+        for (const id of ids) await deleteMutation.mutateAsync(id).catch(() => {})
+        setSelected(new Set())
+    }
 
-    const profilesByUserId = useMemo(
-        () => new Map(employeeProfiles.map((p) => [p.userId, p])),
-        [employeeProfiles]
-    )
+    if (isLoading) {
+        return <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress size={28} /></Box>
+    }
+    if (isError) {
+        return <Box sx={{ p: 2 }}><Alert severity="error">{getApiErrorMessage(error, 'Failed to load users.')}</Alert></Box>
+    }
 
-    const departmentsById = useMemo(
-        () => new Map(departments.map((d) => [d.id, d.name])),
-        [departments]
-    )
+    const onlinePct = counts.all > 0 ? Math.round((counts.online / counts.all) * 100) : 0
+    const managerRatio = counts.managers > 0 ? `1 : ${Math.round(counts.employees / counts.managers)}` : '—'
 
     return (
-        <Stack spacing={2}>
-            <Paper
-                elevation={0}
-                sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}
-            >
-                {/* Card header */}
+        <Box>
+            {apiError && (
+                <Alert severity="error" onClose={() => setApiError('')} sx={{ mb: 2 }}>{apiError}</Alert>
+            )}
+
+            {/* Stats row */}
+            <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+                gap: '12px', mb: '14px',
+            }}>
+                <Box sx={statCardSx}>
+                    <Box sx={statLabelSx}>👥 Total Users</Box>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: C_HEADING, lineHeight: 1 }}>{counts.all}</Box>
+                    <Box sx={{ display: 'flex', gap: '12px', mt: '8px', fontSize: 11, color: C_MUTED, flexWrap: 'wrap' }}>
+                        <RoleDot color="#FEE2E2" label={`${counts.admins} admin${counts.admins === 1 ? '' : 's'}`} />
+                        <RoleDot color="#FEF3C7" label={`${counts.managers} manager${counts.managers === 1 ? '' : 's'}`} />
+                        <RoleDot color="#DBEAFE" label={`${counts.employees} employee${counts.employees === 1 ? '' : 's'}`} />
+                    </Box>
+                </Box>
+                <Box sx={statCardSx}>
+                    <Box sx={statLabelSx}>🟢 Online Now</Box>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: '#22C47A', lineHeight: 1 }}>{counts.online}</Box>
+                    <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>of {counts.all} users · {onlinePct}%</Box>
+                </Box>
+                <Box sx={statCardSx}>
+                    <Box sx={statLabelSx}>📋 With Profile</Box>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: C_BLUE, lineHeight: 1 }}>{counts.withProfile}</Box>
+                    <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>
+                        of {counts.all} users have an employee profile
+                    </Box>
+                </Box>
+                <Box sx={statCardSx}>
+                    <Box sx={statLabelSx}>📊 Manager Ratio</Box>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: C_BLUE, lineHeight: 1 }}>{managerRatio}</Box>
+                    <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>
+                        {counts.managers} manager{counts.managers === 1 ? '' : 's'} for {counts.employees} employee{counts.employees === 1 ? '' : 's'}
+                    </Box>
+                </Box>
+            </Box>
+
+            {/* Toolbar */}
+            <Box sx={{
+                bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+                p: '10px 12px', display: 'flex', gap: '10px', flexWrap: 'wrap',
+                alignItems: 'center', mb: '14px',
+            }}>
+                <Box sx={{ flex: 1, minWidth: 220 }}>
+                    <Box
+                        component="input"
+                        type="search"
+                        placeholder="Search by name or email…"
+                        value={searchText}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
+                        sx={{
+                            width: '100%', p: '7px 10px', fontSize: 13, fontFamily: 'inherit',
+                            border: `1px solid ${C_BORDER}`, borderRadius: '6px', outline: 'none',
+                            '&:focus': { borderColor: C_BLUE, boxShadow: '0 0 0 3px rgba(79,142,247,0.1)' },
+                        }}
+                    />
+                </Box>
+                <SelectFilter value={roleFilter} onChange={setRoleFilter} options={[
+                    { value: 'all', label: 'All roles' },
+                    { value: 'Admin', label: `👑 Admin (${counts.admins})` },
+                    { value: 'Manager', label: `👥 Manager (${counts.managers})` },
+                    { value: 'Employee', label: `👤 Employee (${counts.employees})` },
+                ]} />
+                <SelectFilter value={deptFilter} onChange={setDeptFilter} options={[
+                    { value: 'all', label: 'All departments' },
+                    ...departments.map((d) => ({ value: d.name, label: d.name })),
+                ]} />
                 <Box
+                    component="button"
+                    onClick={() => setCreateOpen(true)}
                     sx={{
-                        px: '18px',
-                        py: '14px',
-                        borderBottom: `1px solid ${C_BORDER}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 2,
+                        bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                        px: '14px', py: '7px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                        fontFamily: 'inherit', whiteSpace: 'nowrap',
+                        '&:hover': { bgcolor: '#3A7AE4' },
                     }}
                 >
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Users</Typography>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => setCreateOpen(true)}
-                        sx={{
-                            fontSize: 12,
-                            py: '5px',
-                            px: 1.5,
-                            bgcolor: '#4F8EF7',
-                            '&:hover': { bgcolor: '#3A7AE4' },
-                            textTransform: 'none',
-                            boxShadow: 'none',
-                        }}
-                    >
-                        + New User
-                    </Button>
+                    + Add user
                 </Box>
+            </Box>
 
-                {/* States */}
-                {isLoading && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                        <CircularProgress size={24} />
+            {/* Bulk action bar */}
+            {selected.size > 0 && (
+                <Box sx={{
+                    position: 'sticky', top: 0, zIndex: 5,
+                    bgcolor: C_HEADING, color: '#fff', borderRadius: '10px',
+                    p: '10px 14px', display: 'flex', alignItems: 'center', gap: '14px',
+                    mb: '14px', flexWrap: 'wrap',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                }}>
+                    <Box sx={{ fontSize: 13 }}>
+                        <Box component="strong">{selected.size}</Box> user{selected.size === 1 ? '' : 's'} selected
                     </Box>
-                )}
-                {isError && (
-                    <Box sx={{ p: 2 }}>
-                        <Alert severity="error">{getErrorMessage(error)}</Alert>
+                    <Box sx={{ ml: 'auto', display: 'flex', gap: '8px' }}>
+                        <Box
+                            component="button"
+                            onClick={() => setSelected(new Set())}
+                            disabled={deleteMutation.isPending}
+                            sx={{
+                                bgcolor: 'transparent', color: '#fff', border: '1px solid #fff',
+                                px: '12px', py: '5px', borderRadius: '6px', fontSize: 12, fontWeight: 500,
+                                cursor: 'pointer', fontFamily: 'inherit',
+                                '&:hover:not(:disabled)': { bgcolor: 'rgba(255,255,255,0.1)' },
+                                '&:disabled': { opacity: 0.5 },
+                            }}
+                        >Clear</Box>
+                        <Box
+                            component="button"
+                            onClick={() => void bulkDelete()}
+                            disabled={deleteMutation.isPending}
+                            sx={{
+                                bgcolor: '#FF4D4F', color: '#fff', border: 'none',
+                                px: '14px', py: '6px', borderRadius: '6px', fontSize: 12, fontWeight: 600,
+                                cursor: 'pointer', fontFamily: 'inherit',
+                                '&:hover:not(:disabled)': { bgcolor: '#E03C3E' },
+                                '&:disabled': { opacity: 0.5 },
+                            }}
+                        >🚫 Delete</Box>
                     </Box>
-                )}
-                {!isLoading && !isError && sortedUsers.length === 0 && (
-                    <Box sx={{ textAlign: 'center', py: 6 }}>
-                        <Typography sx={{ fontSize: 13, color: '#9CA3AF' }}>No users found.</Typography>
-                    </Box>
-                )}
+                </Box>
+            )}
 
-                {/* Table */}
-                {!isLoading && !isError && sortedUsers.length > 0 && (
-                    <Box sx={{ overflowX: 'auto' }}>
-                        <Table sx={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell sx={TH}>Name</TableCell>
-                                    <TableCell sx={TH}>Email</TableCell>
-                                    <TableCell sx={TH}>Role</TableCell>
-                                    <TableCell sx={TH}>Department</TableCell>
-                                    <TableCell sx={TH}>Leave Balance</TableCell>
-                                    <TableCell sx={TH}>Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {sortedUsers.map((user) => {
-                                    const profile = profilesByUserId.get(user.id)
-                                    const deptName = profile?.departmentId
-                                        ? (departmentsById.get(profile.departmentId) ?? null)
-                                        : null
-                                    const isProtected = isReadOnlyAdminUser(user)
+            {/* Status tabs */}
+            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: `1px solid ${C_BORDER}`, px: '2px', flexWrap: 'wrap' }}>
+                {([
+                    { value: 'all',       label: 'All',       count: counts.all },
+                    { value: 'admins',    label: 'Admins',    count: counts.admins },
+                    { value: 'managers',  label: 'Managers',  count: counts.managers },
+                    { value: 'employees', label: 'Employees', count: counts.employees },
+                    { value: 'online',    label: '🟢 Online',  count: counts.online },
+                ] as { value: StatusTab; label: string; count: number }[]).map((tab) => {
+                    const active = statusTab === tab.value
+                    return (
+                        <Box
+                            key={tab.value}
+                            component="button"
+                            onClick={() => setStatusTab(tab.value)}
+                            sx={{
+                                p: '9px 16px', fontSize: 13,
+                                color: active ? C_BLUE : C_MUTED,
+                                cursor: 'pointer',
+                                borderBottom: active ? `2px solid ${C_BLUE}` : '2px solid transparent',
+                                mb: '-1px', display: 'flex', alignItems: 'center', gap: '6px',
+                                background: 'none', border: 'none', fontFamily: 'inherit',
+                                fontWeight: active ? 600 : 500,
+                                '&:hover': { color: active ? C_BLUE : C_HEADING },
+                            }}
+                        >
+                            {tab.label}
+                            <Box component="span" sx={{
+                                bgcolor: active ? '#EEF4FF' : '#F4F5F7',
+                                color: active ? C_BLUE : C_MUTED,
+                                fontSize: 10, fontWeight: 600,
+                                px: '7px', borderRadius: '10px',
+                            }}>{tab.count}</Box>
+                        </Box>
+                    )
+                })}
+            </Box>
 
-                                    return (
-                                        <TableRow
-                                            key={user.id}
-                                            sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}
-                                        >
-                                            <TableCell sx={TD}>
-                                                <strong>{user.displayName || user.email}</strong>
-                                            </TableCell>
-                                            <TableCell sx={{ ...TD, color: C_MUTED }}>{user.email}</TableCell>
-                                            <TableCell sx={TD}>
-                                                {user.roles.map((role) => (
-                                                    <RoleBadge key={role} role={role} />
-                                                ))}
-                                            </TableCell>
-                                            <TableCell sx={TD}>
-                                                {deptName ? <DeptBadge dept={deptName} /> : <span style={{ color: C_MUTED }}>—</span>}
-                                            </TableCell>
-                                            <TableCell sx={TD}>
-                                                {profile != null
-                                                    ? `${profile.leaveBalance} days`
-                                                    : <span style={{ color: C_MUTED }}>—</span>}
-                                            </TableCell>
-                                            <TableCell sx={TD}>
-                                                {isProtected ? (
-                                                    <Typography sx={{ fontSize: 11, color: C_MUTED, fontStyle: 'italic' }}>
-                                                        Protected
-                                                    </Typography>
-                                                ) : (
-                                                    <Stack direction="row" spacing={0.75}>
-                                                        <Button
-                                                            size="small"
-                                                            variant="outlined"
-                                                            onClick={() => setEditData({ user, profile })}
-                                                            sx={{
-                                                                fontSize: 12,
-                                                                py: '5px',
-                                                                px: 1.5,
-                                                                minWidth: 'unset',
-                                                                color: C_MUTED,
-                                                                borderColor: C_BORDER,
-                                                                textTransform: 'none',
-                                                                '&:hover': { bgcolor: '#F4F5F7', borderColor: C_BORDER },
-                                                            }}
-                                                        >
-                                                            Edit
-                                                        </Button>
-                                                        <Button
-                                                            size="small"
-                                                            variant="outlined"
-                                                            disabled={deleteMutation.isPending}
-                                                            onClick={async () => {
-                                                                const result = await SweetAlert.fire({
-                                                                    title: `Delete ${user.email}?`,
-                                                                    icon: 'warning',
-                                                                    showCancelButton: true,
-                                                                    confirmButtonText: 'Yes, delete',
-                                                                    cancelButtonText: 'Cancel',
-                                                                    reverseButtons: true,
-                                                                })
-                                                                if (result.isConfirmed) deleteMutation.mutate(user.id)
-                                                            }}
-                                                            sx={{
-                                                                fontSize: 12,
-                                                                py: '5px',
-                                                                px: 1.5,
-                                                                minWidth: 'unset',
-                                                                color: '#FF4D4F',
-                                                                borderColor: '#FECACA',
-                                                                textTransform: 'none',
-                                                                '&:hover': { bgcolor: '#FFF5F5', borderColor: '#FECACA' },
-                                                            }}
-                                                        >
-                                                            Delete
-                                                        </Button>
-                                                    </Stack>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
-                    </Box>
-                )}
-            </Paper>
+            {/* User rows */}
+            {filtered.length === 0 ? (
+                <Box sx={{
+                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                }}>
+                    No users match the current filters.
+                </Box>
+            ) : (
+                filtered.map((d) => (
+                    <UserRow
+                        key={d.user.id}
+                        derived={d}
+                        isSelected={selected.has(d.user.id)}
+                        isExpanded={expanded.has(d.user.id)}
+                        leaveHistories={leaveHistories}
+                        timesheetHistories={timesheetHistories}
+                        usersByName={userByName}
+                        onToggleSelect={() => toggleSelected(d.user.id)}
+                        onToggleExpand={() => toggleExpanded(d.user.id)}
+                        onEdit={() => setEditData({ user: d.user, profile: d.profile })}
+                        onDelete={async () => {
+                            const result = await SweetAlert.fire({
+                                title: `Delete ${d.user.displayName || d.user.email}?`,
+                                text: 'This cannot be undone.',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Yes, delete',
+                                cancelButtonText: 'Cancel',
+                                confirmButtonColor: '#EF4444',
+                                reverseButtons: true,
+                            })
+                            if (result.isConfirmed) deleteMutation.mutate(d.user.id)
+                        }}
+                        disabled={deleteMutation.isPending}
+                    />
+                ))
+            )}
 
+            {/* Dialogs */}
             <CreateUserDialog
                 open={createOpen}
                 isPending={createMutation.isPending}
@@ -370,21 +534,474 @@ function AdminUsersPanel() {
                 onSubmit={(payload) => createMutation.mutate(payload)}
                 departments={departments}
             />
-
             <EditUserDialog
                 data={editData}
                 departments={departments}
-                isPending={combinedEditMutation.isPending}
-                error={combinedEditMutation.error}
+                isPending={editMutation.isPending}
+                error={editMutation.error}
                 onClose={() => setEditData(null)}
-                onSubmit={(payload) => combinedEditMutation.mutate(payload)}
+                onSubmit={(payload) => editMutation.mutate(payload)}
             />
-        </Stack>
+        </Box>
     )
 }
 
+/* ════════════════════════════════════════════════════════════════════════ */
+/* User row                                                                  */
+/* ════════════════════════════════════════════════════════════════════════ */
+
+function UserRow({
+    derived, isSelected, isExpanded, leaveHistories, timesheetHistories, usersByName,
+    onToggleSelect, onToggleExpand, onEdit, onDelete, disabled,
+}: {
+    derived: DerivedUser
+    isSelected: boolean
+    isExpanded: boolean
+    leaveHistories: LeaveStatusHistory[]
+    timesheetHistories: TimesheetStatusHistory[]
+    usersByName: Map<string, AdminUser>
+    onToggleSelect: () => void
+    onToggleExpand: () => void
+    onEdit: () => void
+    onDelete: () => void
+    disabled: boolean
+}) {
+    const u = derived.user
+    const role = derived.primaryRole
+    const presence = derived.presence
+
+    const activity = useMemo<ActivityItem[]>(() => {
+        const items: ActivityItem[] = []
+        for (const h of leaveHistories) {
+            if (h.employeeId !== u.id && h.changedByUserId !== u.id) continue
+            const isOwn = h.employeeId === u.id
+            const ts = new Date(h.changedAt).getTime()
+            const action = isOwn
+                ? `${h.newStatus === 'Pending' ? 'Submitted leave request' : `Leave ${h.newStatus.toLowerCase()}`}`
+                : `${h.newStatus === 'Approved' ? 'Approved' : h.newStatus === 'Rejected' ? 'Rejected' : 'Changed'} ${h.employeeName}'s leave`
+            const color = h.newStatus === 'Approved' ? 'green'
+                : h.newStatus === 'Rejected' ? 'red'
+                : h.newStatus === 'Pending' ? 'amber' : 'blue'
+            items.push({
+                iconEl: '🌴',
+                color,
+                text: action,
+                age: fmtRelative(ts),
+                timestamp: ts,
+            })
+        }
+        for (const h of timesheetHistories) {
+            if (h.employeeId !== u.id && h.changedByUserId !== u.id) continue
+            const isOwn = h.employeeId === u.id
+            const ts = new Date(h.changedAt).getTime()
+            const action = isOwn
+                ? `Timesheet ${h.newStatus.toLowerCase()}`
+                : `${h.newStatus === 'Approved' ? 'Approved' : h.newStatus === 'Rejected' ? 'Rejected' : 'Changed'} ${h.employeeName}'s timesheet`
+            const color = h.newStatus === 'Approved' ? 'green'
+                : h.newStatus === 'Rejected' ? 'red' : 'blue'
+            items.push({
+                iconEl: '📋',
+                color,
+                text: action,
+                age: fmtRelative(ts),
+                timestamp: ts,
+            })
+        }
+        items.sort((a, b) => b.timestamp - a.timestamp)
+        return items.slice(0, 5)
+    }, [leaveHistories, timesheetHistories, u.id])
+
+    const managerName = useMemo(() => {
+        if (!derived.profile?.managerId) return null
+        // managerId is an EmployeeProfile.Id (not UserId). Look up by name in profilesByUserId would need data we don't have here.
+        // We don't surface a manager name link without that map; show a placeholder.
+        return null
+    }, [derived.profile])
+
+    const roleStyle = roleStyles[role]
+    const accentColor = role === 'Admin' ? '#8B5CF6'
+        : role === 'Manager' ? '#F59E0B' : C_BLUE
+
+    return (
+        <Box sx={{
+            bgcolor: '#fff', border: `1px solid ${C_BORDER}`,
+            borderLeft: `3px solid ${accentColor}`,
+            borderRadius: '10px', mb: '8px',
+            ...(isSelected && { boxShadow: `inset 0 0 0 2px ${C_BLUE}`, bgcolor: '#F0F7FF' }),
+        }}>
+            <Box
+                onClick={onToggleExpand}
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                        xs: '24px 1fr auto',
+                        md: '24px 240px 110px 140px 130px 150px auto',
+                    },
+                    gap: '12px', alignItems: 'center',
+                    p: '14px 16px', cursor: 'pointer',
+                    '&:hover': { bgcolor: isSelected ? '#F0F7FF' : '#F9FAFB' },
+                }}
+            >
+                <Box
+                    component="input"
+                    type="checkbox"
+                    checked={isSelected}
+                    disabled={derived.isProtected}
+                    onChange={onToggleSelect}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    sx={{
+                        cursor: derived.isProtected ? 'not-allowed' : 'pointer',
+                        width: 16, height: 16,
+                        accentColor: C_BLUE,
+                        opacity: derived.isProtected ? 0.3 : 1,
+                    }}
+                />
+
+                {/* User */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <Box sx={{ position: 'relative' }}>
+                        <Box sx={{
+                            width: 36, height: 36, borderRadius: '50%',
+                            bgcolor: avatarBg(u.displayName || u.email), color: '#fff',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 12, fontWeight: 600, flexShrink: 0,
+                        }}>{initials(u.displayName || u.email)}</Box>
+                        <Box sx={{
+                            position: 'absolute', bottom: 0, right: 0,
+                            width: 10, height: 10, borderRadius: '50%',
+                            border: '2px solid #fff',
+                            bgcolor: presence === 'online' ? '#22C47A'
+                                : presence === 'away' ? '#F59E0B' : '#9CA3AF',
+                        }} />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {u.displayName || u.email}
+                            {derived.isProtected && (
+                                <Box component="span" sx={{ ml: '6px', fontSize: 10, color: '#9CA3AF', fontStyle: 'italic' }}>· protected</Box>
+                            )}
+                        </Box>
+                        <Box sx={{ fontSize: 11, color: C_MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {u.email}
+                        </Box>
+                    </Box>
+                </Box>
+
+                {/* Role pill */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                    <Box component="span" sx={{
+                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                        bgcolor: roleStyle.bg, color: roleStyle.fg,
+                        fontSize: 11, fontWeight: 500, px: '8px', py: '3px',
+                        borderRadius: '12px',
+                    }}>
+                        {role === 'Admin' ? '👑' : role === 'Manager' ? '👥' : '👤'} {role}
+                    </Box>
+                </Box>
+
+                {/* Department */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                    {derived.departmentName ? (
+                        <Box component="span" sx={{
+                            display: 'inline-block', bgcolor: '#EFF6FF', color: '#1D4ED8',
+                            borderRadius: '4px', px: '8px', py: '2px',
+                            fontSize: 11, fontWeight: 500,
+                        }}>{derived.departmentName}</Box>
+                    ) : <Box sx={{ fontSize: 11, color: '#9CA3AF' }}>—</Box>}
+                </Box>
+
+                {/* Status */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                    <Box component="span" sx={{
+                        display: 'inline-flex', alignItems: 'center', gap: '5px',
+                        fontSize: 11, fontWeight: 500,
+                        color: presence === 'online' ? '#065F46'
+                            : presence === 'away' ? '#92400E' : C_MUTED,
+                        bgcolor: presence === 'online' ? '#D1FAE5'
+                            : presence === 'away' ? '#FEF3C7' : '#F4F5F7',
+                        px: '8px', py: '3px', borderRadius: '12px',
+                    }}>
+                        {presence === 'online' ? 'Online' : presence === 'away' ? 'Away' : 'Offline'}
+                    </Box>
+                </Box>
+
+                {/* Leave */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                    {derived.leaveTotal > 0 ? (
+                        <>
+                            <Box sx={{ fontSize: 11, color: C_MUTED }}>
+                                <Box component="strong" sx={{
+                                    color: derived.leavePct >= 80 ? '#FF4D4F' : derived.leavePct >= 60 ? '#F59E0B' : C_HEADING,
+                                    fontSize: 13, fontWeight: 700,
+                                }}>{derived.leaveBalance}</Box> / {derived.leaveTotal} days
+                            </Box>
+                            <Box sx={{ height: 4, bgcolor: '#F4F5F7', borderRadius: '2px', overflow: 'hidden', mt: '4px' }}>
+                                <Box sx={{
+                                    height: '100%',
+                                    bgcolor: derived.leavePct >= 80 ? '#FF4D4F' : derived.leavePct >= 60 ? '#F59E0B' : '#22C47A',
+                                    width: `${100 - derived.leavePct}%`,
+                                }} />
+                            </Box>
+                        </>
+                    ) : (
+                        <Box sx={{ fontSize: 11, color: '#9CA3AF' }}>—</Box>
+                    )}
+                </Box>
+
+                {/* Last active */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                    <Box sx={{ fontSize: 12, fontWeight: 600, color: presence === 'online' ? '#22C47A' : '#374151' }}>
+                        {derived.lastSeenLabel}
+                    </Box>
+                    <Box sx={{ fontSize: 10, color: C_MUTED, mt: '2px' }}>
+                        {presence === 'online' ? 'right now' : 'last active'}
+                    </Box>
+                </Box>
+
+                {/* Actions */}
+                <Box
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    sx={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexShrink: 0 }}
+                >
+                    {!derived.isProtected && (
+                        <>
+                            <IconBtn title="Edit" onClick={onEdit}>✏️</IconBtn>
+                            <IconBtn title="Delete" onClick={onDelete} disabled={disabled} danger>🗑</IconBtn>
+                        </>
+                    )}
+                </Box>
+            </Box>
+
+            {isExpanded && (
+                <Box sx={{
+                    px: '16px', py: '14px', borderTop: '1px solid #F3F4F6',
+                    bgcolor: '#FAFBFC',
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
+                    gap: '14px',
+                }}>
+                    <ExpandBlock title="Account details">
+                        <ExpandRow label="Joined" value={fmtJoined(derived.profile?.createdAt)} />
+                        <ExpandRow label="Department" value={derived.departmentName ?? '—'} />
+                        <ExpandRow label="Job title" value={derived.profile?.jobTitle || '—'} />
+                        {role === 'Employee' && (
+                            <ExpandRow label="Manager" value={managerName ?? '—'} />
+                        )}
+                        <ExpandRow label="Annual entitlement"
+                                   value={derived.leaveTotal > 0 ? `${derived.leaveTotal} days` : '—'} />
+                        <ExpandRow label="Balance"
+                                   value={derived.leaveTotal > 0 ? `${derived.leaveBalance} days` : '—'} />
+                    </ExpandBlock>
+
+                    <ExpandBlock title="Recent activity">
+                        {activity.length === 0 ? (
+                            <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>No recent activity</Box>
+                        ) : (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                {activity.map((a, i) => (
+                                    <Box key={i} sx={{ display: 'grid', gridTemplateColumns: '22px 1fr auto', gap: '8px', alignItems: 'center' }}>
+                                        <Box sx={{
+                                            width: 22, height: 22, borderRadius: '50%',
+                                            bgcolor: activityIconBg[a.color],
+                                            color: activityIconFg[a.color],
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: 11,
+                                        }}>{a.iconEl}</Box>
+                                        <Box sx={{ fontSize: 11, color: '#374151', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {a.text}
+                                        </Box>
+                                        <Box sx={{ fontSize: 10, color: '#9CA3AF', whiteSpace: 'nowrap' }}>{a.age}</Box>
+                                    </Box>
+                                ))}
+                            </Box>
+                        )}
+                    </ExpandBlock>
+
+                    <ExpandBlock title={role === 'Manager' || role === 'Admin' ? 'Reach' : 'Quick info'}>
+                        {role === 'Manager' || role === 'Admin' ? (
+                            <DirectReports user={derived.user} role={role} />
+                        ) : (
+                            <>
+                                <ExpandRow label="Email verified" value={<Box component="span" sx={{ color: '#22C47A' }}>✓ Yes</Box>} />
+                                <ExpandRow label="Roles" value={u.roles.join(', ')} />
+                                <ExpandRow label="User ID" value={<Box component="code" sx={{ fontSize: 10 }}>{u.id.slice(0, 8)}…</Box>} />
+                            </>
+                        )}
+                    </ExpandBlock>
+                </Box>
+            )}
+        </Box>
+    )
+    // suppress no-used warning from usersByName param
+    void usersByName
+}
+
+function DirectReports({ user, role }: { user: AdminUser; role: 'Admin' | 'Manager' }) {
+    const { data: profiles = [] } = useQuery({ queryKey: ['employeeProfiles'], queryFn: getEmployeeProfiles })
+    const { data: users = [] } = useQuery({ queryKey: ['adminUsers'], queryFn: getAdminUsers })
+
+    const myProfile = profiles.find((p) => p.userId === user.id)
+    if (!myProfile && role !== 'Admin') {
+        return <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>No profile linked</Box>
+    }
+
+    const reports = role === 'Admin'
+        ? users.filter((u) => u.id !== user.id)
+        : profiles
+            .filter((p) => p.managerId && myProfile && p.managerId === myProfile.id)
+            .map((p) => users.find((u) => u.id === p.userId))
+            .filter((u): u is AdminUser => !!u)
+
+    if (reports.length === 0) {
+        return <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>No direct reports</Box>
+    }
+
+    const visible = reports.slice(0, 4)
+    const remaining = reports.length - visible.length
+
+    return (
+        <>
+            <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, mb: '8px' }}>
+                {reports.length} {role === 'Admin' ? 'people in scope' : `report${reports.length === 1 ? '' : 's'}`}
+            </Box>
+            <Box sx={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                {visible.map((r) => (
+                    <Box key={r.id} title={r.displayName || r.email} sx={{
+                        width: 28, height: 28, borderRadius: '50%',
+                        bgcolor: avatarBg(r.displayName || r.email), color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 10, fontWeight: 600,
+                        border: '2px solid #fff', marginLeft: '-2px',
+                    }}>{initials(r.displayName || r.email)}</Box>
+                ))}
+                {remaining > 0 && (
+                    <Box sx={{
+                        width: 28, height: 28, borderRadius: '50%',
+                        bgcolor: '#E4E6EA', color: C_MUTED,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 10, fontWeight: 600, border: '2px solid #fff', marginLeft: '-2px',
+                    }}>+{remaining}</Box>
+                )}
+            </Box>
+        </>
+    )
+}
+
+/* ════════════════════════════════════════════════════════════════════════ */
+/* Small UI bits                                                            */
+/* ════════════════════════════════════════════════════════════════════════ */
+
+const statCardSx = {
+    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px',
+} as const
+
+const statLabelSx = {
+    fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em',
+    mb: '6px', display: 'flex', alignItems: 'center', gap: '6px',
+} as const
+
+function RoleDot({ color, label }: { color: string; label: string }) {
+    return (
+        <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color }} />
+            {label}
+        </Box>
+    )
+}
+
+function SelectFilter({ value, onChange, options }: {
+    value: string
+    onChange: (v: string) => void
+    options: { value: string; label: string }[]
+}) {
+    return (
+        <Box
+            component="select"
+            value={value}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
+            sx={{
+                fontSize: 12, fontFamily: 'inherit', p: '7px 10px',
+                border: `1px solid ${C_BORDER}`, borderRadius: '6px',
+                color: '#374151', bgcolor: '#fff', outline: 'none', cursor: 'pointer',
+                '&:focus': { borderColor: C_BLUE },
+            }}
+        >
+            {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </Box>
+    )
+}
+
+function ExpandBlock({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '8px', p: '12px 14px' }}>
+            <Box sx={{ fontSize: 11, fontWeight: 600, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '8px' }}>
+                {title}
+            </Box>
+            {children}
+        </Box>
+    )
+}
+
+function ExpandRow({ label, value }: { label: string; value: React.ReactNode }) {
+    return (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: '8px', py: '4px', fontSize: 11 }}>
+            <Box sx={{ color: C_MUTED }}>{label}</Box>
+            <Box sx={{ color: C_HEADING, fontWeight: 500, textAlign: 'right' }}>{value}</Box>
+        </Box>
+    )
+}
+
+function IconBtn({ title, onClick, disabled, danger, children }: {
+    title: string
+    onClick: () => void
+    disabled?: boolean
+    danger?: boolean
+    children: React.ReactNode
+}) {
+    return (
+        <Box
+            component="button"
+            title={title}
+            onClick={onClick}
+            disabled={disabled}
+            sx={{
+                width: 30, height: 30, borderRadius: '6px',
+                bgcolor: 'transparent', border: `1px solid ${C_BORDER}`,
+                color: danger ? '#991B1B' : C_MUTED,
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 13,
+                '&:hover:not(:disabled)': {
+                    bgcolor: danger ? '#FEE2E2' : '#F4F5F7',
+                    borderColor: danger ? '#FECACA' : C_BORDER,
+                },
+                '&:disabled': { opacity: 0.4, cursor: 'not-allowed' },
+            }}
+        >
+            {children}
+        </Box>
+    )
+}
+
+const roleStyles: Record<'Admin' | 'Manager' | 'Employee', { bg: string; fg: string }> = {
+    Admin:    { bg: '#F3E8FF', fg: '#6D28D9' },
+    Manager:  { bg: '#FEF3C7', fg: '#92400E' },
+    Employee: { bg: '#DBEAFE', fg: '#1D4ED8' },
+}
+
+const activityIconBg: Record<ActivityItem['color'], string> = {
+    green: '#D1FAE5', amber: '#FEF3C7', blue: '#DBEAFE', red: '#FEE2E2', gray: '#F4F5F7',
+}
+const activityIconFg: Record<ActivityItem['color'], string> = {
+    green: '#065F46', amber: '#92400E', blue: '#1D4ED8', red: '#991B1B', gray: '#6B7280',
+}
+
+/* ════════════════════════════════════════════════════════════════════════ */
+/* Dialogs                                                                  */
+/* ════════════════════════════════════════════════════════════════════════ */
+
 function EditUserDialog(props: {
-    data: EditData | null
+    data: { user: AdminUser; profile?: EmployeeProfile } | null
     departments: Department[]
     onClose: () => void
     isPending: boolean
@@ -441,7 +1058,7 @@ function EditUserDialog(props: {
                     <Divider />
                     <Typography variant="subtitle2" color="text.secondary">Roles</Typography>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                        {allRoles.map((role) => (
+                        {ALL_ROLES.map((role) => (
                             <FormControlLabel
                                 key={role}
                                 control={<Checkbox checked={roles.includes(role)} onChange={() => toggleRole(role)} />}
@@ -486,7 +1103,7 @@ function EditUserDialog(props: {
                         </>
                     )}
 
-                    {props.error ? <Alert severity="error">{getErrorMessage(props.error)}</Alert> : null}
+                    {props.error ? <Alert severity="error">{getApiErrorMessage(props.error, 'Failed.')}</Alert> : null}
                 </Stack>
             </AppDialogContent>
             <AppDialogActions>
@@ -559,7 +1176,7 @@ function CreateUserDialog(props: {
                         ))}
                     </TextField>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                        {allRoles.map((role) => (
+                        {ALL_ROLES.map((role) => (
                             <FormControlLabel
                                 key={role}
                                 control={<Checkbox checked={roles.includes(role)} onChange={() => toggleRole(role)} />}
@@ -567,7 +1184,7 @@ function CreateUserDialog(props: {
                             />
                         ))}
                     </Stack>
-                    {props.error ? <Alert severity="error">{getErrorMessage(props.error)}</Alert> : null}
+                    {props.error ? <Alert severity="error">{getApiErrorMessage(props.error, 'Failed.')}</Alert> : null}
                 </Stack>
             </AppDialogContent>
             <AppDialogActions>

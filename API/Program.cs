@@ -4,6 +4,7 @@ using API.Models;
 using API.Hubs;
 using Application.Core;
 using Application.Annualleaves.Queries;
+using Application.Holidays;
 using Application.LeaveTypes.Commands;
 using Application.LeaveTypes.DTOs;
 using AspNet.Security.OAuth.GitHub;
@@ -35,6 +36,7 @@ var githubClientSecret = builder.Configuration["Authentication:GitHub:ClientSecr
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -93,6 +95,12 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddMediatR(x =>
 x.RegisterServicesFromAssemblyContaining<GetAnnualleaveList.Handler>());
+
+builder.Services.AddHttpClient<NagerHolidayClient>(client =>
+{
+    client.BaseAddress = new Uri("https://date.nager.at/api/v3/");
+    client.Timeout = TimeSpan.FromSeconds(8);
+});
 
 // Explicit registrations for LeaveType commands to avoid handler resolution issues
 // when running under watch/hot-reload in development.

@@ -6,6 +6,11 @@ export async function getTimesheets(): Promise<Timesheet[]> {
     return res.data;
 }
 
+export async function getMyTimesheets(): Promise<Timesheet[]> {
+    const res = await apiClient.get('/timesheets', { params: { myOnly: true } });
+    return res.data;
+}
+
 export async function getTimesheet(id: string): Promise<Timesheet> {
     const res = await apiClient.get(`/timesheets/${id}`);
     return res.data;
