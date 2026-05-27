@@ -10,6 +10,8 @@ import { createAnnualLeave, getAnnualLeaves, getEmployeeProfiles, getHolidays, g
 import { getApiErrorMessage } from '../../lib/api/error-utils'
 import { useStore } from '../../lib/mobx'
 import type { LeaveType, UserInfo } from '../../lib/types'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
+import type { Theme } from '@mui/material/styles'
 
 const applyLeaveSchema = z
     .object({
@@ -56,10 +58,6 @@ function formatBytes(bytes: number): string {
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
 
 const LEAVE_ICONS: Record<string, string> = {
     annual: '🌴',
@@ -456,16 +454,16 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                     </Box>
 
                     {/* Duration toggle */}
-                    <Box sx={{ display: 'flex', gap: '4px', p: '3px', bgcolor: '#F4F5F7', borderRadius: '8px', width: 'fit-content', mb: '14px' }}>
+                    <Box sx={{ display: 'flex', gap: '4px', p: '3px', bgcolor: 'action.hover', borderRadius: '8px', width: 'fit-content', mb: '14px' }}>
                         <DurationButton active={duration === 'full'} onClick={() => setValue('duration', 'full', { shouldDirty: true })}>Full day(s)</DurationButton>
                         <DurationButton active={duration === 'half-am'} onClick={() => setValue('duration', 'half-am', { shouldDirty: true })}>Half day (AM)</DurationButton>
                         <DurationButton active={duration === 'half-pm'} onClick={() => setValue('duration', 'half-pm', { shouldDirty: true })}>Half day (PM)</DurationButton>
                     </Box>
 
                     {/* Mini calendar */}
-                    <Box sx={{ bgcolor: '#FAFBFC', border: `1px solid ${C_BORDER}`, borderRadius: '8px', p: '12px 14px' }}>
+                    <Box sx={{ bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: '12px 14px' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: '10px' }}>
-                            <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>
+                            <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
                                 {MONTH_NAMES[calMonth]} {calYear}
                             </Box>
                             <Box sx={{ display: 'flex', gap: '4px' }}>
@@ -475,7 +473,7 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                         </Box>
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px', mb: '4px' }}>
                             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-                                <Box key={d} sx={{ textAlign: 'center', fontSize: 10, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', py: '4px' }}>{d}</Box>
+                                <Box key={d} sx={{ textAlign: 'center', fontSize: 10, color: 'text.disabled', fontWeight: 600, textTransform: 'uppercase', py: '4px' }}>{d}</Box>
                             ))}
                         </Box>
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
@@ -521,11 +519,11 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                                 )
                             })}
                         </Box>
-                        <Box sx={{ display: 'flex', gap: '12px', mt: '12px', pt: '10px', borderTop: `1px solid ${C_BORDER}`, fontSize: 10, color: C_MUTED, flexWrap: 'wrap' }}>
-                            <Legend swatch={C_BLUE} label="Your selection" />
-                            <Legend swatch="#FEF3C7" label="Public holiday" />
-                            <Legend swatch="#fff" borderBottom="#F59E0B" label="Teammate on leave" />
-                            <Legend swatch="#F4F5F7" label="Weekend" />
+                        <Box sx={{ display: 'flex', gap: '12px', mt: '12px', pt: '10px', borderTop: '1px solid', borderColor: 'divider', fontSize: 10, color: 'text.secondary', flexWrap: 'wrap' }}>
+                            <Legend swatch={'primary.main'} label="Your selection" />
+                            <Legend swatch="warning.light" label="Public holiday" />
+                            <Legend swatch="background.paper" borderBottom="warning.main" label="Teammate on leave" />
+                            <Legend swatch="action.hover" label="Weekend" />
                         </Box>
                     </Box>
                     {(errors.startDate || errors.endDate) && (
@@ -540,24 +538,24 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                     <Box sx={sectionTitleSx}>
                         <Box component="span" sx={sectionNumSx}>3</Box>
                         Coverage
-                        <Box component="span" sx={{ fontWeight: 400, color: '#9CA3AF', fontSize: 12, ml: '6px' }}>(optional)</Box>
+                        <Box component="span" sx={{ fontWeight: 400, color: 'text.disabled', fontSize: 12, ml: '6px' }}>(optional)</Box>
                     </Box>
                     <Box sx={sectionSubSx}>Nominate a colleague to handle urgent matters while you're away.</Box>
                     <Box
                         onClick={() => alert('Teammate picker coming soon.')}
                         sx={{
                             display: 'flex', gap: '10px', alignItems: 'center', p: '10px 12px',
-                            bgcolor: '#F9FAFB', border: `1px dashed ${C_BORDER}`, borderRadius: '8px', cursor: 'pointer',
+                            bgcolor: 'action.hover', border: '1px dashed', borderColor: 'divider', borderRadius: '8px', cursor: 'pointer',
                             transition: 'all 0.15s',
-                            '&:hover': { bgcolor: '#EEF4FF', borderColor: C_BLUE, borderStyle: 'solid' },
+                            '&:hover': { bgcolor: softBg('primary'), borderColor: 'primary.main', borderStyle: 'solid' },
                         }}
                     >
-                        <Box sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: '#E4E6EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: C_MUTED }}>+</Box>
+                        <Box sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'text.secondary' }}>+</Box>
                         <Box sx={{ flex: 1 }}>
-                            <Box sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING }}>Choose a delegate</Box>
-                            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '1px' }}>Click to pick a teammate</Box>
+                            <Box sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>Choose a delegate</Box>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '1px' }}>Click to pick a teammate</Box>
                         </Box>
-                        <Box component="span" sx={{ color: '#9CA3AF', fontSize: 14 }}>›</Box>
+                        <Box component="span" sx={{ color: 'text.disabled', fontSize: 14 }}>›</Box>
                     </Box>
                 </Box>
 
@@ -566,7 +564,7 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                     <Box sx={sectionTitleSx}>
                         <Box component="span" sx={sectionNumSx}>4</Box>
                         Reason
-                        <Box component="span" sx={{ fontWeight: 400, color: '#9CA3AF', fontSize: 12, ml: '6px' }}>(optional)</Box>
+                        <Box component="span" sx={{ fontWeight: 400, color: 'text.disabled', fontSize: 12, ml: '6px' }}>(optional)</Box>
                     </Box>
                     <Box sx={sectionSubSx}>A brief note helps your manager approve quickly. Sensitive info stays private.</Box>
                     <Box
@@ -579,15 +577,17 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                         placeholder="e.g. Family trip to Greece — booked months ago"
                         sx={{
                             width: '100%', minHeight: 80, p: '10px 12px', fontSize: 13,
-                            border: `1px solid ${errors.reason ? '#FCA5A5' : C_BORDER}`, borderRadius: '8px', fontFamily: 'inherit',
-                            resize: 'vertical', outline: 'none', color: C_HEADING, lineHeight: 1.5,
-                            '&:focus': { borderColor: C_BLUE, boxShadow: '0 0 0 3px rgba(79,142,247,0.1)' },
+                            border: '1px solid', borderColor: errors.reason ? 'error.main' : 'divider', borderRadius: '8px', fontFamily: 'inherit',
+                            resize: 'vertical', outline: 'none',
+                            bgcolor: 'background.paper', color: 'text.primary', lineHeight: 1.5,
+                            '&::placeholder': { color: 'text.disabled' },
+                            '&:focus': { borderColor: 'primary.main' },
                         }}
                     />
-                    <Box sx={{ fontSize: 11, color: '#9CA3AF', textAlign: 'right', mt: '4px' }}>{reason.length} / 500</Box>
+                    <Box sx={{ fontSize: 11, color: 'text.disabled', textAlign: 'right', mt: '4px' }}>{reason.length} / 500</Box>
                     {errors.reason && <FieldError id="reason-error">{errors.reason.message}</FieldError>}
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '6px', mt: '8px' }}>
-                        <Box sx={{ fontSize: 11, color: '#9CA3AF', alignSelf: 'center' }}>Quick:</Box>
+                        <Box sx={{ fontSize: 11, color: 'text.disabled', alignSelf: 'center' }}>Quick:</Box>
                         {QUICK_REASONS.map((text, i) => (
                             <Box
                                 key={text}
@@ -595,10 +595,10 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                                 type="button"
                                 onClick={() => setValue('reason', text, { shouldDirty: true, shouldValidate: true })}
                                 sx={{
-                                    bgcolor: '#F4F5F7', border: '1px solid transparent', color: C_MUTED,
+                                    bgcolor: 'action.hover', border: '1px solid transparent', color: 'text.secondary',
                                     p: '5px 12px', borderRadius: '14px', fontSize: 11, cursor: 'pointer',
                                     fontFamily: 'inherit',
-                                    '&:hover': { bgcolor: '#EEF4FF', color: C_BLUE, borderColor: '#BFDBFE' },
+                                    '&:hover': { bgcolor: softBg('primary'), color: 'primary.main', borderColor: 'primary.main' },
                                 }}
                             >
                                 {QUICK_REASON_LABELS[i]}
@@ -616,7 +616,7 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                             component="span"
                             sx={{
                                 fontWeight: 400,
-                                color: isSickLeave ? '#92400E' : '#9CA3AF',
+                                color: isSickLeave ? 'warning.dark' : 'text.disabled',
                                 fontSize: 12,
                                 ml: '6px',
                             }}
@@ -653,29 +653,29 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                             sx={{
                                 border: '2px dashed',
                                 borderColor: isDragOver
-                                    ? C_BLUE
+                                    ? 'primary.main'
                                     : attachmentRecommended
-                                        ? '#F59E0B'
-                                        : C_BORDER,
+                                        ? 'warning.main'
+                                        : 'divider',
                                 bgcolor: isDragOver
-                                    ? '#EEF4FF'
+                                    ? softBg('primary')
                                     : attachmentRecommended
-                                        ? '#FFFBEB'
-                                        : '#FAFBFC',
+                                        ? softBg('warning')
+                                        : 'action.hover',
                                 borderRadius: '10px',
                                 p: '20px 16px',
                                 textAlign: 'center',
                                 cursor: 'pointer',
                                 transition: 'all 0.15s',
-                                '&:hover': { borderColor: C_BLUE, bgcolor: '#EEF4FF' },
+                                '&:hover': { borderColor: 'primary.main', bgcolor: softBg('primary') },
                             }}
                         >
                             <Box sx={{ fontSize: 28, mb: '8px' }}>📎</Box>
-                            <Box sx={{ fontSize: 13, fontWeight: 500, color: C_HEADING, mb: '4px' }}>
+                            <Box sx={{ fontSize: 13, fontWeight: 500, color: 'text.primary', mb: '4px' }}>
                                 Drop a file here or{' '}
-                                <Box component="span" sx={{ color: C_BLUE, textDecoration: 'underline' }}>browse your device</Box>
+                                <Box component="span" sx={{ color: 'primary.main', textDecoration: 'underline' }}>browse your device</Box>
                             </Box>
-                            <Box sx={{ fontSize: 11, color: C_MUTED }}>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary' }}>
                                 PDF, JPG, PNG, HEIC, or Word · up to 10 MB
                             </Box>
                         </Box>
@@ -685,8 +685,8 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', mt: '10px' }}>
                             <Box sx={{
                                 display: 'flex', alignItems: 'center', gap: '10px',
-                                p: '10px 12px', bgcolor: '#fff',
-                                border: `1px solid ${C_BORDER}`, borderRadius: '8px',
+                                p: '10px 12px', bgcolor: 'background.paper',
+                                border: '1px solid', borderColor: 'divider', borderRadius: '8px',
                             }}>
                                 {attachment.kind === 'img' && attachment.previewUrl ? (
                                     <Box
@@ -696,7 +696,7 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                                         sx={{
                                             width: 36, height: 36, borderRadius: '6px',
                                             objectFit: 'cover', flexShrink: 0,
-                                            border: `1px solid ${C_BORDER}`,
+                                            border: '1px solid', borderColor: 'divider',
                                         }}
                                     />
                                 ) : (
@@ -709,18 +709,18 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                                 )}
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <Box sx={{
-                                        fontSize: 12, fontWeight: 500, color: C_HEADING,
+                                        fontSize: 12, fontWeight: 500, color: 'text.primary',
                                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                     }}>
                                         {attachment.name}
                                     </Box>
                                     <Box sx={{
-                                        fontSize: 11, color: C_MUTED, mt: '2px',
+                                        fontSize: 11, color: 'text.secondary', mt: '2px',
                                         display: 'flex', alignItems: 'center', gap: '8px',
                                     }}>
                                         <Box component="span">{formatBytes(attachment.size)}</Box>
                                         <Box component="span">·</Box>
-                                        <Box component="span" sx={{ color: '#22C47A', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                        <Box component="span" sx={{ color: 'success.main', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                                             ✓ Ready to send
                                         </Box>
                                     </Box>
@@ -732,10 +732,10 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                                     disabled={isPending}
                                     title="Remove"
                                     sx={{
-                                        bgcolor: 'transparent', border: 'none', color: '#9CA3AF',
+                                        bgcolor: 'transparent', border: 'none', color: 'text.disabled',
                                         cursor: 'pointer', fontSize: 14, p: '4px 8px',
                                         borderRadius: '4px', fontFamily: 'inherit',
-                                        '&:hover': { bgcolor: '#FEE2E2', color: '#991B1B' },
+                                        '&:hover': { bgcolor: softBg('error'), color: 'error.dark' },
                                         '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
                                     }}
                                 >
@@ -747,9 +747,9 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
 
                     {uploadError && (
                         <Box sx={{
-                            mt: '10px', p: '8px 12px', bgcolor: '#FEE2E2',
-                            border: '1px solid #FCA5A5', borderRadius: '6px',
-                            fontSize: 11, color: '#991B1B',
+                            mt: '10px', p: '8px 12px', bgcolor: softBg('error'),
+                            border: '1px solid', borderColor: 'error.main', borderRadius: '6px',
+                            fontSize: 11, color: 'error.dark',
                         }}>
                             {uploadError}
                         </Box>
@@ -757,9 +757,9 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
 
                     {attachmentRecommended && (
                         <Box sx={{
-                            mt: '10px', p: '8px 12px', bgcolor: '#FFFBEB',
-                            border: '1px solid #FDE68A', borderRadius: '6px',
-                            fontSize: 11, color: '#92400E',
+                            mt: '10px', p: '8px 12px', bgcolor: softBg('warning'),
+                            border: '1px solid', borderColor: 'warning.main', borderRadius: '6px',
+                            fontSize: 11, color: 'warning.dark',
                             display: 'flex', alignItems: 'center', gap: '6px',
                         }}>
                             <Box component="span">💡</Box>
@@ -772,10 +772,16 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
             {/* RIGHT COLUMN — sticky summary */}
             <Box>
                 <Box sx={{
-                    position: 'sticky', top: 18, bgcolor: '#fff', border: `1px solid ${C_BORDER}`,
+                    position: 'sticky', top: 18, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider',
                     borderRadius: '12px', overflow: 'hidden', height: 'fit-content',
                 }}>
-                    <Box sx={{ p: '16px 18px', background: 'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)', color: '#fff' }}>
+                    <Box sx={(theme) => ({
+                        p: '16px 18px',
+                        background: theme.palette.mode === 'dark'
+                            ? 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)'
+                            : 'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)',
+                        color: '#fff',
+                    })}>
                         <Box sx={{ fontSize: 11, opacity: 0.9, mb: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             {selectedType ? `${iconForLeaveType(selectedType.name)} ${selectedType.name}` : '—'}
                         </Box>
@@ -792,20 +798,20 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                         <SummaryRow l="Back at work" r={endDate ? nextWorkingDay(endDate, holidaySet) : '—'} />
                         <SummaryRow l="Days deducted" r={selectedAffectsBalance ? String(daysDeducted) : '0 (unpaid)'} />
                         <SummaryRow l="Attachments" r={attachment ? `📎 1 file` : 'None'} muted={!attachment} />
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: '8px', fontSize: 12, mt: '6px', pt: '12px', borderTop: `2px solid #F3F4F6` }}>
-                            <Box sx={{ fontWeight: 600, color: C_HEADING }}>Balance after</Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: '8px', fontSize: 12, mt: '6px', pt: '12px', borderTop: '2px solid', borderTopColor: 'divider' }}>
+                            <Box sx={{ fontWeight: 600, color: 'text.primary' }}>Balance after</Box>
                             <Box sx={{
                                 fontWeight: 600,
-                                color: isInsufficient ? '#FF4D4F' : balanceAfter <= 3 && selectedAffectsBalance ? '#F59E0B' : C_HEADING,
+                                color: isInsufficient ? 'error.main' : balanceAfter <= 3 && selectedAffectsBalance ? 'warning.main' : 'text.primary',
                             }}>
                                 {selectedAffectsBalance ? `${balanceAfter} / ${entitlement}` : `${currentBalance} / ${entitlement}`}
                             </Box>
                         </Box>
-                        <Box sx={{ height: 6, bgcolor: '#E4E6EA', borderRadius: '3px', overflow: 'hidden', mt: '6px' }}>
+                        <Box sx={{ height: 6, bgcolor: 'divider', borderRadius: '3px', overflow: 'hidden', mt: '6px' }}>
                             <Box sx={{
                                 height: '100%', borderRadius: '3px',
                                 width: `${balancePct}%`,
-                                bgcolor: balancePct >= 100 ? '#FF4D4F' : balancePct >= 80 ? '#F59E0B' : '#22C47A',
+                                bgcolor: balancePct >= 100 ? 'error.main' : balancePct >= 80 ? 'warning.main' : 'success.main',
                             }} />
                         </Box>
                     </Box>
@@ -846,17 +852,17 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                         </Box>
                     )}
 
-                    <Box sx={{ p: '14px 18px', bgcolor: '#FAFBFC', borderTop: `1px solid ${C_BORDER}`, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <Box sx={{ p: '14px 18px', bgcolor: 'action.hover', borderTop: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <Box
                             component="button"
                             type="submit"
                             disabled={!canSubmit || isPending}
                             sx={{
-                                bgcolor: C_BLUE, color: '#fff', border: 'none', p: '11px',
+                                bgcolor: 'primary.main', color: '#fff', border: 'none', p: '11px',
                                 borderRadius: '8px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                                 fontFamily: 'inherit', transition: 'background 0.15s',
                                 display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                                '&:hover:not(:disabled)': { bgcolor: '#3A7AE4' },
+                                '&:hover:not(:disabled)': { bgcolor: 'primary.dark' },
                                 '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
                             }}
                         >
@@ -875,9 +881,9 @@ function ApplyLeavePage({ user }: { user: UserInfo }) {
                             onClick={() => uiStore.navigateToMyLeave('requests')}
                             disabled={isPending}
                             sx={{
-                                bgcolor: 'transparent', color: C_MUTED, border: `1px solid ${C_BORDER}`,
+                                bgcolor: 'transparent', color: 'text.secondary', border: '1px solid', borderColor: 'divider',
                                 p: '9px', borderRadius: '8px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
-                                '&:hover': { bgcolor: '#F4F5F7', color: C_HEADING },
+                                '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
                                 '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
                             }}
                         >
@@ -912,30 +918,30 @@ function LeaveTypeCard({
             type="button"
             onClick={onSelect}
             sx={{
-                border: `1.5px solid ${selected ? C_BLUE : C_BORDER}`,
+                border: '1.5px solid',
+                borderColor: selected ? 'primary.main' : 'divider',
                 borderRadius: '10px', p: '14px 12px', cursor: 'pointer',
-                transition: 'all 0.15s', bgcolor: selected ? '#EEF4FF' : '#fff',
+                transition: 'all 0.15s', bgcolor: selected ? softBg('primary') : 'background.paper',
                 textAlign: 'left', fontFamily: 'inherit',
-                boxShadow: selected ? '0 0 0 3px rgba(79,142,247,0.1)' : 'none',
-                '&:hover': { borderColor: C_BLUE, transform: 'translateY(-1px)' },
+                '&:hover': { borderColor: 'primary.main', transform: 'translateY(-1px)' },
             }}
         >
             <Box sx={{ fontSize: 22, lineHeight: 1, mb: '8px' }}>{iconForLeaveType(type.name)}</Box>
-            <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, mb: '4px' }}>{type.name}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+            <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: '4px' }}>{type.name}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
                 <Box component="span">{descForLeaveType(type.name)}</Box>
                 {tracksBalance && entitlement > 0 && (
                     <Box component="span">
-                        <Box component="strong" sx={{ color: C_HEADING, fontWeight: 700 }}>{remaining}</Box>
+                        <Box component="strong" sx={{ color: 'text.primary', fontWeight: 700 }}>{remaining}</Box>
                         /{entitlement}
                     </Box>
                 )}
             </Box>
             {tracksBalance && entitlement > 0 && (
-                <Box sx={{ height: 3, bgcolor: '#E4E6EA', borderRadius: '2px', mt: '6px', overflow: 'hidden' }}>
+                <Box sx={{ height: 3, bgcolor: 'divider', borderRadius: '2px', mt: '6px', overflow: 'hidden' }}>
                     <Box sx={{
                         height: '100%',
-                        bgcolor: selected ? C_BLUE : low ? '#F59E0B' : '#22C47A',
+                        bgcolor: selected ? 'primary.main' : low ? 'warning.main' : 'success.main',
                         width: `${pct}%`,
                     }} />
                 </Box>
@@ -951,10 +957,9 @@ function DurationButton({ active, onClick, children }: { active: boolean; onClic
             type="button"
             onClick={onClick}
             sx={{
-                p: '6px 14px', border: 'none', bgcolor: active ? '#fff' : 'transparent',
-                fontSize: 12, color: active ? C_HEADING : C_MUTED, cursor: 'pointer',
+                p: '6px 14px', border: 'none', bgcolor: active ? 'background.paper' : 'transparent',
+                fontSize: 12, color: active ? 'text.primary' : 'text.secondary', cursor: 'pointer',
                 borderRadius: '6px', fontFamily: 'inherit', fontWeight: 500,
-                boxShadow: active ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                 transition: 'all 0.15s',
             }}
         >
@@ -970,9 +975,9 @@ function CalNavBtn({ onClick, children }: { onClick: () => void; children: React
             type="button"
             onClick={onClick}
             sx={{
-                width: 26, height: 26, border: `1px solid ${C_BORDER}`, bgcolor: '#fff',
-                borderRadius: '5px', cursor: 'pointer', fontSize: 12, color: C_MUTED,
-                '&:hover': { bgcolor: '#F4F5F7', color: C_HEADING },
+                width: 26, height: 26, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper',
+                borderRadius: '5px', cursor: 'pointer', fontSize: 12, color: 'text.secondary',
+                '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
             }}
         >
             {children}
@@ -986,9 +991,9 @@ function FieldError({ id, children }: { id?: string; children: React.ReactNode }
             id={id}
             role="alert"
             sx={{
-                mt: '10px', p: '8px 12px', bgcolor: '#FEE2E2',
-                border: '1px solid #FCA5A5', borderRadius: '6px',
-                fontSize: 11, color: '#991B1B',
+                mt: '10px', p: '8px 12px', bgcolor: softBg('error'),
+                border: '1px solid', borderColor: 'error.main', borderRadius: '6px',
+                fontSize: 11, color: 'error.dark',
                 display: 'flex', alignItems: 'center', gap: '6px',
             }}
         >
@@ -1004,7 +1009,7 @@ function Legend({ swatch, borderBottom, label }: { swatch: string; borderBottom?
             <Box sx={{
                 width: 10, height: 10, borderRadius: '2px', bgcolor: swatch,
                 boxShadow: borderBottom ? `inset 0 -2px 0 ${borderBottom}` : 'none',
-                border: swatch === '#fff' ? `1px solid ${C_BORDER}` : 'none',
+                border: swatch === '#fff' ? `1px solid ${'divider'}` : 'none',
             }} />
             {label}
         </Box>
@@ -1013,19 +1018,19 @@ function Legend({ swatch, borderBottom, label }: { swatch: string; borderBottom?
 
 function SummaryRow({ l, r, muted }: { l: string; r: string; muted?: boolean }) {
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: '8px', fontSize: 12, borderBottom: `1px solid #F3F4F6` }}>
-            <Box sx={{ color: C_MUTED }}>{l}</Box>
-            <Box sx={{ fontWeight: muted ? 400 : 600, color: muted ? '#9CA3AF' : C_HEADING }}>{r}</Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: '8px', fontSize: 12, borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+            <Box sx={{ color: 'text.secondary' }}>{l}</Box>
+            <Box sx={{ fontWeight: muted ? 400 : 600, color: muted ? 'text.disabled' : 'text.primary' }}>{r}</Box>
         </Box>
     )
 }
 
 function fileIconSx(kind: FileKind) {
     const palette =
-        kind === 'pdf' ? { bg: '#FEE2E2', fg: '#991B1B' } :
-        kind === 'img' ? { bg: '#DBEAFE', fg: '#1D4ED8' } :
-        kind === 'doc' ? { bg: '#DBEAFE', fg: '#1D4ED8' } :
-                         { bg: '#F4F5F7', fg: '#6B7280' }
+        kind === 'pdf' ? { bg: softBg('error'), fg: 'error.dark' } :
+        kind === 'img' ? { bg: softBg('info'), fg: 'info.dark' } :
+        kind === 'doc' ? { bg: softBg('info'), fg: 'info.dark' } :
+                         { bg: 'action.hover', fg: 'text.secondary' }
     return {
         width: 36, height: 36, borderRadius: '6px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1036,10 +1041,10 @@ function fileIconSx(kind: FileKind) {
 
 function Warning({ tone, children }: { tone: 'warn' | 'info' | 'good' | 'error'; children: React.ReactNode }) {
     const styles =
-        tone === 'error' ? { bg: '#FEE2E2', fg: '#991B1B', border: '#FCA5A5', icon: '⚠️' } :
-        tone === 'warn'  ? { bg: '#FEF3C7', fg: '#92400E', border: '#FDE68A', icon: '⚠️' } :
-        tone === 'info'  ? { bg: '#EFF6FF', fg: '#1D4ED8', border: '#DBEAFE', icon: '⏰' } :
-                           { bg: '#D1FAE5', fg: '#065F46', border: '#A7F3D0', icon: '✓' }
+        tone === 'error' ? { bg: softBg('error'), fg: 'error.dark', border: 'error.main', icon: '⚠️' } :
+        tone === 'warn'  ? { bg: softBg('warning'), fg: 'warning.dark', border: 'warning.main', icon: '⚠️' } :
+        tone === 'info'  ? { bg: softBg('info'), fg: 'info.dark', border: 'info.main', icon: '⏰' } :
+                           { bg: softBg('success'), fg: 'success.dark', border: 'success.main', icon: '✓' }
     return (
         <Box sx={{
             p: '10px 14px', fontSize: 12, display: 'flex', alignItems: 'flex-start', gap: '8px',
@@ -1054,8 +1059,8 @@ function Warning({ tone, children }: { tone: 'warn' | 'info' | 'good' | 'error';
 /* ---------- shared sx ---------- */
 
 const sectionSx = {
-    bgcolor: '#fff',
-    border: `1px solid ${C_BORDER}`,
+    bgcolor: 'background.paper',
+    border: '1px solid', borderColor: 'divider',
     borderRadius: '12px',
     p: '20px 22px',
     mb: '14px',
@@ -1068,7 +1073,7 @@ const sectionNumSx = {
     width: 22,
     height: 22,
     borderRadius: '50%',
-    bgcolor: C_BLUE,
+    bgcolor: 'primary.main',
     color: '#fff',
     fontSize: 11,
     fontWeight: 700,
@@ -1078,7 +1083,7 @@ const sectionNumSx = {
 const sectionTitleSx = {
     fontSize: 14,
     fontWeight: 600,
-    color: C_HEADING,
+    color: 'text.primary',
     mb: '4px',
     display: 'flex',
     alignItems: 'center',
@@ -1086,7 +1091,7 @@ const sectionTitleSx = {
 
 const sectionSubSx = {
     fontSize: 12,
-    color: C_MUTED,
+    color: 'text.secondary',
     mb: '14px',
     pl: '30px',
 } as const
@@ -1096,23 +1101,23 @@ function calCellSx({ weekend, holiday, teammate, today, rangeStart, rangeEnd, in
     rangeStart?: boolean; rangeEnd?: boolean; inRange?: boolean; otherMonth?: boolean
 }) {
     const isEdge = rangeStart || rangeEnd
-    let bg: string | undefined
-    let color = C_HEADING
+    let bg: SxColor | undefined
+    let color: SxColor = 'text.primary'
     let borderRadius = '6px'
-    if (otherMonth) color = '#E4E6EA'
-    else if (weekend) color = '#C7C7CC'
+    if (otherMonth) color = 'divider'
+    else if (weekend) color = 'text.disabled'
     if (holiday && !isEdge) {
-        bg = '#FEF3C7'
-        color = '#92400E'
+        bg = softBg('warning')
+        color = 'warning.dark'
     }
     if (isEdge) {
-        bg = C_BLUE
+        bg = 'primary.main'
         color = '#fff'
         if (rangeStart && !rangeEnd) borderRadius = '6px 0 0 6px'
         if (rangeEnd && !rangeStart) borderRadius = '0 6px 6px 0'
     } else if (inRange) {
-        bg = '#DBEAFE'
-        color = '#1D4ED8'
+        bg = softBg('info')
+        color = 'info.dark'
         borderRadius = '0'
     }
 
@@ -1130,15 +1135,15 @@ function calCellSx({ weekend, holiday, teammate, today, rangeStart, rangeEnd, in
         userSelect: 'none',
         bgcolor: bg,
         fontWeight: today || isEdge ? 700 : 400,
-        boxShadow: teammate && !isEdge ? 'inset 0 -2px 0 #F59E0B' : 'none',
-        '&:hover': disabled ? {} : { bgcolor: isEdge ? C_BLUE : inRange ? '#DBEAFE' : '#EEF4FF' },
+        boxShadow: teammate && !isEdge ? (theme: Theme) => `inset 0 -2px 0 ${theme.palette.warning.main}` : 'none',
+        '&:hover': disabled ? {} : { bgcolor: isEdge ? 'primary.main' : inRange ? softBg('info') : softBg('primary') },
         '&::after': holiday && !isEdge ? {
             content: '""', position: 'absolute', top: 3, right: 3,
-            width: 5, height: 5, borderRadius: '50%', bgcolor: '#F59E0B',
+            width: 5, height: 5, borderRadius: '50%', bgcolor: 'warning.main',
         } : today ? {
             content: '""', position: 'absolute', bottom: 3, left: '50%',
             transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%',
-            bgcolor: isEdge ? '#fff' : C_BLUE,
+            bgcolor: isEdge ? '#fff' : 'primary.main',
         } : undefined,
     } as const
 }

@@ -14,32 +14,30 @@ import Typography from '@mui/material/Typography'
 import { getTeamAttendance } from '../../lib/api'
 import { formatElapsed, formatTime } from '../../lib/hooks/useAttendance'
 import type { TeamMemberAttendance, TeamMemberStatus } from '../../lib/types'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const BLUE = '#4F8EF7'
-const GREEN = '#22C47A'
-const AMBER = '#F59E0B'
-const RED = '#FF4D4F'
+const BLUE = 'primary.main'
+const GREEN = 'success.main'
+const AMBER = 'warning.main'
+const RED = 'error.main'
 
 const TH = {
     py: '10px',
     px: '14px',
     fontSize: 11,
     fontWeight: 600,
-    color: C_MUTED,
+    color: 'text.secondary',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB',
-    borderBottom: `1px solid ${C_BORDER}`,
+    bgcolor: 'action.hover',
+    borderBottom: '1px solid', borderColor: 'divider',
 }
 
 const TD = {
     py: '11px',
     px: '14px',
     fontSize: 13,
-    color: '#374151',
+    color: 'text.primary',
     borderBottom: '1px solid #F3F4F6',
 }
 
@@ -48,12 +46,12 @@ function initials(name: string) {
 }
 
 function StatusPill({ kind, children }: { kind: TeamMemberStatus | 'late'; children: React.ReactNode }) {
-    const styles: Record<string, { bg: string; color: string; dot: string }> = {
-        in:    { bg: '#D1FAE5', color: '#065F46', dot: GREEN },
-        out:   { bg: '#F3F4F6', color: '#6B7280', dot: '#9CA3AF' },
-        break: { bg: '#FEF3C7', color: '#92400E', dot: AMBER },
-        late:  { bg: '#FEE2E2', color: '#991B1B', dot: RED },
-        leave: { bg: '#EFF6FF', color: '#1D4ED8', dot: BLUE },
+    const styles: Record<string, { bg: SxColor; color: string; dot: string }> = {
+        in:    { bg: softBg('success'), color: 'success.dark', dot: GREEN },
+        out:   { bg: 'divider', color: 'text.secondary', dot: 'text.disabled' },
+        break: { bg: softBg('warning'), color: 'warning.dark', dot: AMBER },
+        late:  { bg: softBg('error'), color: 'error.dark', dot: RED },
+        leave: { bg: softBg('info'), color: 'info.dark', dot: BLUE },
     }
     const s = styles[kind]
     return (
@@ -73,21 +71,21 @@ function StatusPill({ kind, children }: { kind: TeamMemberStatus | 'late'; child
 function StatCard({ accent, label, value, sub }: { accent: string; label: string; value: number | string; sub: string }) {
     return (
         <Paper elevation={0} sx={{
-            bgcolor: '#fff',
-            border: `1px solid ${C_BORDER}`,
+            bgcolor: 'background.paper',
+            border: '1px solid', borderColor: 'divider',
             borderTop: `3px solid ${accent}`,
             borderRadius: '10px',
             p: '18px 20px',
         }}>
-            <Typography sx={{ fontSize: 12, color: C_MUTED, mb: 1 }}>{label}</Typography>
-            <Typography sx={{ fontSize: 26, fontWeight: 700, color: C_HEADING, lineHeight: 1 }}>{value}</Typography>
-            <Typography sx={{ fontSize: 11, color: C_MUTED, mt: 0.5 }}>{sub}</Typography>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1 }}>{label}</Typography>
+            <Typography sx={{ fontSize: 26, fontWeight: 700, color: 'text.primary', lineHeight: 1 }}>{value}</Typography>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5 }}>{sub}</Typography>
         </Paper>
     )
 }
 
 function TeamMemberCard({ m }: { m: TeamMemberAttendance }) {
-    const leftColor = m.status === 'in' ? GREEN : m.status === 'break' ? AMBER : C_BORDER
+    const leftColor = m.status === 'in' ? GREEN : m.status === 'break' ? AMBER : 'divider'
     const pillLabel = m.status === 'in' ? 'Working'
         : m.status === 'break' ? 'On break'
         : m.status === 'leave' ? 'On leave'
@@ -95,8 +93,8 @@ function TeamMemberCard({ m }: { m: TeamMemberAttendance }) {
 
     return (
         <Box sx={{
-            bgcolor: '#fff',
-            border: `1px solid ${C_BORDER}`,
+            bgcolor: 'background.paper',
+            border: '1px solid', borderColor: 'divider',
             borderLeftWidth: 3,
             borderLeftColor: leftColor,
             borderRadius: '8px',
@@ -112,31 +110,31 @@ function TeamMemberCard({ m }: { m: TeamMemberAttendance }) {
                     {initials(m.employeeName)}
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {m.employeeName}
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: C_MUTED }}>
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
                         {m.jobTitle || m.departmentName}
                     </Typography>
                 </Box>
                 <StatusPill kind={m.status}>{pillLabel}</StatusPill>
             </Stack>
-            <Box sx={{ fontSize: 11, color: C_MUTED }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary' }}>
                 {m.status === 'out' || m.status === 'leave' ? (
                     <span>{m.todayNote}</span>
                 ) : (
                     <>
                         <span>
                             In at{' '}
-                            <Box component="strong" sx={{ color: C_HEADING, fontVariantNumeric: 'tabular-nums' }}>
+                            <Box component="strong" sx={{ color: 'text.primary', fontVariantNumeric: 'tabular-nums' }}>
                                 {m.checkInAt ? formatTime(m.checkInAt) : '—'}
                             </Box>
                             {' '}·{' '}
-                            <Box component="strong" sx={{ color: C_HEADING, fontVariantNumeric: 'tabular-nums' }}>
+                            <Box component="strong" sx={{ color: 'text.primary', fontVariantNumeric: 'tabular-nums' }}>
                                 {formatElapsed(m.workedMinutes)}
                             </Box>{' worked'}
                         </span>
-                        <Box sx={{ fontSize: 10, color: '#9CA3AF', mt: 0.25 }}>{m.todayNote}</Box>
+                        <Box sx={{ fontSize: 10, color: 'text.disabled', mt: 0.25 }}>{m.todayNote}</Box>
                     </>
                 )}
             </Box>
@@ -176,9 +174,9 @@ export default function TeamAttendancePage() {
                 <StatCard accent={RED} label="Not checked in" value={outCount} sub={outCount === 0 ? 'all accounted for' : 'follow up?'} />
             </Box>
 
-            <Paper elevation={0} sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
-                <Box sx={{ p: '14px 18px', borderBottom: `1px solid ${C_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Live · Team</Typography>
+            <Paper elevation={0} sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
+                <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>Live · Team</Typography>
                     <Stack direction="row" alignItems="center" spacing={0.625}>
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: GREEN }} />
                         <Typography sx={{ fontSize: 11, color: GREEN }}>Auto-refreshing</Typography>
@@ -186,7 +184,7 @@ export default function TeamAttendancePage() {
                 </Box>
                 <Box sx={{ p: 2.25 }}>
                     {members.length === 0 ? (
-                        <Typography sx={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', py: 4 }}>
+                        <Typography sx={{ fontSize: 13, color: 'text.disabled', textAlign: 'center', py: 4 }}>
                             No team members.
                         </Typography>
                     ) : (
@@ -202,9 +200,9 @@ export default function TeamAttendancePage() {
             </Paper>
 
             {week.length > 0 && (
-                <Paper elevation={0} sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
-                    <Box sx={{ p: '14px 18px', borderBottom: `1px solid ${C_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Weekly Attendance Log</Typography>
+                <Paper elevation={0} sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
+                    <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>Weekly Attendance Log</Typography>
                         <Select size="small" value="this-week" sx={{ fontSize: 12, '& .MuiSelect-select': { py: 0.5, px: 1.25 } }}>
                             <MenuItem value="this-week">This week</MenuItem>
                         </Select>
@@ -224,18 +222,18 @@ export default function TeamAttendancePage() {
                             </TableHead>
                             <TableBody>
                                 {week.map((row) => (
-                                    <TableRow key={row.employeeId} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}>
+                                    <TableRow key={row.employeeId} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: 'action.hover' } }}>
                                         <TableCell sx={TD}>
                                             <Box component="strong">{row.employeeName}</Box>
                                         </TableCell>
                                         {row.days.map((d, idx) => (
                                             <TableCell key={idx} sx={TD}>
                                                 {d.workedMinutes == null
-                                                    ? <Box component="span" sx={{ color: '#9CA3AF' }}>—</Box>
+                                                    ? <Box component="span" sx={{ color: 'text.disabled' }}>—</Box>
                                                     : (
                                                         <>
                                                             {formatElapsed(d.workedMinutes)}
-                                                            {d.note === 'in' && <Box component="span" sx={{ color: C_MUTED, fontSize: 11, ml: 0.5 }}>(in)</Box>}
+                                                            {d.note === 'in' && <Box component="span" sx={{ color: 'text.secondary', fontSize: 11, ml: 0.5 }}>(in)</Box>}
                                                             {d.note === 'break' && <Box component="span" sx={{ color: AMBER, fontSize: 11, ml: 0.5 }}>(break)</Box>}
                                                         </>
                                                     )}

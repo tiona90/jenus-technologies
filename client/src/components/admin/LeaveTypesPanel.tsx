@@ -27,6 +27,7 @@ import {
     type UpsertLeaveTypeRequest,
 } from '../../lib/api'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
+import { softBg } from '../../lib/theme-tokens'
 import type {
     AttachmentPolicy,
     EligibilityScope,
@@ -35,12 +36,6 @@ import type {
 
 /* ─── tokens ─────────────────────────────────────────────────────────────── */
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
-const C_GREEN = '#22C47A'
-const C_AMBER = '#F59E0B'
 
 const PROTECTED_NAME = 'annual leave'
 
@@ -236,13 +231,13 @@ function LeaveTypesPanel() {
                 <StatCard
                     label="📊 Requests YTD"
                     value={String(totalRequestsYTD)}
-                    valueColor={C_BLUE}
+                    valueColor={'primary.main'}
                     sub={`across all leave types · avg ${totalActive > 0 ? Math.round(totalRequestsYTD / totalActive) : 0} per type`}
                 />
                 <StatCard
                     label="📅 Total Days Taken"
                     value={String(totalDaysYTD)}
-                    valueColor={C_GREEN}
+                    valueColor={'success.main'}
                     sub="days off used by all employees"
                 />
                 <StatCard
@@ -257,7 +252,7 @@ function LeaveTypesPanel() {
 
             {/* Toolbar */}
             <Box sx={{
-                bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+                bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
                 p: '10px 12px', display: 'flex', gap: '10px', flexWrap: 'wrap',
                 alignItems: 'center', mb: '14px',
             }}>
@@ -270,8 +265,10 @@ function LeaveTypesPanel() {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                         sx={{
                             width: '100%', p: '7px 10px', fontSize: 13, fontFamily: 'inherit',
-                            border: `1px solid ${C_BORDER}`, borderRadius: '6px', outline: 'none',
-                            '&:focus': { borderColor: C_BLUE, boxShadow: '0 0 0 3px rgba(79,142,247,0.1)' },
+                            border: '1px solid', borderColor: 'divider', borderRadius: '6px', outline: 'none',
+                            bgcolor: 'background.paper', color: 'text.primary',
+                            '&::placeholder': { color: 'text.disabled' },
+                            '&:focus': { borderColor: 'primary.main' },
                         }}
                     />
                 </Box>
@@ -299,10 +296,10 @@ function LeaveTypesPanel() {
                     component="button"
                     onClick={() => setCreateOpen(true)}
                     sx={{
-                        bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '14px', py: '7px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                         fontFamily: 'inherit', whiteSpace: 'nowrap',
-                        '&:hover': { bgcolor: '#3A7AE4' },
+                        '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
                     + New leave type
@@ -312,8 +309,8 @@ function LeaveTypesPanel() {
             {/* Cards grid */}
             {filtered.length === 0 ? (
                 <Box sx={{
-                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                 }}>
                     No leave types match the current filters.
                 </Box>
@@ -346,7 +343,7 @@ function LeaveTypesPanel() {
                                     showCancelButton: true,
                                     confirmButtonText: 'Yes, delete',
                                     cancelButtonText: 'Cancel',
-                                    confirmButtonColor: '#EF4444',
+                                    confirmButtonColor: 'error.main',
                                     reverseButtons: true,
                                 })
                                 if (result.isConfirmed) deleteMutation.mutate(d.type.id)
@@ -396,7 +393,7 @@ function LeaveTypeCard({ derived, onEdit, onToggle, onDelete }: {
 
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px',
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px',
             overflow: 'hidden', transition: 'all 0.15s',
             display: 'flex', flexDirection: 'column',
             opacity: t.isActive ? 1 : 0.65,
@@ -416,11 +413,11 @@ function LeaveTypeCard({ derived, onEdit, onToggle, onDelete }: {
                         }}>
                             {t.icon}
                         </Box>
-                        <Box sx={{ fontSize: 18, fontWeight: 700, color: C_HEADING, lineHeight: 1.2, mb: '4px' }}>
+                        <Box sx={{ fontSize: 18, fontWeight: 700, color: 'text.primary', lineHeight: 1.2, mb: '4px' }}>
                             {t.name}
                         </Box>
                         {t.description && (
-                            <Box sx={{ fontSize: 12, color: C_MUTED, lineHeight: 1.5, maxWidth: '90%' }}>
+                            <Box sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.5, maxWidth: '90%' }}>
                                 {t.description}
                             </Box>
                         )}
@@ -437,7 +434,7 @@ function LeaveTypeCard({ derived, onEdit, onToggle, onDelete }: {
             {/* Toggle row */}
             <Box sx={{
                 display: 'flex', alignItems: 'center', gap: '8px',
-                p: '10px 20px', bgcolor: '#FAFBFC', borderBottom: '1px solid #F3F4F6',
+                p: '10px 20px', bgcolor: 'action.hover', borderBottom: '1px solid #F3F4F6',
             }}>
                 <Switch
                     size="small"
@@ -445,14 +442,14 @@ function LeaveTypeCard({ derived, onEdit, onToggle, onDelete }: {
                     onChange={onToggle}
                     disabled={isProtected && t.isActive}
                     sx={{
-                        '& .MuiSwitch-switchBase.Mui-checked': { color: C_GREEN },
-                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: C_GREEN },
+                        '& .MuiSwitch-switchBase.Mui-checked': { color: 'success.main' },
+                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: 'success.main' },
                     }}
                 />
-                <Box sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING }}>
+                <Box sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>
                     {t.isActive ? 'Enabled' : 'Disabled'}
                 </Box>
-                <Box sx={{ fontSize: 11, color: C_MUTED }}>
+                <Box sx={{ fontSize: 11, color: 'text.secondary' }}>
                     · {t.isActive ? 'available to employees' : 'hidden from leave requests'}
                 </Box>
             </Box>
@@ -463,27 +460,27 @@ function LeaveTypeCard({ derived, onEdit, onToggle, onDelete }: {
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
             }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ fontSize: 10, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '2px' }}>
+                    <Box sx={{ fontSize: 10, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '2px' }}>
                         Default allowance
                     </Box>
-                    <Box sx={{ fontSize: 28, fontWeight: 700, color: C_HEADING, lineHeight: 1 }}>
+                    <Box sx={{ fontSize: 28, fontWeight: 700, color: 'text.primary', lineHeight: 1 }}>
                         {t.defaultAllowance}
-                        <Box component="span" sx={{ fontSize: 14, color: C_MUTED, fontWeight: 500, ml: '4px' }}>
+                        <Box component="span" sx={{ fontSize: 14, color: 'text.secondary', fontWeight: 500, ml: '4px' }}>
                             {t.allowanceUnit}
                         </Box>
                     </Box>
                     {t.accrualNotes && (
-                        <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>{t.accrualNotes}</Box>
+                        <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>{t.accrualNotes}</Box>
                     )}
                 </Box>
                 <Box
                     component="button"
                     onClick={onEdit}
                     sx={{
-                        fontSize: 11, color: C_BLUE, bgcolor: 'transparent',
+                        fontSize: 11, color: 'primary.main', bgcolor: 'transparent',
                         border: '1px solid #C7D7F7', px: '10px', py: '4px',
                         borderRadius: '6px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500,
-                        '&:hover': { bgcolor: '#EEF4FF' },
+                        '&:hover': { bgcolor: softBg('primary') },
                     }}
                 >
                     Edit
@@ -492,7 +489,7 @@ function LeaveTypeCard({ derived, onEdit, onToggle, onDelete }: {
 
             {/* Rules */}
             <Box sx={{ p: '12px 20px', borderBottom: '1px solid #F3F4F6' }}>
-                <Box sx={{ fontSize: 10, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '10px' }}>
+                <Box sx={{ fontSize: 10, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '10px' }}>
                     Rules & approval
                 </Box>
                 <Rule
@@ -524,24 +521,24 @@ function LeaveTypeCard({ derived, onEdit, onToggle, onDelete }: {
             {/* Eligibility */}
             <Box sx={{
                 p: '10px 20px', display: 'flex', flexWrap: 'wrap', gap: '4px',
-                alignItems: 'center', bgcolor: '#FAFBFC',
+                alignItems: 'center', bgcolor: 'action.hover',
             }}>
-                <Box sx={{ fontSize: 10, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mr: '4px' }}>
+                <Box sx={{ fontSize: 10, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mr: '4px' }}>
                     Available to
                 </Box>
                 <Box sx={{
                     display: 'inline-flex', alignItems: 'center', gap: '3px',
                     px: '8px', py: '2px', borderRadius: '10px',
                     fontSize: 10, fontWeight: 500,
-                    bgcolor: t.eligibilityScope === 'All' ? '#D1FAE5' : '#EEF4FF',
-                    color: t.eligibilityScope === 'All' ? '#065F46' : '#1D4ED8',
+                    bgcolor: t.eligibilityScope === 'All' ? softBg('success') : softBg('primary'),
+                    color: t.eligibilityScope === 'All' ? 'success.dark' : 'info.dark',
                 }}>
                     {t.eligibilityNotes || (t.eligibilityScope === 'All' ? 'All employees' : 'Limited')}
                 </Box>
             </Box>
 
             {/* Footer stats */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1px', bgcolor: '#F3F4F6', mt: 'auto' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1px', bgcolor: 'divider', mt: 'auto' }}>
                 <FooterStat
                     label="Requests YTD"
                     value={String(requestsYTD)}
@@ -568,7 +565,7 @@ function AttachmentRule({ policy }: { policy: AttachmentPolicy }) {
             <Rule
                 ok={true}
                 glyph="~"
-                glyphColor={C_AMBER}
+                glyphColor={'warning.main'}
                 label={<>Attachment <strong>encouraged</strong> (faster approval with doctor's note)</>}
             />
         )
@@ -586,15 +583,15 @@ function Rule({ ok, label, glyph, glyphColor }: {
         <Box sx={{
             display: 'grid', gridTemplateColumns: '18px 1fr', gap: '8px',
             py: '5px', alignItems: 'flex-start',
-            fontSize: 12, color: '#374151',
+            fontSize: 12, color: 'text.primary',
         }}>
             <Box sx={{
-                color: glyphColor ?? (ok ? C_GREEN : '#9CA3AF'),
+                color: glyphColor ?? (ok ? 'success.main' : 'text.disabled'),
                 fontWeight: 700, lineHeight: 1.5,
             }}>
                 {glyph ?? (ok ? '✓' : '○')}
             </Box>
-            <Box sx={{ lineHeight: 1.5, '& strong': { color: C_HEADING, fontWeight: 600 } }}>
+            <Box sx={{ lineHeight: 1.5, '& strong': { color: 'text.primary', fontWeight: 600 } }}>
                 {label}
             </Box>
         </Box>
@@ -603,12 +600,12 @@ function Rule({ ok, label, glyph, glyphColor }: {
 
 function FooterStat({ label, value, sub }: { label: string; value: string; sub: string }) {
     return (
-        <Box sx={{ bgcolor: '#fff', p: '12px 14px', textAlign: 'center' }}>
-            <Box sx={{ fontSize: 10, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '4px' }}>
+        <Box sx={{ bgcolor: 'background.paper', p: '12px 14px', textAlign: 'center' }}>
+            <Box sx={{ fontSize: 10, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '4px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 17, fontWeight: 700, color: C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 10, color: C_MUTED, mt: '2px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 17, fontWeight: 700, color: 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 10, color: 'text.secondary', mt: '2px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -644,22 +641,22 @@ function AddCard({ onClick }: { onClick: () => void }) {
             component="button"
             onClick={onClick}
             sx={{
-                bgcolor: '#FAFBFC', border: `2px dashed #D1D5DB`,
+                bgcolor: 'action.hover', border: `2px dashed #D1D5DB`,
                 borderRadius: '12px', p: '40px 20px', minHeight: 460,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
-                color: C_MUTED, transition: 'all 0.15s',
-                '&:hover': { borderColor: C_BLUE, bgcolor: '#EEF4FF', transform: 'translateY(-2px)' },
+                color: 'text.secondary', transition: 'all 0.15s',
+                '&:hover': { borderColor: 'primary.main', bgcolor: softBg('primary'), transform: 'translateY(-2px)' },
             }}
         >
             <Box sx={{
                 width: 56, height: 56, borderRadius: '50%',
-                bgcolor: '#fff', border: '2px dashed #D1D5DB',
+                bgcolor: 'background.paper', border: '2px dashed #D1D5DB',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, color: C_MUTED, mb: '12px',
+                fontSize: 24, color: 'text.secondary', mb: '12px',
             }}>+</Box>
-            <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING, mb: '4px' }}>Create a new leave type</Box>
-            <Box sx={{ fontSize: 12, color: C_MUTED, lineHeight: 1.5 }}>
+            <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', mb: '4px' }}>Create a new leave type</Box>
+            <Box sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.5 }}>
                 Define allowance, approval rules,<br/>and eligibility for your organization
             </Box>
         </Box>
@@ -678,12 +675,12 @@ function StatCard({ label, value, sub, valueColor, valueSize = 26 }: {
     valueSize?: number
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '14px 16px' }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '14px 16px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: valueSize, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '6px' }}>{sub}</Box>
+            <Box sx={{ fontSize: valueSize, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '6px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -700,9 +697,9 @@ function SelectFilter({ value, onChange, options }: {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
             sx={{
                 fontSize: 12, fontFamily: 'inherit', p: '7px 10px',
-                border: `1px solid ${C_BORDER}`, borderRadius: '6px',
-                color: '#374151', bgcolor: '#fff', outline: 'none', cursor: 'pointer',
-                '&:focus': { borderColor: C_BLUE },
+                border: '1px solid', borderColor: 'divider', borderRadius: '6px',
+                color: 'text.primary', bgcolor: 'background.paper', outline: 'none', cursor: 'pointer',
+                '&:focus': { borderColor: 'primary.main' },
             }}
         >
             {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

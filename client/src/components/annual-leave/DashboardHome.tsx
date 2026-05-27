@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
+import { alpha, type Theme } from '@mui/material/styles'
 import {
     approveTimesheet, getAdminUsers, getAnnualLeaves, getAppSettings,
     getCompanyAttendance, getDepartments, getEmployeeProfiles, getLeaveTypes,
@@ -16,12 +17,18 @@ import type {
     LeaveType, RecentActivity, TeamAttendance, TeamMemberAttendance, Timesheet, TimesheetStatus, UserInfo,
 } from '../../lib/types'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
-
 const WEEKLY_TARGET = 40
+
+// Soft semantic-tint backgrounds used for status pills, alerts, and hover states.
+// `alpha` keeps them legible in both light and dark modes by tinting the
+// theme's semantic colors rather than hardcoding pastel hex values.
+const softBg = (palette: keyof Theme['palette']) => (theme: Theme) => {
+    const p = theme.palette[palette]
+    if (p && typeof p === 'object' && 'main' in p && typeof p.main === 'string') {
+        return alpha(p.main, theme.palette.mode === 'dark' ? 0.18 : 0.12)
+    }
+    return 'transparent'
+}
 
 const LEAVE_ICONS: Record<string, string> = {
     annual: '🌴', vacation: '🌴',
@@ -237,7 +244,10 @@ function EmployeeDashboard({ user }: { user: UserInfo }) {
     return (
         <Box>
             <GreetingHero
-                gradient="linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)"
+                gradient={{
+                    light: 'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)',
+                    dark: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
+                }}
                 hello={`${greetingForHour(today.getHours())} · ${formatTodayLong()}`}
                 name={`Hi ${firstName(user)} 👋`}
                 summary={summary}
@@ -291,7 +301,7 @@ function EmployeeDashboard({ user }: { user: UserInfo }) {
                 </ActionCard>
             </Box>
 
-            <Box sx={{ fontSize: 11, color: '#9CA3AF', textAlign: 'center', mt: '8px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.disabled', textAlign: 'center', mt: '8px' }}>
                 {yearEndDays} days left in this leave year.
             </Box>
         </Box>
@@ -497,7 +507,10 @@ function ManagerDashboard({ user }: { user: UserInfo }) {
     return (
         <Box>
             <GreetingHero
-                gradient="linear-gradient(135deg, #1A1A2E 0%, #4F8EF7 100%)"
+                gradient={{
+                    light: 'linear-gradient(135deg, #1A1A2E 0%, #4F8EF7 100%)',
+                    dark: 'linear-gradient(135deg, #0f172a 0%, #1e40af 100%)',
+                }}
                 hello={`${greetingForHour(today.getHours())} · ${formatTodayLong()}`}
                 name={`Hi ${firstName(user)} 👋`}
                 summary={summary}
@@ -599,7 +612,10 @@ function AdminDashboard({ user: _user }: { user: UserInfo }) {
     return (
         <Box>
             <GreetingHero
-                gradient="linear-gradient(135deg, #4338CA 0%, #8B5CF6 100%)"
+                gradient={{
+                    light: 'linear-gradient(135deg, #4338CA 0%, #8B5CF6 100%)',
+                    dark: 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%)',
+                }}
                 hello={`${greetingForHour(today.getHours())} · ${formatTodayLong()}`}
                 name="Workspace overview"
                 summary={
@@ -620,10 +636,10 @@ function AdminDashboard({ user: _user }: { user: UserInfo }) {
                 gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
                 gap: '12px', mb: '14px',
             }}>
-                <Gauge label="Pending approvals" big={totalApprovals.toString()} bigColor="#F59E0B" sub={`${pendingLeaveCount} leave · ${pendingTsCount} timesheets · ${overThreeDaysOld} over 3 days old`} barColor="#F59E0B" barPct={Math.min(100, totalApprovals * 5)} />
-                <Gauge label="Today's attendance" big={`${attendancePct}%`} bigColor="#22C47A" sub={company ? `${company.in} in · ${company.leave} on leave · ${company.out} not checked in` : '—'} barColor="#22C47A" barPct={attendancePct} />
-                <Gauge label="On-time submissions" big={`${onTimePct}%`} bigColor={C_BLUE} sub="last 4 weeks · target 90%" barColor={C_BLUE} barPct={onTimePct} />
-                <Gauge label="Active issues" big={`${company?.issues.filter((i) => i.severity === 'danger').length ?? 0}`} bigColor="#FF4D4F" sub={company ? `${company.out} not checked in` : '—'} barColor="#FF4D4F" barPct={Math.min(100, (company?.issues.length ?? 0) * 20)} />
+                <Gauge label="Pending approvals" big={totalApprovals.toString()} bigColor="warning.main" sub={`${pendingLeaveCount} leave · ${pendingTsCount} timesheets · ${overThreeDaysOld} over 3 days old`} barColor="warning.main" barPct={Math.min(100, totalApprovals * 5)} />
+                <Gauge label="Today's attendance" big={`${attendancePct}%`} bigColor="success.main" sub={company ? `${company.in} in · ${company.leave} on leave · ${company.out} not checked in` : '—'} barColor="success.main" barPct={attendancePct} />
+                <Gauge label="On-time submissions" big={`${onTimePct}%`} bigColor="primary.main" sub="last 4 weeks · target 90%" barColor="primary.main" barPct={onTimePct} />
+                <Gauge label="Active issues" big={`${company?.issues.filter((i) => i.severity === 'danger').length ?? 0}`} bigColor="error.main" sub={company ? `${company.out} not checked in` : '—'} barColor="error.main" barPct={Math.min(100, (company?.issues.length ?? 0) * 20)} />
             </Box>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: '14px', mb: '14px' }}>
@@ -682,19 +698,25 @@ function CenterSpinner() {
     )
 }
 
+// Each hero call site supplies a {light, dark} gradient pair. Light is the
+// original bright brand gradient; dark is a desaturated variant so the hero
+// doesn't shout against a dark page background.
+type HeroGradient = { light: string; dark: string }
+
 function GreetingHero({ gradient, hello, name, summary, meta }: {
-    gradient: string
+    gradient: HeroGradient
     hello: string
     name: string
     summary: React.ReactNode
     meta: { l: string; v: string }[]
 }) {
     return (
-        <Box sx={{
-            background: gradient, color: '#fff', borderRadius: '14px',
+        <Box sx={(theme) => ({
+            background: theme.palette.mode === 'dark' ? gradient.dark : gradient.light,
+            color: '#fff', borderRadius: '14px',
             p: { xs: '20px', md: '24px 28px' }, mb: '14px',
             position: 'relative', overflow: 'hidden',
-        }}>
+        })}>
             <Box sx={{ position: 'relative', zIndex: 1 }}>
                 <Box sx={{ fontSize: 12, opacity: 0.85, mb: '4px' }}>{hello}</Box>
                 <Box sx={{ fontSize: { xs: 22, md: 26 }, fontWeight: 700, mb: '10px' }}>{name}</Box>
@@ -726,14 +748,14 @@ function ActionCard({ title, icon, action, countLabel, countTone, children }: {
 }) {
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px',
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px',
             overflow: 'hidden', mb: '14px',
         }}>
             <Box sx={{
-                px: '18px', py: '14px', borderBottom: `1px solid ${C_BORDER}`,
+                px: '18px', py: '14px', borderBottom: '1px solid', borderColor: 'divider',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
             }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 14, fontWeight: 600, color: C_HEADING }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                     {icon && <Box component="span">{icon}</Box>}
                     {title}
                 </Box>
@@ -742,8 +764,8 @@ function ActionCard({ title, icon, action, countLabel, countTone, children }: {
                         <Box component="span" sx={{
                             fontSize: 11, fontWeight: 600, px: '8px', py: '3px',
                             borderRadius: '12px',
-                            bgcolor: countTone === 'urgent' ? '#FEE2E2' : '#F4F5F7',
-                            color: countTone === 'urgent' ? '#991B1B' : C_MUTED,
+                            bgcolor: countTone === 'urgent' ? softBg('error') : 'action.hover',
+                            color: countTone === 'urgent' ? 'error.dark' : 'text.secondary',
                         }}>{countLabel}</Box>
                     )}
                     {action}
@@ -761,19 +783,20 @@ function AttentionRow({ item }: { item: AttentionItem }) {
             sx={{
                 display: 'flex', alignItems: 'center', gap: '12px',
                 p: '12px 14px', borderRadius: '8px', cursor: 'pointer',
-                bgcolor: item.tone === 'urgent' ? '#FFFBEB' : '#F9FAFB',
-                border: `1px solid ${item.tone === 'urgent' ? '#FDE68A' : C_BORDER}`,
+                bgcolor: item.tone === 'urgent' ? softBg('warning') : 'action.hover',
+                border: '1px solid',
+                borderColor: item.tone === 'urgent' ? 'warning.light' : 'divider',
                 mb: '8px', transition: 'all 0.15s',
                 '&:last-child': { mb: 0 },
-                '&:hover': { borderColor: C_BLUE, bgcolor: '#EEF4FF' },
+                '&:hover': { borderColor: 'primary.main', bgcolor: softBg('primary') },
             }}
         >
             <Box sx={{ fontSize: 20 }}>{item.icon}</Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, mb: '2px' }}>{item.label}</Box>
-                <Box sx={{ fontSize: 11, color: C_MUTED }}>{item.sub}</Box>
+                <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: '2px' }}>{item.label}</Box>
+                <Box sx={{ fontSize: 11, color: 'text.secondary' }}>{item.sub}</Box>
             </Box>
-            <Box sx={{ color: '#9CA3AF', fontSize: 18 }}>›</Box>
+            <Box sx={{ color: 'text.disabled', fontSize: 18 }}>›</Box>
         </Box>
     )
 }
@@ -784,10 +807,10 @@ function OutlineBtn({ onClick, children }: { onClick: () => void; children: Reac
             component="button"
             onClick={onClick}
             sx={{
-                bgcolor: '#fff', color: C_BLUE, border: `1px solid ${C_BLUE}`,
+                bgcolor: 'background.paper', color: 'primary.main', border: '1px solid', borderColor: 'primary.main',
                 px: '12px', py: '5px', borderRadius: '6px', fontSize: 12, fontWeight: 500,
                 cursor: 'pointer', fontFamily: 'inherit',
-                '&:hover': { bgcolor: '#EEF4FF' },
+                '&:hover': { bgcolor: softBg('primary') },
             }}
         >
             {children}
@@ -808,12 +831,12 @@ function ThisWeekCard({ ts, hoursRemaining, todayDow, onContinue }: {
     const todayIdx = todayDow === 0 || todayDow === 6 ? -1 : todayDow - 1
 
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', overflow: 'hidden' }}>
             <Box sx={{
-                px: '18px', py: '14px', borderBottom: `1px solid ${C_BORDER}`,
+                px: '18px', py: '14px', borderBottom: '1px solid', borderColor: 'divider',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 14, fontWeight: 600, color: C_HEADING }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                     <Box component="span">⏱</Box>
                     This week · {formatRange(ts.periodStart, ts.periodEnd)}
                 </Box>
@@ -821,9 +844,9 @@ function ThisWeekCard({ ts, hoursRemaining, todayDow, onContinue }: {
                     component="button"
                     onClick={onContinue}
                     sx={{
-                        bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '12px', py: '5px', fontSize: 12, fontWeight: 500, cursor: 'pointer',
-                        fontFamily: 'inherit', '&:hover': { bgcolor: '#3A7AE4' },
+                        fontFamily: 'inherit', '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
                     Continue →
@@ -831,16 +854,16 @@ function ThisWeekCard({ ts, hoursRemaining, todayDow, onContinue }: {
             </Box>
             <Box sx={{ p: '14px 18px' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '6px' }}>
-                    <Box sx={{ fontSize: 24, fontWeight: 700, color: C_HEADING }}>
+                    <Box sx={{ fontSize: 24, fontWeight: 700, color: 'text.primary' }}>
                         {hours.toFixed(1)}
-                        <Box component="span" sx={{ fontSize: 14, color: C_MUTED, fontWeight: 500 }}>{` / ${WEEKLY_TARGET}h`}</Box>
+                        <Box component="span" sx={{ fontSize: 14, color: 'text.secondary', fontWeight: 500 }}>{` / ${WEEKLY_TARGET}h`}</Box>
                     </Box>
-                    <Box sx={{ fontSize: 11, color: hoursRemaining > 0 ? '#F59E0B' : '#22C47A', fontWeight: 600 }}>
+                    <Box sx={{ fontSize: 11, color: hoursRemaining > 0 ? 'warning.main' : 'success.main', fontWeight: 600 }}>
                         {hoursRemaining > 0 ? `${hoursRemaining.toFixed(1)}h remaining` : '✓ Complete'}
                     </Box>
                 </Box>
-                <Box sx={{ height: 8, bgcolor: '#F4F5F7', borderRadius: '4px', overflow: 'hidden', mb: '12px' }}>
-                    <Box sx={{ height: '100%', bgcolor: C_BLUE, borderRadius: '4px', width: `${pct}%` }} />
+                <Box sx={{ height: 8, bgcolor: 'action.hover', borderRadius: '4px', overflow: 'hidden', mb: '12px' }}>
+                    <Box sx={{ height: '100%', bgcolor: 'primary.main', borderRadius: '4px', width: `${pct}%` }} />
                 </Box>
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
                     {DAY_LABELS.map((d, i) => {
@@ -850,15 +873,15 @@ function ThisWeekCard({ ts, hoursRemaining, todayDow, onContinue }: {
                         return (
                             <Box key={d} sx={{
                                 p: '6px 8px', borderRadius: '5px', textAlign: 'center', fontSize: 11,
-                                bgcolor: isToday ? '#EEF4FF' : filled ? '#ECFDF5' : '#F9FAFB',
-                                boxShadow: isToday ? `inset 0 0 0 1px ${C_BLUE}` : 'none',
+                                bgcolor: isToday ? softBg('primary') : filled ? softBg('success') : 'action.hover',
+                                boxShadow: isToday ? (theme) => `inset 0 0 0 1px ${theme.palette.primary.main}` : 'none',
                             }}>
-                                <Box sx={{ fontSize: 9, color: isToday ? '#1D4ED8' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <Box sx={{ fontSize: 9, color: isToday ? 'info.dark' : 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     {d}{isToday ? ' · Today' : ''}
                                 </Box>
                                 <Box sx={{
                                     fontWeight: 600, fontVariantNumeric: 'tabular-nums', mt: '2px',
-                                    color: isToday ? '#1D4ED8' : filled ? '#065F46' : '#9CA3AF',
+                                    color: isToday ? 'info.dark' : filled ? 'success.dark' : 'text.disabled',
                                 }}>
                                     {filled ? `${h.toFixed(1)}h` : '—'}
                                 </Box>
@@ -874,19 +897,19 @@ function ThisWeekCard({ ts, hoursRemaining, todayDow, onContinue }: {
 function NoCurrentWeek({ onOpen }: { onOpen: () => void }) {
     return (
         <Box sx={{
-            bgcolor: '#F9FAFB', border: `1px dashed ${C_BORDER}`, borderRadius: '12px',
+            bgcolor: 'action.hover', border: '1px dashed', borderColor: 'divider', borderRadius: '12px',
             p: '24px', textAlign: 'center',
         }}>
             <Box sx={{ fontSize: 28, mb: '8px' }}>📝</Box>
-            <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING, mb: '4px' }}>No timesheet for this week</Box>
-            <Box sx={{ fontSize: 12, color: C_MUTED, mb: '12px' }}>Start tracking your hours.</Box>
+            <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', mb: '4px' }}>No timesheet for this week</Box>
+            <Box sx={{ fontSize: 12, color: 'text.secondary', mb: '12px' }}>Start tracking your hours.</Box>
             <Box
                 component="button"
                 onClick={onOpen}
                 sx={{
-                    bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                    bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                     px: '14px', py: '6px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                    fontFamily: 'inherit', '&:hover': { bgcolor: '#3A7AE4' },
+                    fontFamily: 'inherit', '&:hover': { bgcolor: 'primary.dark' },
                 }}
             >
                 Open this week
@@ -905,15 +928,17 @@ function NextLeaveCard({ leave, typeName, today }: {
     const sameDay = leave.startDate.slice(0, 10) === leave.endDate.slice(0, 10)
 
     return (
-        <Box sx={{
-            background: 'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)',
+        <Box sx={(theme) => ({
+            background: theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)'
+                : 'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)',
             color: '#fff', borderRadius: '12px', p: '20px 22px',
             position: 'relative', overflow: 'hidden',
             '&::before': {
                 content: '"🌴"', position: 'absolute', right: -10, bottom: -20,
                 fontSize: 110, opacity: 0.15, transform: 'rotate(-12deg)',
             },
-        }}>
+        })}>
             <Box sx={{ fontSize: 11, opacity: 0.85, textTransform: 'uppercase', letterSpacing: '0.08em', mb: '8px' }}>
                 {isPending ? '⏳ Next request' : '✓ Next time off'}
             </Box>
@@ -948,19 +973,19 @@ function NextLeaveCard({ leave, typeName, today }: {
 function EmptyNextLeave({ onApply }: { onApply: () => void }) {
     return (
         <Box sx={{
-            bgcolor: '#F9FAFB', border: `1px dashed ${C_BORDER}`, borderRadius: '12px',
-            p: '24px', textAlign: 'center', color: C_MUTED,
+            bgcolor: 'action.hover', border: '1px dashed', borderColor: 'divider', borderRadius: '12px',
+            p: '24px', textAlign: 'center', color: 'text.secondary',
         }}>
             <Box sx={{ fontSize: 28, mb: '8px' }}>🏖️</Box>
-            <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING, mb: '4px' }}>No upcoming leave</Box>
+            <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', mb: '4px' }}>No upcoming leave</Box>
             <Box sx={{ fontSize: 12, mb: '12px' }}>Time to plan your next break?</Box>
             <Box
                 component="button"
                 onClick={onApply}
                 sx={{
-                    bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                    bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                     px: '14px', py: '6px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                    fontFamily: 'inherit', '&:hover': { bgcolor: '#3A7AE4' },
+                    fontFamily: 'inherit', '&:hover': { bgcolor: 'primary.dark' },
                 }}
             >
                 + Apply for leave
@@ -993,30 +1018,30 @@ function LeaveBalanceList({ leaveTypes, approvedThisYear, leaveTypeById, entitle
         })
 
     if (rows.length === 0) {
-        return <Box sx={{ fontSize: 12, color: C_MUTED, py: '8px' }}>No active leave types.</Box>
+        return <Box sx={{ fontSize: 12, color: 'text.secondary', py: '8px' }}>No active leave types.</Box>
     }
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {rows.map((r) => {
-                const fillColor = !r.tracks ? '#9CA3AF' : r.pct >= 90 ? '#FF4D4F' : r.pct >= 70 ? '#F59E0B' : '#22C47A'
+                const fillColor = !r.tracks ? 'text.disabled' : r.pct >= 90 ? 'error.main' : r.pct >= 70 ? 'warning.main' : 'success.main'
                 return (
                     <Box key={r.id} sx={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: '10px', alignItems: 'center' }}>
                         <Box sx={{ fontSize: 18 }}>{iconForLeaveType(leaveTypeById.get(r.id)?.name)}</Box>
                         <Box>
-                            <Box sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING }}>{r.name}</Box>
-                            <Box sx={{ height: 5, bgcolor: '#F4F5F7', borderRadius: '3px', mt: '5px', overflow: 'hidden' }}>
+                            <Box sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>{r.name}</Box>
+                            <Box sx={{ height: 5, bgcolor: 'action.hover', borderRadius: '3px', mt: '5px', overflow: 'hidden' }}>
                                 <Box sx={{ height: '100%', borderRadius: '3px', bgcolor: fillColor, width: `${r.pct}%` }} />
                             </Box>
                         </Box>
-                        <Box sx={{ fontSize: 13, color: C_MUTED, fontVariantNumeric: 'tabular-nums', textAlign: 'right', minWidth: 50 }}>
+                        <Box sx={{ fontSize: 13, color: 'text.secondary', fontVariantNumeric: 'tabular-nums', textAlign: 'right', minWidth: 50 }}>
                             {r.tracks && r.total > 0 ? (
                                 <>
-                                    <Box component="strong" sx={{ fontSize: 14, color: C_HEADING, fontWeight: 700 }}>{r.remaining}</Box>
+                                    <Box component="strong" sx={{ fontSize: 14, color: 'text.primary', fontWeight: 700 }}>{r.remaining}</Box>
                                     /{r.total}
                                 </>
                             ) : (
-                                <Box component="strong" sx={{ fontSize: 14, color: C_HEADING, fontWeight: 700 }}>{r.used}</Box>
+                                <Box component="strong" sx={{ fontSize: 14, color: 'text.primary', fontWeight: 700 }}>{r.used}</Box>
                             )}
                         </Box>
                     </Box>
@@ -1040,16 +1065,16 @@ function QuickActions({ tiles }: { tiles: { icon: string; label: string; sub: st
                     onClick={t.onClick}
                     sx={{
                         display: 'flex', alignItems: 'center', gap: '10px', p: '12px',
-                        bgcolor: '#F9FAFB', border: `1px solid ${C_BORDER}`, borderRadius: '8px',
+                        bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', borderRadius: '8px',
                         cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
                         transition: 'all 0.15s',
-                        '&:hover': { borderColor: C_BLUE, bgcolor: '#EEF4FF', transform: 'translateY(-1px)' },
+                        '&:hover': { borderColor: 'primary.main', bgcolor: softBg('primary'), transform: 'translateY(-1px)' },
                     }}
                 >
                     <Box sx={{ fontSize: 20 }}>{t.icon}</Box>
                     <Box>
-                        <Box sx={{ fontSize: 12, fontWeight: 600, color: C_HEADING }}>{t.label}</Box>
-                        <Box sx={{ fontSize: 11, color: C_MUTED, mt: '1px' }}>{t.sub}</Box>
+                        <Box sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>{t.label}</Box>
+                        <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '1px' }}>{t.sub}</Box>
                     </Box>
                 </Box>
             ))}
@@ -1070,19 +1095,19 @@ function ApprovalQueueCard({ queue, totalQueue, onApprove, onReject, disabled, o
 }) {
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px',
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px',
             overflow: 'hidden', mb: '14px',
         }}>
             <Box sx={{
-                px: '18px', py: '14px', borderBottom: `1px solid ${C_BORDER}`,
+                px: '18px', py: '14px', borderBottom: '1px solid', borderColor: 'divider',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap',
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <Box component="span" sx={{ fontSize: 16 }}>⚡</Box>
-                    <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Approval queue</Box>
+                    <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>Approval queue</Box>
                     {totalQueue > 0 && (
                         <Box component="span" sx={{
-                            bgcolor: '#FEE2E2', color: '#991B1B',
+                            bgcolor: softBg('error'), color: 'error.dark',
                             fontSize: 11, fontWeight: 600,
                             px: '8px', py: '3px', borderRadius: '12px',
                         }}>{totalQueue} waiting</Box>
@@ -1094,7 +1119,7 @@ function ApprovalQueueCard({ queue, totalQueue, onApprove, onReject, disabled, o
                 </Box>
             </Box>
             {queue.length === 0 ? (
-                <Box sx={{ p: '24px', textAlign: 'center', color: C_MUTED, fontSize: 13 }}>
+                <Box sx={{ p: '24px', textAlign: 'center', color: 'text.secondary', fontSize: 13 }}>
                     🎉 The queue is empty. Nothing to approve right now.
                 </Box>
             ) : (
@@ -1129,24 +1154,24 @@ function ApprovalQueueRow({ item, isLast, onApprove, onReject, disabled }: {
             gridTemplateColumns: { xs: '36px 1fr', md: '36px 1fr auto auto' },
             gap: '12px', alignItems: 'center',
             px: '18px', py: '12px',
-            borderBottom: isLast ? 'none' : '1px solid #F3F4F6',
-            '&:hover': { bgcolor: '#F9FAFB' },
+            borderBottom: isLast ? 'none' : (theme: Theme) => `1px solid ${theme.palette.divider}`,
+            '&:hover': { bgcolor: 'action.hover' },
         }}>
             <Box sx={{
                 width: 36, height: 36, borderRadius: '50%',
-                bgcolor: item.urgent ? '#FF4D4F' : avatarBgFor(item.name),
+                bgcolor: item.urgent ? 'error.main' : avatarBgFor(item.name),
                 color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 12, fontWeight: 600,
             }}>{initials(item.name)}</Box>
             <Box sx={{ minWidth: 0 }}>
-                <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, mb: '2px' }}>{item.title}</Box>
-                <Box sx={{ fontSize: 11, color: C_MUTED, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: '2px' }}>{item.title}</Box>
+                <Box sx={{ fontSize: 11, color: 'text.secondary', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <Box component="span">{item.meta}</Box>
                     {item.tags.map((t, j) => <QueueTagPill key={j} tag={t} />)}
                 </Box>
             </Box>
             <Box sx={{
-                fontSize: 11, color: item.urgent ? '#991B1B' : C_MUTED, fontWeight: item.urgent ? 600 : 400,
+                fontSize: 11, color: item.urgent ? 'error.dark' : 'text.secondary', fontWeight: item.urgent ? 600 : 400,
                 whiteSpace: 'nowrap', display: { xs: 'none', md: 'block' },
             }}>{age}</Box>
             <Box sx={{ display: 'flex', gap: '6px', gridColumn: { xs: '1 / -1', md: 'auto' }, mt: { xs: '8px', md: 0 } }}>
@@ -1155,10 +1180,10 @@ function ApprovalQueueRow({ item, isLast, onApprove, onReject, disabled }: {
                     onClick={onApprove}
                     disabled={disabled}
                     sx={{
-                        bgcolor: '#22C47A', color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'success.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '12px', py: '5px', fontSize: 12, fontWeight: 500, cursor: 'pointer',
                         fontFamily: 'inherit',
-                        '&:hover:not(:disabled)': { bgcolor: '#18A867' },
+                        '&:hover:not(:disabled)': { bgcolor: 'success.dark' },
                         '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
                     }}
                 >
@@ -1169,10 +1194,10 @@ function ApprovalQueueRow({ item, isLast, onApprove, onReject, disabled }: {
                     onClick={onReject}
                     disabled={disabled}
                     sx={{
-                        bgcolor: '#FF4D4F', color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'error.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '12px', py: '5px', fontSize: 12, fontWeight: 500, cursor: 'pointer',
                         fontFamily: 'inherit',
-                        '&:hover:not(:disabled)': { bgcolor: '#E03C3E' },
+                        '&:hover:not(:disabled)': { bgcolor: 'error.dark' },
                         '&:disabled': { opacity: 0.5, cursor: 'not-allowed' },
                     }}
                 >
@@ -1185,10 +1210,10 @@ function ApprovalQueueRow({ item, isLast, onApprove, onReject, disabled }: {
 
 function QueueTagPill({ tag }: { tag: QueueTag }) {
     const styles =
-        tag.tone === 'urgent'   ? { bg: '#FEE2E2', color: '#991B1B' } :
-        tag.tone === 'warning'  ? { bg: '#FEF3C7', color: '#92400E' } :
-        tag.tone === 'conflict' ? { bg: '#FEF3C7', color: '#92400E' } :
-                                  { bg: '#EFF6FF', color: '#1D4ED8' }
+        tag.tone === 'urgent'   ? { bg: softBg('error'), color: 'error.dark' } :
+        tag.tone === 'warning'  ? { bg: softBg('warning'), color: 'warning.dark' } :
+        tag.tone === 'conflict' ? { bg: softBg('warning'), color: 'warning.dark' } :
+                                  { bg: softBg('info'), color: 'info.dark' }
     return (
         <Box component="span" sx={{
             display: 'inline-flex', alignItems: 'center', fontSize: 10, fontWeight: 500,
@@ -1209,7 +1234,7 @@ function formatRelativeAge(d: Date) {
 }
 
 function avatarBgFor(name: string) {
-    const colors = ['#4F8EF7', '#22C47A', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16']
+    const colors = ['primary.main', 'success.main', 'warning.main', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16']
     let hash = 0
     for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0
     return colors[Math.abs(hash) % colors.length]
@@ -1219,7 +1244,7 @@ function TeamStatusNowCard({ team }: { team: TeamAttendance | null }) {
     if (!team) {
         return (
             <ActionCard title="Team status now" icon="👥">
-                <Box sx={{ fontSize: 12, color: C_MUTED }}>Loading team attendance…</Box>
+                <Box sx={{ fontSize: 12, color: 'text.secondary' }}>Loading team attendance…</Box>
             </ActionCard>
         )
     }
@@ -1233,17 +1258,17 @@ function TeamStatusNowCard({ team }: { team: TeamAttendance | null }) {
             title="Team status now"
             icon="👥"
             action={
-                <Box component="span" sx={{ fontSize: 11, color: '#22C47A', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#22C47A' }} />
+                <Box component="span" sx={{ fontSize: 11, color: 'success.main', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
                     Live
                 </Box>
             }
         >
-            <Box sx={{ display: 'flex', gap: '14px', mb: '14px', fontSize: 11, color: C_MUTED, flexWrap: 'wrap' }}>
-                <Box><Box component="strong" sx={{ color: '#22C47A', fontSize: 14 }}>{inCount}</Box> working</Box>
-                <Box><Box component="strong" sx={{ color: '#F59E0B', fontSize: 14 }}>{brkCount}</Box> on break</Box>
-                <Box><Box component="strong" sx={{ color: C_BLUE, fontSize: 14 }}>{leaveCount}</Box> on leave</Box>
-                <Box><Box component="strong" sx={{ color: '#9CA3AF', fontSize: 14 }}>{outCount}</Box> not in</Box>
+            <Box sx={{ display: 'flex', gap: '14px', mb: '14px', fontSize: 11, color: 'text.secondary', flexWrap: 'wrap' }}>
+                <Box><Box component="strong" sx={{ color: 'success.main', fontSize: 14 }}>{inCount}</Box> working</Box>
+                <Box><Box component="strong" sx={{ color: 'warning.main', fontSize: 14 }}>{brkCount}</Box> on break</Box>
+                <Box><Box component="strong" sx={{ color: 'primary.main', fontSize: 14 }}>{leaveCount}</Box> on leave</Box>
+                <Box><Box component="strong" sx={{ color: 'text.disabled', fontSize: 14 }}>{outCount}</Box> not in</Box>
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
                 {team.members.slice(0, 12).map((m) => <TeamMemberTile key={m.employeeId} member={m} />)}
@@ -1254,10 +1279,10 @@ function TeamStatusNowCard({ team }: { team: TeamAttendance | null }) {
 
 function TeamMemberTile({ member }: { member: TeamMemberAttendance }) {
     const tone =
-        member.status === 'in'    ? { border: '#22C47A', sub: 'In', subColor: '#22C47A' } :
-        member.status === 'break' ? { border: '#F59E0B', sub: '☕ Break', subColor: '#F59E0B' } :
-        member.status === 'leave' ? { border: C_BLUE,    sub: '🌴 On leave', subColor: C_BLUE } :
-                                    { border: '#9CA3AF', sub: 'Not in', subColor: '#9CA3AF' }
+        member.status === 'in'    ? { border: 'success.main', sub: 'In', subColor: 'success.main' } :
+        member.status === 'break' ? { border: 'warning.main', sub: '☕ Break', subColor: 'warning.main' } :
+        member.status === 'leave' ? { border: 'primary.main', sub: '🌴 On leave', subColor: 'primary.main' } :
+                                    { border: 'text.disabled', sub: 'Not in', subColor: 'text.disabled' }
     const detail =
         member.status === 'in' && member.checkInAt
             ? `In since ${new Date(member.checkInAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
@@ -1267,7 +1292,7 @@ function TeamMemberTile({ member }: { member: TeamMemberAttendance }) {
     return (
         <Box sx={{
             display: 'flex', alignItems: 'center', gap: '8px', p: '8px 10px',
-            bgcolor: '#F9FAFB', border: `1px solid ${C_BORDER}`, borderRadius: '8px',
+            bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', borderRadius: '8px',
             borderLeft: `3px solid ${tone.border}`,
         }}>
             <Box sx={{
@@ -1277,7 +1302,7 @@ function TeamMemberTile({ member }: { member: TeamMemberAttendance }) {
                 fontSize: 10, fontWeight: 600, flexShrink: 0,
             }}>{initials(member.employeeName)}</Box>
             <Box sx={{ minWidth: 0 }}>
-                <Box sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Box sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {member.employeeName}
                 </Box>
                 <Box sx={{ fontSize: 10, color: tone.subColor }}>{detail}</Box>
@@ -1296,27 +1321,27 @@ function TeamSubmissionsCard({ submitted, total, missing }: {
         <ActionCard title="This week's submissions" icon="📊">
             <Box sx={{ mb: '14px' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '6px' }}>
-                    <Box sx={{ fontSize: 22, fontWeight: 700, color: C_HEADING }}>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: 'text.primary' }}>
                         {submitted}
-                        <Box component="span" sx={{ fontSize: 14, color: C_MUTED, fontWeight: 500 }}>
+                        <Box component="span" sx={{ fontSize: 14, color: 'text.secondary', fontWeight: 500 }}>
                             {` / ${total} submitted`}
                         </Box>
                     </Box>
                     {outstanding > 0 && (
-                        <Box sx={{ fontSize: 11, color: '#F59E0B', fontWeight: 600 }}>{outstanding} outstanding</Box>
+                        <Box sx={{ fontSize: 11, color: 'warning.main', fontWeight: 600 }}>{outstanding} outstanding</Box>
                     )}
                 </Box>
-                <Box sx={{ height: 8, bgcolor: '#F4F5F7', borderRadius: '4px', overflow: 'hidden' }}>
-                    <Box sx={{ height: '100%', bgcolor: '#22C47A', borderRadius: '4px', width: `${pct}%` }} />
+                <Box sx={{ height: 8, bgcolor: 'action.hover', borderRadius: '4px', overflow: 'hidden' }}>
+                    <Box sx={{ height: '100%', bgcolor: 'success.main', borderRadius: '4px', width: `${pct}%` }} />
                 </Box>
             </Box>
             {missing.length === 0 ? (
-                <Box sx={{ fontSize: 12, color: '#22C47A', textAlign: 'center', py: '6px' }}>
+                <Box sx={{ fontSize: 12, color: 'success.main', textAlign: 'center', py: '6px' }}>
                     ✓ Everyone has submitted for this week.
                 </Box>
             ) : (
                 <>
-                    <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '8px', fontWeight: 600 }}>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '8px', fontWeight: 600 }}>
                         Not yet submitted
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1329,8 +1354,8 @@ function TeamSubmissionsCard({ submitted, total, missing }: {
                                     fontSize: 10, fontWeight: 600, flexShrink: 0,
                                 }}>{initials(m.name)}</Box>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Box sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING }}>{m.name}</Box>
-                                    <Box sx={{ fontSize: 10, color: C_MUTED }}>{m.note}</Box>
+                                    <Box sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>{m.name}</Box>
+                                    <Box sx={{ fontSize: 10, color: 'text.secondary' }}>{m.note}</Box>
                                 </Box>
                             </Box>
                         ))}
@@ -1348,14 +1373,14 @@ function Gauge({ label, big, bigColor, sub, barColor, barPct }: {
 }) {
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px',
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', p: '14px 16px',
         }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 26, fontWeight: 700, color: bigColor ?? C_HEADING, lineHeight: 1, mb: '6px' }}>{big}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mb: '8px' }}>{sub}</Box>
-            <Box sx={{ height: 4, bgcolor: '#F4F5F7', borderRadius: '2px', overflow: 'hidden' }}>
+            <Box sx={{ fontSize: 26, fontWeight: 700, color: bigColor ?? 'text.primary', lineHeight: 1, mb: '6px' }}>{big}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mb: '8px' }}>{sub}</Box>
+            <Box sx={{ height: 4, bgcolor: 'action.hover', borderRadius: '2px', overflow: 'hidden' }}>
                 <Box sx={{ height: '100%', bgcolor: barColor, borderRadius: '2px', width: `${Math.min(100, barPct)}%` }} />
             </Box>
         </Box>
@@ -1386,7 +1411,7 @@ function DepartmentHealthCard({ departments, leaves, timesheets, onLive }: {
     return (
         <ActionCard title="Department health" icon="🏢" action={<OutlineBtn onClick={onLive}>Live attendance</OutlineBtn>}>
             {departments.length === 0 ? (
-                <Box sx={{ fontSize: 12, color: C_MUTED, py: '8px' }}>No attendance data.</Box>
+                <Box sx={{ fontSize: 12, color: 'text.secondary', py: '8px' }}>No attendance data.</Box>
             ) : (
                 <>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1402,31 +1427,31 @@ function DepartmentHealthCard({ departments, leaves, timesheets, onLive }: {
                                     gridTemplateColumns: { xs: '1fr', sm: '110px 1fr 130px' },
                                     gap: '10px', alignItems: 'center', fontSize: 12,
                                 }}>
-                                    <Box sx={{ fontWeight: 600, color: C_HEADING }}>
+                                    <Box sx={{ fontWeight: 600, color: 'text.primary' }}>
                                         {d.name}
-                                        <Box component="span" sx={{ color: '#9CA3AF', fontWeight: 400, fontSize: 11, ml: '4px' }}>
+                                        <Box component="span" sx={{ color: 'text.disabled', fontWeight: 400, fontSize: 11, ml: '4px' }}>
                                             ({d.total})
                                         </Box>
                                     </Box>
-                                    <Box sx={{ display: 'flex', height: 12, bgcolor: '#F4F5F7', borderRadius: '4px', overflow: 'hidden' }}>
-                                        <Box title={`${d.in} working`} sx={{ width: `${inPct}%`, bgcolor: '#22C47A' }} />
-                                        <Box title={`${d.break} on break`} sx={{ width: `${brkPct}%`, bgcolor: '#F59E0B' }} />
-                                        <Box title={`${d.leave} on leave`} sx={{ width: `${leavePct}%`, bgcolor: C_BLUE }} />
-                                        <Box title={`${d.out} not in`} sx={{ width: `${outPct}%`, bgcolor: '#E4E6EA' }} />
+                                    <Box sx={{ display: 'flex', height: 12, bgcolor: 'action.hover', borderRadius: '4px', overflow: 'hidden' }}>
+                                        <Box title={`${d.in} working`} sx={{ width: `${inPct}%`, bgcolor: 'success.main' }} />
+                                        <Box title={`${d.break} on break`} sx={{ width: `${brkPct}%`, bgcolor: 'warning.main' }} />
+                                        <Box title={`${d.leave} on leave`} sx={{ width: `${leavePct}%`, bgcolor: 'primary.main' }} />
+                                        <Box title={`${d.out} not in`} sx={{ width: `${outPct}%`, bgcolor: 'divider' }} />
                                     </Box>
-                                    <Box sx={{ color: C_MUTED, textAlign: { xs: 'left', sm: 'right' } }}>
+                                    <Box sx={{ color: 'text.secondary', textAlign: { xs: 'left', sm: 'right' } }}>
                                         {pending > 0 && <>{pending} pending · </>}
-                                        <Box component="strong" sx={{ color: C_HEADING }}>{Math.round(inPct)}% in</Box>
+                                        <Box component="strong" sx={{ color: 'text.primary' }}>{Math.round(inPct)}% in</Box>
                                     </Box>
                                 </Box>
                             )
                         })}
                     </Box>
-                    <Box sx={{ mt: '12px', pt: '10px', borderTop: '1px solid #F3F4F6', display: 'flex', gap: '14px', fontSize: 10, color: C_MUTED, flexWrap: 'wrap' }}>
-                        <LegendDot color="#22C47A" label="Working" />
-                        <LegendDot color="#F59E0B" label="Break" />
-                        <LegendDot color={C_BLUE} label="Leave" />
-                        <LegendDot color="#E4E6EA" label="Not in" />
+                    <Box sx={{ mt: '12px', pt: '10px', borderTop: (theme: Theme) => `1px solid ${theme.palette.divider}`, display: 'flex', gap: '14px', fontSize: 10, color: 'text.secondary', flexWrap: 'wrap' }}>
+                        <LegendDot color="success.main" label="Working" />
+                        <LegendDot color="warning.main" label="Break" />
+                        <LegendDot color="primary.main" label="Leave" />
+                        <LegendDot color="divider" label="Not in" />
                     </Box>
                 </>
             )}
@@ -1444,21 +1469,22 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 }
 
 function TodaysIssuesCard({ issues }: { issues: AttendanceIssue[] }) {
-    const tones: Record<string, { bg: string; bd: string; head: string; body: string }> = {
-        danger:  { bg: '#FEE2E2', bd: '#FF4D4F', head: '#991B1B', body: '#7F1D1D' },
-        warning: { bg: '#FEF3C7', bd: '#F59E0B', head: '#92400E', body: '#78350F' },
-        info:    { bg: '#EFF6FF', bd: C_BLUE,    head: '#1D4ED8', body: '#1E3A8A' },
-        success: { bg: '#D1FAE5', bd: '#22C47A', head: '#065F46', body: '#064E3B' },
+    type Tone = { bg: string | ((theme: Theme) => string); bd: string; head: string; body: string }
+    const tones: Record<string, Tone> = {
+        danger:  { bg: softBg('error'),   bd: 'error.main',   head: 'error.dark',   body: 'error.dark' },
+        warning: { bg: softBg('warning'), bd: 'warning.main', head: 'warning.dark', body: 'warning.dark' },
+        info:    { bg: softBg('info'),    bd: 'info.main',    head: 'info.dark',    body: 'info.dark' },
+        success: { bg: softBg('success'), bd: 'success.main', head: 'success.dark', body: 'success.dark' },
     }
     return (
-        <ActionCard title="Today's issues" icon="⚠️" action={<Box component="span" sx={{ fontSize: 11, color: '#9CA3AF' }}>Updated just now</Box>}>
+        <ActionCard title="Today's issues" icon="⚠️" action={<Box component="span" sx={{ fontSize: 11, color: 'text.disabled' }}>Updated just now</Box>}>
             {issues.length === 0 ? (
                 <Box sx={{
-                    bgcolor: '#D1FAE5', borderLeft: '3px solid #22C47A', borderRadius: '6px',
+                    bgcolor: softBg('success'), borderLeft: '3px solid', borderColor: 'success.main', borderRadius: '6px',
                     p: '10px 12px',
                 }}>
-                    <Box sx={{ fontSize: 12, fontWeight: 600, color: '#065F46' }}>✓ All systems quiet</Box>
-                    <Box sx={{ fontSize: 11, color: '#064E3B' }}>No active attendance issues.</Box>
+                    <Box sx={{ fontSize: 12, fontWeight: 600, color: 'success.dark' }}>✓ All systems quiet</Box>
+                    <Box sx={{ fontSize: 11, color: 'success.dark' }}>No active attendance issues.</Box>
                 </Box>
             ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1466,7 +1492,7 @@ function TodaysIssuesCard({ issues }: { issues: AttendanceIssue[] }) {
                         const t = tones[it.severity] ?? tones.info
                         return (
                             <Box key={i} sx={{
-                                bgcolor: t.bg, borderLeft: `3px solid ${t.bd}`, borderRadius: '6px',
+                                bgcolor: t.bg, borderLeft: '3px solid', borderColor: t.bd, borderRadius: '6px',
                                 p: '10px 12px',
                             }}>
                                 <Box sx={{ fontSize: 12, fontWeight: 600, color: t.head, mb: '3px' }}>{it.title}</Box>
@@ -1484,7 +1510,7 @@ function RecentActivityCard({ activity }: { activity: RecentActivity[] }) {
     return (
         <ActionCard title="Recent activity" icon="📡">
             {activity.length === 0 ? (
-                <Box sx={{ fontSize: 12, color: C_MUTED, textAlign: 'center', py: '12px' }}>
+                <Box sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center', py: '12px' }}>
                     No recent activity.
                 </Box>
             ) : (
@@ -1493,17 +1519,17 @@ function RecentActivityCard({ activity }: { activity: RecentActivity[] }) {
                         <Box key={i} sx={{
                             display: 'grid', gridTemplateColumns: '24px 1fr auto', gap: '10px',
                             alignItems: 'center', py: '8px',
-                            borderBottom: i === Math.min(activity.length, 8) - 1 ? 'none' : '1px solid #F3F4F6',
+                            borderBottom: i === Math.min(activity.length, 8) - 1 ? 'none' : (theme: Theme) => `1px solid ${theme.palette.divider}`,
                         }}>
                             <Box sx={{ fontSize: 14 }}>{iconForActivity(a.action)}</Box>
-                            <Box sx={{ fontSize: 12, color: '#374151' }}>
-                                <Box component="strong" sx={{ color: C_HEADING, fontWeight: 600 }}>{a.employeeName}</Box>{' '}
+                            <Box sx={{ fontSize: 12, color: 'text.primary' }}>
+                                <Box component="strong" sx={{ color: 'text.primary', fontWeight: 600 }}>{a.employeeName}</Box>{' '}
                                 {a.action}
                                 {a.departmentName && (
-                                    <Box component="span" sx={{ color: '#9CA3AF', ml: '4px', fontSize: 11 }}>· {a.departmentName}</Box>
+                                    <Box component="span" sx={{ color: 'text.disabled', ml: '4px', fontSize: 11 }}>· {a.departmentName}</Box>
                                 )}
                             </Box>
-                            <Box sx={{ fontSize: 11, color: '#9CA3AF', whiteSpace: 'nowrap' }}>
+                            <Box sx={{ fontSize: 11, color: 'text.disabled', whiteSpace: 'nowrap' }}>
                                 {a.minutesAgo != null ? formatMinutesAgo(a.minutesAgo) : '—'}
                             </Box>
                         </Box>

@@ -24,21 +24,19 @@ import Typography from '@mui/material/Typography'
 import { approveTimesheet, getDepartments, getProjects, getTimesheet, getTimesheets, rejectTimesheet } from '../../lib/api'
 import type { TimesheetEntry, TimesheetStatus, UserInfo } from '../../lib/types'
 import type { Timesheet } from '../../lib/types/timesheet'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-    Draft:       { bg: '#EFF6FF', color: '#1D4ED8' },
-    Submitted:   { bg: '#FEF3C7', color: '#92400E' },
-    Approved:    { bg: '#D1FAE5', color: '#065F46' },
-    Rejected:    { bg: '#FEE2E2', color: '#991B1B' },
+const STATUS_COLORS: Record<string, { bg: SxColor; color: string }> = {
+    Draft:       { bg: softBg('info'), color: 'info.dark' },
+    Submitted:   { bg: softBg('warning'), color: 'warning.dark' },
+    Approved:    { bg: softBg('success'), color: 'success.dark' },
+    Rejected:    { bg: softBg('error'), color: 'error.dark' },
     Resubmitted: { bg: '#F3E8FF', color: '#6D28D9' },
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const s = STATUS_COLORS[status] ?? { bg: '#F3F4F6', color: '#6B7280' }
+    const s = STATUS_COLORS[status] ?? { bg: 'divider', color: 'text.secondary' }
     return (
         <Box
             component="span"
@@ -66,8 +64,8 @@ function DeptBadge({ dept }: { dept: string }) {
             component="span"
             sx={{
                 display: 'inline-block',
-                bgcolor: '#EFF6FF',
-                color: '#1D4ED8',
+                bgcolor: softBg('info'),
+                color: 'info.dark',
                 borderRadius: '4px',
                 px: 1,
                 py: 0.25,
@@ -97,18 +95,18 @@ const TH = {
     px: '14px',
     fontSize: 11,
     fontWeight: 600,
-    color: C_MUTED,
+    color: 'text.secondary',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB',
-    borderBottom: `1px solid ${C_BORDER}`,
+    bgcolor: 'action.hover',
+    borderBottom: '1px solid', borderColor: 'divider',
 }
 
 const TD = {
     py: '11px',
     px: '14px',
     fontSize: 13,
-    color: '#374151',
+    color: 'text.primary',
     borderBottom: `1px solid #F3F4F6`,
 }
 
@@ -215,18 +213,18 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
     return (
         <Stack spacing={2.5}>
             {/* Status tabs */}
-            <Box sx={{ borderBottom: `2px solid ${C_BORDER}`, mb: -1 }}>
+            <Box sx={{ borderBottom: '2px solid', borderColor: 'divider', mb: -1 }}>
                 <Tabs
                     value={statusTab}
                     onChange={(_e, v: StatusTab) => setStatusTab(v)}
-                    TabIndicatorProps={{ style: { backgroundColor: '#4F8EF7', height: 2 } }}
+                    TabIndicatorProps={{ style: { backgroundColor: 'primary.main', height: 2 } }}
                     sx={{
                         minHeight: 44,
                         '& .MuiTab-root': {
                             textTransform: 'none',
                             fontWeight: 500,
                             fontSize: 13,
-                            color: C_MUTED,
+                            color: 'text.secondary',
                             minHeight: 44,
                             py: 0,
                             px: 2.25,
@@ -241,21 +239,21 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
             {/* Table card */}
             <Paper
                 elevation={0}
-                sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}
+                sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}
             >
                 {/* Card header */}
                 <Box
                     sx={{
                         px: '18px',
                         py: '14px',
-                        borderBottom: `1px solid ${C_BORDER}`,
+                        borderBottom: '1px solid', borderColor: 'divider',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         gap: 2,
                     }}
                 >
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                         {isAdmin ? 'All Timesheets' : 'Team Timesheets'}
                     </Typography>
 
@@ -285,7 +283,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                     </Box>
                 ) : filtered.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 6 }}>
-                        <Typography sx={{ fontSize: 13, color: '#9CA3AF' }}>No timesheets found.</Typography>
+                        <Typography sx={{ fontSize: 13, color: 'text.disabled' }}>No timesheets found.</Typography>
                     </Box>
                 ) : (
                     <Box sx={{ overflowX: 'auto' }}>
@@ -310,12 +308,12 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                     return (
                                         <TableRow
                                             key={ts.id}
-                                            sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}
+                                            sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: 'action.hover' } }}
                                         >
                                             <TableCell sx={TD}><strong>{ts.employeeName}</strong></TableCell>
                                             {isAdmin && (
                                                 <TableCell sx={TD}>
-                                                    {deptName !== '—' ? <DeptBadge dept={deptName} /> : <span style={{ color: C_MUTED }}>—</span>}
+                                                    {deptName !== '—' ? <DeptBadge dept={deptName} /> : <span style={{ color: 'text.secondary' }}>—</span>}
                                                 </TableCell>
                                             )}
                                             <TableCell sx={TD}>{formatPeriod(ts.periodStart, ts.periodEnd)}</TableCell>
@@ -323,7 +321,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                             <TableCell sx={TD}>
                                                 <StatusBadge status={ts.status} />
                                             </TableCell>
-                                            <TableCell sx={{ ...TD, color: C_MUTED }}>
+                                            <TableCell sx={{ ...TD, color: 'text.secondary' }}>
                                                 {ts.submittedAt
                                                     ? new Date(ts.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                                                     : '—'}
@@ -340,10 +338,10 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                                                 py: '5px',
                                                                 px: 1.5,
                                                                 minWidth: 'unset',
-                                                                color: '#6B7280',
-                                                                borderColor: C_BORDER,
+                                                                color: 'text.secondary',
+                                                                borderColor: 'divider',
                                                                 textTransform: 'none',
-                                                                '&:hover': { bgcolor: '#F4F5F7', borderColor: C_BORDER },
+                                                                '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' },
                                                             }}
                                                         >
                                                             View
@@ -361,8 +359,8 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                                                 py: '5px',
                                                                 px: 1.5,
                                                                 minWidth: 'unset',
-                                                                bgcolor: '#22C47A',
-                                                                '&:hover': { bgcolor: '#18A867' },
+                                                                bgcolor: 'success.main',
+                                                                '&:hover': { bgcolor: 'success.dark' },
                                                                 textTransform: 'none',
                                                                 boxShadow: 'none',
                                                             }}
@@ -382,8 +380,8 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                                                 py: '5px',
                                                                 px: 1.5,
                                                                 minWidth: 'unset',
-                                                                bgcolor: '#FF4D4F',
-                                                                '&:hover': { bgcolor: '#E03C3E' },
+                                                                bgcolor: 'error.main',
+                                                                '&:hover': { bgcolor: 'error.dark' },
                                                                 textTransform: 'none',
                                                                 boxShadow: 'none',
                                                             }}
@@ -401,10 +399,10 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                                             py: '5px',
                                                             px: 1.5,
                                                             minWidth: 'unset',
-                                                            color: '#6B7280',
-                                                            borderColor: C_BORDER,
+                                                            color: 'text.secondary',
+                                                            borderColor: 'divider',
                                                             textTransform: 'none',
-                                                            '&:hover': { bgcolor: '#F4F5F7', borderColor: C_BORDER },
+                                                            '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' },
                                                         }}
                                                     >
                                                         View
@@ -432,7 +430,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                     <>
                         <DialogTitle sx={{ pb: 1 }}>
                             <Stack direction="row" alignItems="center" spacing={1.5}>
-                                <Typography sx={{ fontSize: 15, fontWeight: 700, color: C_HEADING }}>
+                                <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'text.primary' }}>
                                     {viewTs.employeeName} — {formatPeriod(viewTs.periodStart, viewTs.periodEnd)}
                                 </Typography>
                                 <StatusBadge status={viewTs.status} />
@@ -448,7 +446,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                 </Box>
                             ) : (
                                 <Stack spacing={2}>
-                                    <Box sx={{ border: `1px solid ${C_BORDER}`, borderRadius: '8px', overflow: 'hidden' }}>
+                                    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', overflow: 'hidden' }}>
                                         <Table sx={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <TableHead>
                                                 <TableRow>
@@ -461,7 +459,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                             <TableBody>
                                                 {entries.length === 0 ? (
                                                     <TableRow>
-                                                        <TableCell colSpan={4} sx={{ ...TD, textAlign: 'center', color: '#9CA3AF', py: 3 }}>
+                                                        <TableCell colSpan={4} sx={{ ...TD, textAlign: 'center', color: 'text.disabled', py: 3 }}>
                                                             No entries.
                                                         </TableCell>
                                                     </TableRow>
@@ -472,12 +470,12 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                                         return (
                                                             <TableRow
                                                                 key={entry.id}
-                                                                sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}
+                                                                sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: 'action.hover' } }}
                                                             >
                                                                 <TableCell sx={TD}>{projectName}</TableCell>
                                                                 <TableCell sx={TD}>{formatDate(entry.date)}</TableCell>
                                                                 <TableCell sx={TD}>{Number(entry.hoursWorked).toFixed(1)}</TableCell>
-                                                                <TableCell sx={{ ...TD, color: C_MUTED }}>{entry.notes ?? '—'}</TableCell>
+                                                                <TableCell sx={{ ...TD, color: 'text.secondary' }}>{entry.notes ?? '—'}</TableCell>
                                                             </TableRow>
                                                         )
                                                     })
@@ -487,9 +485,9 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                     </Box>
 
                                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>
+                                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
                                             Total:{' '}
-                                            <span style={{ color: '#4F8EF7' }}>
+                                            <span style={{ color: 'primary.main' }}>
                                                 {entries.reduce((sum, e) => sum + Number(e.hoursWorked), 0).toFixed(1)} hrs
                                             </span>
                                         </Typography>
@@ -504,7 +502,7 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                             <Button
                                 variant="outlined"
                                 onClick={() => setViewTs(null)}
-                                sx={{ textTransform: 'none', borderColor: C_BORDER, color: C_MUTED }}
+                                sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
                             >
                                 Close
                             </Button>
@@ -520,8 +518,8 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                         startIcon={isActioning && rejectMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
                                         sx={{
                                             textTransform: 'none',
-                                            bgcolor: '#FF4D4F',
-                                            '&:hover': { bgcolor: '#E03C3E' },
+                                            bgcolor: 'error.main',
+                                            '&:hover': { bgcolor: 'error.dark' },
                                             boxShadow: 'none',
                                         }}
                                     >
@@ -537,8 +535,8 @@ const TeamTimesheetPage = observer(function TeamTimesheetPage({ user }: { user: 
                                         startIcon={isActioning && approveMutation.isPending ? <CircularProgress size={14} color="inherit" /> : null}
                                         sx={{
                                             textTransform: 'none',
-                                            bgcolor: '#22C47A',
-                                            '&:hover': { bgcolor: '#18A867' },
+                                            bgcolor: 'success.main',
+                                            '&:hover': { bgcolor: 'success.dark' },
                                             boxShadow: 'none',
                                         }}
                                     >

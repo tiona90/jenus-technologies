@@ -25,6 +25,7 @@ import {
     updateProject,
 } from '../../lib/api'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
+import { softBg } from '../../lib/theme-tokens'
 import type {
     AdminUser,
     Department,
@@ -35,25 +36,19 @@ import type {
 
 /* ─── tokens ─────────────────────────────────────────────────────────────── */
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
-const C_GREEN = '#22C47A'
-const C_AMBER = '#F59E0B'
 
 const CODE_COLORS: Record<string, string> = {
-    p1: '#4F8EF7', p2: '#22C47A', p3: '#F59E0B', p4: '#8B5CF6', p5: '#FF4D4F',
+    p1: 'primary.main', p2: 'success.main', p3: 'warning.main', p4: 'secondary.main', p5: 'error.main',
 }
 const COLOR_KEYS = Object.keys(CODE_COLORS)
 
 const STATUS_COLORS = {
-    Active:   { bg: '#D1FAE5', fg: '#065F46', dot: C_GREEN },
-    OnHold:   { bg: '#FEF3C7', fg: '#92400E', dot: C_AMBER },
-    Inactive: { bg: '#F3F4F6', fg: '#6B7280', dot: '#9CA3AF' },
+    Active:   { bg: softBg('success'), fg: 'success.dark', dot: 'success.main' },
+    OnHold:   { bg: softBg('warning'), fg: 'warning.dark', dot: 'warning.main' },
+    Inactive: { bg: 'divider', fg: 'text.secondary', dot: 'text.disabled' },
 } as const
 
-const AVATAR_PALETTE = ['#4F8EF7', '#22C47A', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#FF4D4F']
+const AVATAR_PALETTE = ['primary.main', 'success.main', 'warning.main', 'secondary.main', '#EC4899', '#06B6D4', '#84CC16', 'error.main']
 
 type StatusFilter = 'all' | ProjectStatus
 type DeptFilter = 'all' | number | 'cross'
@@ -182,7 +177,7 @@ function ProjectsPanel() {
                 <StatCard
                     label="⏱ Hours Logged YTD"
                     value={counts.totalHoursYTD.toLocaleString()}
-                    valueColor={C_BLUE}
+                    valueColor={'primary.main'}
                     sub={`across all projects${counts.active > 0
                         ? ` · avg ${Math.round(counts.totalHoursYTD / counts.active)} per active`
                         : ''}`}
@@ -190,13 +185,13 @@ function ProjectsPanel() {
                 <StatCard
                     label="👥 Team Members"
                     value={String(counts.members)}
-                    valueColor={C_GREEN}
+                    valueColor={'success.main'}
                     sub="contributing across all projects"
                 />
                 <StatCard
                     label="⚠️ Low Activity"
                     value={String(counts.lowActivity)}
-                    valueColor={counts.lowActivity > 0 ? C_AMBER : C_GREEN}
+                    valueColor={counts.lowActivity > 0 ? 'warning.main' : 'success.main'}
                     sub={counts.lowActivity === 0
                         ? 'all projects on track'
                         : `project${counts.lowActivity === 1 ? '' : 's'} < 50% target`}
@@ -205,7 +200,7 @@ function ProjectsPanel() {
 
             {/* Toolbar */}
             <Box sx={{
-                bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+                bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
                 p: '10px 12px', display: 'flex', gap: '10px', flexWrap: 'wrap',
                 alignItems: 'center', mb: '14px',
             }}>
@@ -218,8 +213,10 @@ function ProjectsPanel() {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                         sx={{
                             width: '100%', p: '7px 10px', fontSize: 13, fontFamily: 'inherit',
-                            border: `1px solid ${C_BORDER}`, borderRadius: '6px', outline: 'none',
-                            '&:focus': { borderColor: C_BLUE, boxShadow: '0 0 0 3px rgba(79,142,247,0.1)' },
+                            border: '1px solid', borderColor: 'divider', borderRadius: '6px', outline: 'none',
+                            bgcolor: 'background.paper', color: 'text.primary',
+                            '&::placeholder': { color: 'text.disabled' },
+                            '&:focus': { borderColor: 'primary.main' },
                         }}
                     />
                 </Box>
@@ -247,10 +244,10 @@ function ProjectsPanel() {
                     component="button"
                     onClick={() => setCreateOpen(true)}
                     sx={{
-                        bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '14px', py: '7px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                         fontFamily: 'inherit', whiteSpace: 'nowrap',
-                        '&:hover': { bgcolor: '#3A7AE4' },
+                        '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
                     + New project
@@ -260,8 +257,8 @@ function ProjectsPanel() {
             {/* Grid */}
             {filtered.length === 0 ? (
                 <Box sx={{
-                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                 }}>
                     No projects match the current filters.
                 </Box>
@@ -284,7 +281,7 @@ function ProjectsPanel() {
                                     showCancelButton: true,
                                     confirmButtonText: 'Yes, delete',
                                     cancelButtonText: 'Cancel',
-                                    confirmButtonColor: '#EF4444',
+                                    confirmButtonColor: 'error.main',
                                     reverseButtons: true,
                                 })
                                 if (result.isConfirmed) deleteMutation.mutate(p.id)
@@ -332,10 +329,10 @@ function ProjectCard({ project, onEdit, onDelete }: {
     onDelete: () => void
 }) {
     const p = project
-    const codeColor = p.status === 'Inactive' ? '#9CA3AF' : (CODE_COLORS[p.colorKey] ?? CODE_COLORS.p1)
+    const codeColor = p.status === 'Inactive' ? 'text.disabled' : (CODE_COLORS[p.colorKey] ?? CODE_COLORS.p1)
     const status = STATUS_COLORS[p.status]
     const weekPct = p.targetWeeklyHours > 0 ? (p.hoursThisWeek / p.targetWeeklyHours) * 100 : 0
-    const fillColor = weekPct < 50 ? C_AMBER : weekPct >= 100 ? C_GREEN : C_BLUE
+    const fillColor = weekPct < 50 ? 'warning.main' : weekPct >= 100 ? 'success.main' : 'primary.main'
     const avgPerPerson = p.teamSize > 0 ? +(p.hoursThisWeek / p.teamSize).toFixed(1) : 0
 
     const visibleTeam = p.team.slice(0, 6)
@@ -347,16 +344,16 @@ function ProjectCard({ project, onEdit, onDelete }: {
 
     return (
         <Box sx={{
-            bgcolor: isInactive ? '#FAFBFC' : '#fff',
-            border: `1px solid ${C_BORDER}`, borderRadius: '12px',
+            bgcolor: isInactive ? 'action.hover' : 'background.paper',
+            border: '1px solid', borderColor: 'divider', borderRadius: '12px',
             overflow: 'hidden', transition: 'all 0.15s',
             display: 'flex', flexDirection: 'column',
             opacity: isInactive ? 0.7 : 1,
-            '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 6px 20px rgba(0,0,0,0.06)' },
+            '&:hover': { transform: 'translateY(-2px)' },
         }}>
             {/* Header */}
             <Box sx={{
-                p: '16px 18px', borderBottom: '1px solid #F3F4F6',
+                p: '16px 18px', borderBottom: '1px solid', borderBottomColor: 'divider',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px',
             }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -365,17 +362,17 @@ function ProjectCard({ project, onEdit, onDelete }: {
                         fontSize: 11, fontWeight: 700, px: '8px', py: '3px',
                         borderRadius: '6px', letterSpacing: '0.02em', mb: '6px',
                     }}>{p.code}</Box>
-                    <Box sx={{ fontSize: 16, fontWeight: 700, color: C_HEADING, lineHeight: 1.3, mb: '6px' }}>
+                    <Box sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary', lineHeight: 1.3, mb: '6px' }}>
                         {p.name}
                     </Box>
                     <Box sx={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <Box sx={{
                             fontSize: 11, px: '8px', py: '2px', borderRadius: '10px',
-                            bgcolor: '#F4F5F7', color: C_MUTED, fontWeight: 500,
+                            bgcolor: 'action.hover', color: 'text.secondary', fontWeight: 500,
                         }}>{deptName}</Box>
                         {p.ownerName && (
-                            <Box sx={{ fontSize: 11, color: C_MUTED }}>
-                                Owner: <Box component="strong" sx={{ color: C_HEADING, fontWeight: 600 }}>{p.ownerName}</Box>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary' }}>
+                                Owner: <Box component="strong" sx={{ color: 'text.primary', fontWeight: 600 }}>{p.ownerName}</Box>
                             </Box>
                         )}
                     </Box>
@@ -395,14 +392,14 @@ function ProjectCard({ project, onEdit, onDelete }: {
 
             {/* Team */}
             {p.teamSize > 0 ? (
-                <Box sx={{ p: '12px 18px', borderBottom: '1px solid #F3F4F6' }}>
+                <Box sx={{ p: '12px 18px', borderBottom: '1px solid', borderBottomColor: 'divider' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '8px' }}>
-                        <Box sx={{ fontSize: 10, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                        <Box sx={{ fontSize: 10, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                             Team
                         </Box>
-                        <Box sx={{ fontSize: 13, fontWeight: 700, color: C_HEADING }}>
+                        <Box sx={{ fontSize: 13, fontWeight: 700, color: 'text.primary' }}>
                             {p.teamSize}
-                            <Box component="span" sx={{ fontSize: 11, color: C_MUTED, fontWeight: 500, ml: '4px' }}>
+                            <Box component="span" sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500, ml: '4px' }}>
                                 {p.teamSize === 1 ? 'person' : 'people'}
                             </Box>
                         </Box>
@@ -417,7 +414,7 @@ function ProjectCard({ project, onEdit, onDelete }: {
                                     bgcolor: avatarBg(m.displayName || m.userId), color: '#fff',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: 11, fontWeight: 600,
-                                    border: '2px solid #fff',
+                                    border: '2px solid', borderColor: 'background.paper',
                                     marginLeft: '-6px', '&:first-of-type': { marginLeft: 0 },
                                 }}
                             >{initials(m.displayName)}</Box>
@@ -425,47 +422,47 @@ function ProjectCard({ project, onEdit, onDelete }: {
                         {remaining > 0 && (
                             <Box sx={{
                                 width: 32, height: 32, borderRadius: '50%',
-                                bgcolor: '#F4F5F7', color: C_MUTED,
+                                bgcolor: 'action.hover', color: 'text.secondary',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: 10, fontWeight: 600,
-                                border: '2px solid #fff', marginLeft: '-6px',
+                                border: '2px solid', borderColor: 'background.paper', marginLeft: '-6px',
                             }}>+{remaining}</Box>
                         )}
                     </Box>
                 </Box>
             ) : (
                 <Box sx={{
-                    p: '12px 18px', borderBottom: '1px solid #F3F4F6',
-                    bgcolor: '#FFFBEB', borderLeft: '3px solid #FDE68A',
-                    fontSize: 11, color: '#92400E',
+                    p: '12px 18px', borderBottom: '1px solid', borderBottomColor: 'divider',
+                    bgcolor: softBg('warning'), borderLeft: '3px solid', borderLeftColor: 'warning.main',
+                    fontSize: 11, color: 'warning.dark',
                 }}>
                     ⚠ No team members assigned to this project
                 </Box>
             )}
 
             {/* Hours */}
-            <Box sx={{ p: '14px 18px', borderBottom: '1px solid #F3F4F6' }}>
+            <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderBottomColor: 'divider' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '8px' }}>
-                    <Box sx={{ fontSize: 10, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                    <Box sx={{ fontSize: 10, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                         Hours logged
                     </Box>
-                    <Box sx={{ fontSize: 11, color: C_MUTED }}>This week</Box>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary' }}>This week</Box>
                 </Box>
-                <Box sx={{ fontSize: 26, fontWeight: 700, color: C_HEADING, lineHeight: 1, mb: '8px' }}>
+                <Box sx={{ fontSize: 26, fontWeight: 700, color: 'text.primary', lineHeight: 1, mb: '8px' }}>
                     {p.hoursThisWeek}
-                    <Box component="span" sx={{ fontSize: 13, fontWeight: 500, color: C_MUTED, ml: '4px' }}>
+                    <Box component="span" sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', ml: '4px' }}>
                         / {p.targetWeeklyHours}h
                     </Box>
                 </Box>
                 {p.targetWeeklyHours > 0 ? (
                     <>
-                        <Box sx={{ height: 8, bgcolor: '#F4F5F7', borderRadius: '4px', overflow: 'hidden', mb: '10px' }}>
+                        <Box sx={{ height: 8, bgcolor: 'action.hover', borderRadius: '4px', overflow: 'hidden', mb: '10px' }}>
                             <Box sx={{
                                 height: '100%', bgcolor: fillColor, borderRadius: '4px',
                                 width: `${Math.min(100, weekPct)}%`, transition: 'width 0.3s',
                             }} />
                         </Box>
-                        <Box sx={{ fontSize: 11, color: C_MUTED }}>
+                        <Box sx={{ fontSize: 11, color: 'text.secondary' }}>
                             {weekPct < 50
                                 ? `⚠ ${Math.max(0, p.targetWeeklyHours - p.hoursThisWeek).toFixed(0)}h below target · may need attention`
                                 : weekPct >= 100
@@ -474,7 +471,7 @@ function ProjectCard({ project, onEdit, onDelete }: {
                         </Box>
                     </>
                 ) : (
-                    <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>
+                    <Box sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>
                         {p.hoursThisWeek > 0 ? 'No weekly target set' : 'No activity this week'}
                     </Box>
                 )}
@@ -482,8 +479,8 @@ function ProjectCard({ project, onEdit, onDelete }: {
 
             {/* Top contributors */}
             {topContributors.length > 0 && (
-                <Box sx={{ p: '12px 18px', borderBottom: '1px solid #F3F4F6' }}>
-                    <Box sx={{ fontSize: 10, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '8px' }}>
+                <Box sx={{ p: '12px 18px', borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+                    <Box sx={{ fontSize: 10, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '8px' }}>
                         Top contributors (this week)
                     </Box>
                     {topContributors.map((m) => (
@@ -497,15 +494,15 @@ function ProjectCard({ project, onEdit, onDelete }: {
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: 8, fontWeight: 600,
                             }}>{initials(m.displayName)}</Box>
-                            <Box sx={{ fontSize: 12, color: C_HEADING, fontWeight: 500 }}>{m.displayName}</Box>
-                            <Box sx={{ fontSize: 11, color: C_MUTED, fontWeight: 600 }}>{m.hoursThisWeek}h</Box>
+                            <Box sx={{ fontSize: 12, color: 'text.primary', fontWeight: 500 }}>{m.displayName}</Box>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 600 }}>{m.hoursThisWeek}h</Box>
                         </Box>
                     ))}
                 </Box>
             )}
 
             {/* Stats triplet */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1px', bgcolor: '#F3F4F6', mt: 'auto' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1px', bgcolor: 'divider', mt: 'auto' }}>
                 <CardStat label="YTD hours" value={p.hoursYTD.toLocaleString()} sub="total logged" />
                 <CardStat
                     label="Team"
@@ -516,14 +513,14 @@ function ProjectCard({ project, onEdit, onDelete }: {
                     label="Avg/week"
                     value={avgPerPerson > 0 ? avgPerPerson.toFixed(1) : '—'}
                     sub="hrs per person"
-                    valueColor={avgPerPerson > 0 && avgPerPerson < 10 && p.status === 'Active' ? C_AMBER : undefined}
+                    valueColor={avgPerPerson > 0 && avgPerPerson < 10 && p.status === 'Active' ? 'warning.main' : undefined}
                 />
             </Box>
 
             {/* Footer */}
             <Box sx={{
                 display: 'flex', gap: '6px', p: '10px 14px',
-                bgcolor: '#FAFBFC',
+                bgcolor: 'action.hover',
             }}>
                 <OutlineBtn flex onClick={onEdit}>✏️ Edit</OutlineBtn>
                 <OutlineBtn flex danger onClick={onDelete}>🗑 Delete</OutlineBtn>
@@ -538,22 +535,22 @@ function AddCard({ onClick }: { onClick: () => void }) {
             component="button"
             onClick={onClick}
             sx={{
-                bgcolor: '#FAFBFC', border: `2px dashed #D1D5DB`,
+                bgcolor: 'action.hover', border: '2px dashed', borderColor: 'divider',
                 borderRadius: '12px', p: '40px 20px', minHeight: 440,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
-                color: C_MUTED, transition: 'all 0.15s',
-                '&:hover': { borderColor: C_BLUE, bgcolor: '#EEF4FF', transform: 'translateY(-2px)' },
+                color: 'text.secondary', transition: 'all 0.15s',
+                '&:hover': { borderColor: 'primary.main', bgcolor: softBg('primary'), transform: 'translateY(-2px)' },
             }}
         >
             <Box sx={{
                 width: 56, height: 56, borderRadius: '50%',
-                bgcolor: '#fff', border: '2px dashed #D1D5DB',
+                bgcolor: 'background.paper', border: '2px dashed', borderColor: 'divider',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, color: C_MUTED, mb: '12px',
+                fontSize: 24, color: 'text.secondary', mb: '12px',
             }}>+</Box>
-            <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING, mb: '4px' }}>Create a new project</Box>
-            <Box sx={{ fontSize: 12, color: C_MUTED, lineHeight: 1.5 }}>
+            <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', mb: '4px' }}>Create a new project</Box>
+            <Box sx={{ fontSize: 12, color: 'text.secondary', lineHeight: 1.5 }}>
                 Set up a project code, assign a team,<br/>and start tracking time
             </Box>
         </Box>
@@ -569,12 +566,12 @@ function CardStat({ label, value, sub, valueColor }: {
     valueColor?: string
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', p: '12px 14px', textAlign: 'center' }}>
-            <Box sx={{ fontSize: 10, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '4px' }}>
+        <Box sx={{ bgcolor: 'background.paper', p: '12px 14px', textAlign: 'center' }}>
+            <Box sx={{ fontSize: 10, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '4px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 17, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 10, color: C_MUTED, mt: '2px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 17, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 10, color: 'text.secondary', mt: '2px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -586,12 +583,12 @@ function StatCard({ label, value, sub, valueColor }: {
     valueColor?: string
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '14px 16px' }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '14px 16px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 26, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '6px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 26, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '6px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -608,9 +605,9 @@ function SelectFilter({ value, onChange, options }: {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
             sx={{
                 fontSize: 12, fontFamily: 'inherit', p: '7px 10px',
-                border: `1px solid ${C_BORDER}`, borderRadius: '6px',
-                color: '#374151', bgcolor: '#fff', outline: 'none', cursor: 'pointer',
-                '&:focus': { borderColor: C_BLUE },
+                border: '1px solid', borderColor: 'divider', borderRadius: '6px',
+                color: 'text.primary', bgcolor: 'background.paper', outline: 'none', cursor: 'pointer',
+                '&:focus': { borderColor: 'primary.main' },
             }}
         >
             {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -629,14 +626,14 @@ function OutlineBtn({ children, onClick, flex, danger }: {
             component="button"
             onClick={onClick}
             sx={{
-                bgcolor: '#fff', color: danger ? '#FF4D4F' : C_HEADING,
-                border: `1px solid ${danger ? '#FECACA' : C_BORDER}`,
+                bgcolor: 'background.paper', color: danger ? 'error.main' : 'text.primary',
+                border: `1px solid ${danger ? 'error.main' : 'divider'}`,
                 borderRadius: '6px', px: '12px', py: '6px',
                 fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
                 flex: flex ? 1 : 'initial',
                 '&:hover': danger
-                    ? { bgcolor: '#FFF5F5', borderColor: '#FECACA' }
-                    : { bgcolor: '#F4F5F7', borderColor: C_BLUE, color: C_BLUE },
+                    ? { bgcolor: '#FFF5F5', borderColor: 'error.main' }
+                    : { bgcolor: 'action.hover', borderColor: 'primary.main', color: 'primary.main' },
             }}
         >
             {children}

@@ -20,17 +20,15 @@ import Typography from '@mui/material/Typography'
 import { getAppSettings, getDepartments, getEmployeeProfiles, getHolidayCountries, updateAppSettings } from '../../lib/api'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
 import type { AppSettings, HolidayCountry } from '../../lib/types'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
 
 const TH = {
-    py: '10px', px: '14px', fontSize: 11, fontWeight: 600, color: C_MUTED,
+    py: '10px', px: '14px', fontSize: 11, fontWeight: 600, color: 'text.secondary',
     textTransform: 'uppercase' as const, letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB', borderBottom: `1px solid ${C_BORDER}`,
+    bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider',
 }
-const TD = { py: '11px', px: '14px', fontSize: 13, color: '#374151', borderBottom: `1px solid #F3F4F6` }
+const TD = { py: '11px', px: '14px', fontSize: 13, color: 'text.primary', borderBottom: `1px solid #F3F4F6` }
 
 const MONTHS = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -63,10 +61,10 @@ function ToggleRow({ title, sub, checked, onChange }: {
     title: string; sub: string; checked: boolean; onChange: (v: boolean) => void
 }) {
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1.25, borderBottom: `1px solid ${C_BORDER}`, '&:last-child': { borderBottom: 'none' } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1.25, borderBottom: '1px solid', borderColor: 'divider', '&:last-child': { borderBottom: 'none' } }}>
             <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 500, color: C_HEADING }}>{title}</Typography>
-                <Typography sx={{ fontSize: 11, color: C_MUTED }}>{sub}</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'text.primary' }}>{title}</Typography>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{sub}</Typography>
             </Box>
             <Switch checked={checked} onChange={(e) => onChange(e.target.checked)} size="small" />
         </Box>
@@ -74,14 +72,14 @@ function ToggleRow({ title, sub, checked, onChange }: {
 }
 
 function ScheduleRow({ label, date, color, bg, border, badge, badgeBg, badgeColor }: {
-    label: string; date: string; color: string; bg: string; border: string
-    badge: string; badgeBg: string; badgeColor: string
+    label: string; date: string; color: string; bg: SxColor; border: string
+    badge: string; badgeBg: SxColor; badgeColor: string
 }) {
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '10px 12px', bgcolor: bg, border: `1px solid ${border}`, borderRadius: '8px' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '10px 12px', bgcolor: bg, border: '1px solid', borderColor: border, borderRadius: '8px' }}>
             <Box>
                 <Typography sx={{ fontSize: 12, fontWeight: 500, color }}>{label}</Typography>
-                <Typography sx={{ fontSize: 11, color: C_MUTED }}>{date}</Typography>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>{date}</Typography>
             </Box>
             <Box component="span" sx={{ fontSize: 11, fontWeight: 500, px: 1.1, py: 0.4, borderRadius: '20px', bgcolor: badgeBg, color: badgeColor, whiteSpace: 'nowrap' }}>
                 {badge}
@@ -193,15 +191,15 @@ export default function AppSettingsPanel() {
             <Grid container spacing={2.5} alignItems="flex-start">
                 {/* ── Left: Configuration ─────────────────────────────────── */}
                 <Grid size={{ xs: 12, md: 7 }}>
-                    <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
-                        <Box sx={{ px: 2.25, py: 1.75, borderBottom: `1px solid ${C_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Leave Year Configuration</Typography>
-                            <Box component="span" sx={{ fontSize: 11, fontWeight: 500, px: 1.1, py: 0.4, borderRadius: '20px', bgcolor: '#DBEAFE', color: '#1D4ED8' }}>Admin Only</Box>
+                    <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
+                        <Box sx={{ px: 2.25, py: 1.75, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>Leave Year Configuration</Typography>
+                            <Box component="span" sx={{ fontSize: 11, fontWeight: 500, px: 1.1, py: 0.4, borderRadius: '20px', bgcolor: softBg('info'), color: 'info.dark' }}>Admin Only</Box>
                         </Box>
                         <Box sx={{ p: 2.25 }}>
                             <Stack spacing={2}>
                                 {/* Warning */}
-                                <Box sx={{ display: 'flex', gap: 1, p: '10px 14px', bgcolor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', fontSize: 12, color: '#92400E' }}>
+                                <Box sx={{ display: 'flex', gap: 1, p: '10px 14px', bgcolor: softBg('warning'), border: '1px solid #FDE68A', borderRadius: '8px', fontSize: 12, color: 'warning.dark' }}>
                                     <span>⚠️</span>
                                     <span>Changes take effect from the <strong>next rollover only</strong>. The current year is not affected.</span>
                                 </Box>
@@ -209,7 +207,7 @@ export default function AppSettingsPanel() {
                                 {/* Leave Year Dates */}
                                 <Grid container spacing={1.5}>
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, mb: 0.75 }}>Leave Year Start Month</Typography>
+                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', mb: 0.75 }}>Leave Year Start Month</Typography>
                                         <Select
                                             size="small" fullWidth value={form.leaveYearStartMonth}
                                             onChange={(e) => set('leaveYearStartMonth', Number(e.target.value))}
@@ -219,11 +217,11 @@ export default function AppSettingsPanel() {
                                         </Select>
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, mb: 0.75 }}>Leave Year End Date</Typography>
+                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', mb: 0.75 }}>Leave Year End Date</Typography>
                                         <TextField
                                             size="small" fullWidth disabled
                                             value={fmt(endDate)}
-                                            sx={{ '& .MuiInputBase-input': { fontSize: 13, bgcolor: '#F9FAFB', color: C_MUTED } }}
+                                            sx={{ '& .MuiInputBase-input': { fontSize: 13, bgcolor: 'action.hover', color: 'text.secondary' } }}
                                         />
                                     </Grid>
                                 </Grid>
@@ -231,7 +229,7 @@ export default function AppSettingsPanel() {
                                 {/* Carryover + Entitlement */}
                                 <Grid container spacing={1.5}>
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, mb: 0.75 }}>Max Carryover Days</Typography>
+                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', mb: 0.75 }}>Max Carryover Days</Typography>
                                         <TextField
                                             size="small" fullWidth type="number"
                                             value={form.maxCarryoverDays}
@@ -239,10 +237,10 @@ export default function AppSettingsPanel() {
                                             inputProps={{ min: 0, max: 50 }}
                                             sx={{ '& .MuiInputBase-input': { fontSize: 13 } }}
                                         />
-                                        <Typography sx={{ fontSize: 11, color: '#9CA3AF', mt: 0.5 }}>Days above this cap expire at year end</Typography>
+                                        <Typography sx={{ fontSize: 11, color: 'text.disabled', mt: 0.5 }}>Days above this cap expire at year end</Typography>
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, mb: 0.75 }}>Default Annual Entitlement</Typography>
+                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', mb: 0.75 }}>Default Annual Entitlement</Typography>
                                         <TextField
                                             size="small" fullWidth type="number"
                                             value={form.defaultAnnualEntitlement}
@@ -256,7 +254,7 @@ export default function AppSettingsPanel() {
                                 {/* Warning days */}
                                 <Grid container spacing={1.5}>
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, mb: 0.75 }}>Year-End Warning (days before)</Typography>
+                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', mb: 0.75 }}>Year-End Warning (days before)</Typography>
                                         <TextField
                                             size="small" fullWidth type="number"
                                             value={form.yearEndWarningDays}
@@ -266,7 +264,7 @@ export default function AppSettingsPanel() {
                                         />
                                     </Grid>
                                     <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, mb: 0.75 }}>Final Warning (days before)</Typography>
+                                        <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', mb: 0.75 }}>Final Warning (days before)</Typography>
                                         <TextField
                                             size="small" fullWidth type="number"
                                             value={form.finalWarningDays}
@@ -279,7 +277,7 @@ export default function AppSettingsPanel() {
 
                                 {/* Public holidays */}
                                 <Box>
-                                    <Typography sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING, mb: 0.75 }}>
+                                    <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', mb: 0.75 }}>
                                         Public Holidays — Country
                                     </Typography>
                                     <Autocomplete<HolidayCountry, false, false, false>
@@ -307,7 +305,7 @@ export default function AppSettingsPanel() {
                                             />
                                         )}
                                     />
-                                    <Typography sx={{ fontSize: 11, color: '#9CA3AF', mt: 0.5 }}>
+                                    <Typography sx={{ fontSize: 11, color: 'text.disabled', mt: 0.5 }}>
                                         Holidays are fetched from{' '}
                                         <Box component="span" sx={{ fontFamily: 'monospace' }}>date.nager.at</Box>{' '}
                                         and cached server-side. Changing country re-fetches on first request.
@@ -315,7 +313,7 @@ export default function AppSettingsPanel() {
                                 </Box>
 
                                 {/* Toggles */}
-                                <Box sx={{ border: `1px solid ${C_BORDER}`, borderRadius: '8px', px: 2, py: 0.5 }}>
+                                <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', px: 2, py: 0.5 }}>
                                     <ToggleRow title="Auto-run rollover on reset date" sub={`Resets balances automatically on ${fmt(nextReset)}`} checked={form.autoRunRollover} onChange={(v) => set('autoRunRollover', v)} />
                                     <ToggleRow title="Send year-end warning emails" sub="Notify employees with days at risk" checked={form.sendYearEndWarningEmails} onChange={(v) => set('sendYearEndWarningEmails', v)} />
                                     <ToggleRow title="Block leave spanning into next year" sub="Employees cannot submit leave beyond year end" checked={form.blockLeaveSpanningIntoNextYear} onChange={(v) => set('blockLeaveSpanningIntoNextYear', v)} />
@@ -329,12 +327,12 @@ export default function AppSettingsPanel() {
 
                                 <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                                     <Button variant="outlined" size="small" onClick={() => saved && setForm(saved)} disabled={!isDirty || mutation.isPending}
-                                        sx={{ textTransform: 'none', borderColor: C_BORDER, color: C_MUTED }}>
+                                        sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}>
                                         Cancel
                                     </Button>
                                     <Button variant="contained" size="small" onClick={() => mutation.mutate()} disabled={!isDirty || mutation.isPending}
                                         startIcon={mutation.isPending ? <CircularProgress size={13} color="inherit" /> : null}
-                                        sx={{ textTransform: 'none', bgcolor: '#4F8EF7', '&:hover': { bgcolor: '#3A7AE4' }, boxShadow: 'none' }}>
+                                        sx={{ textTransform: 'none', bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, boxShadow: 'none' }}>
                                         {mutation.isPending ? 'Saving…' : 'Save Settings'}
                                     </Button>
                                 </Box>
@@ -347,37 +345,37 @@ export default function AppSettingsPanel() {
                 <Grid size={{ xs: 12, md: 5 }}>
                     <Stack spacing={2}>
                         {/* Current Leave Year */}
-                        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
-                            <Box sx={{ px: 2.25, py: 1.75, borderBottom: `1px solid ${C_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Current Leave Year</Typography>
-                                <Box component="span" sx={{ fontSize: 11, fontWeight: 500, px: 1.1, py: 0.4, borderRadius: '20px', bgcolor: '#D1FAE5', color: '#065F46' }}>● Active</Box>
+                        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
+                            <Box sx={{ px: 2.25, py: 1.75, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>Current Leave Year</Typography>
+                                <Box component="span" sx={{ fontSize: 11, fontWeight: 500, px: 1.1, py: 0.4, borderRadius: '20px', bgcolor: softBg('success'), color: 'success.dark' }}>● Active</Box>
                             </Box>
                             <Box sx={{ p: 2.25 }}>
                                 {/* Stats 2×2 */}
                                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', mb: 2 }}>
-                                    {[
-                                        { bg: '#EFF6FF', color: '#1D4ED8', label: 'Year', value: yearLabel },
-                                        { bg: '#F0FDF4', color: '#15803D', label: 'Days Remaining', value: String(daysRemaining) },
-                                        { bg: '#FFFBEB', color: '#92400E', label: 'Carryover Cap', value: `${form.maxCarryoverDays} days` },
-                                        { bg: '#F5F3FF', color: '#5B21B6', label: 'Next Reset', value: fmt(nextReset) },
-                                    ].map(({ bg, color, label, value }) => (
+                                    {([
+                                        { bg: softBg('info'),      color: 'info.dark',      label: 'Year',           value: yearLabel },
+                                        { bg: softBg('success'),   color: 'success.dark',   label: 'Days Remaining', value: String(daysRemaining) },
+                                        { bg: softBg('warning'),   color: 'warning.dark',   label: 'Carryover Cap',  value: `${form.maxCarryoverDays} days` },
+                                        { bg: softBg('secondary'), color: 'secondary.dark', label: 'Next Reset',     value: fmt(nextReset) },
+                                    ] as const).map(({ bg, color, label, value }) => (
                                         <Box key={label} sx={{ bgcolor: bg, borderRadius: '8px', p: '12px', textAlign: 'center' }}>
                                             <Typography sx={{ fontSize: 11, color, mb: 0.5 }}>{label}</Typography>
-                                            <Typography sx={{ fontSize: 15, fontWeight: 700, color: C_HEADING }}>{value}</Typography>
+                                            <Typography sx={{ fontSize: 15, fontWeight: 700, color: 'text.primary' }}>{value}</Typography>
                                         </Box>
                                     ))}
                                 </Box>
 
                                 {/* Year progress bar */}
-                                <Typography sx={{ fontSize: 11, fontWeight: 600, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: 0.75 }}>
+                                <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 0.75 }}>
                                     Year Progress
                                 </Typography>
                                 <Box sx={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', height: 26, mb: 0.5 }}>
                                     {[
-                                        { label: quarters[0], color: '#4F8EF7' },
-                                        { label: quarters[1], color: '#22C47A' },
-                                        { label: quarters[2], color: '#F59E0B' },
-                                        { label: quarters[3], color: '#EF4444' },
+                                        { label: quarters[0], color: 'primary.main' },
+                                        { label: quarters[1], color: 'success.main' },
+                                        { label: quarters[2], color: 'warning.main' },
+                                        { label: quarters[3], color: 'error.main' },
                                     ].map(({ label, color }) => (
                                         <Box key={label} sx={{ flex: 1, bgcolor: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', fontWeight: 500 }}>
                                             {label}
@@ -387,13 +385,13 @@ export default function AppSettingsPanel() {
                                         Roll
                                     </Box>
                                 </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#9CA3AF', mb: 1.75 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'text.disabled', mb: 1.75 }}>
                                     <span>{fmt(lyStart)}</span>
                                     <span>{fmt(lyEnd)}</span>
                                 </Box>
 
                                 {/* Rollover info */}
-                                <Box sx={{ display: 'flex', gap: 1, p: '10px 14px', bgcolor: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '8px', fontSize: 12, color: '#5B21B6' }}>
+                                <Box sx={{ display: 'flex', gap: 1, p: '10px 14px', bgcolor: softBg('secondary'), border: '1px solid', borderColor: 'secondary.main', borderRadius: '8px', fontSize: 12, color: 'secondary.dark' }}>
                                     <span>🔁</span>
                                     <span>On <strong>{fmt(nextReset)}</strong> the system will auto-calculate carryover (max {form.maxCarryoverDays} days), expire excess, and reset all balances.</span>
                                 </Box>
@@ -401,17 +399,17 @@ export default function AppSettingsPanel() {
                         </Box>
 
                         {/* Upcoming Schedule */}
-                        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
-                            <Box sx={{ px: 2.25, py: 1.75, borderBottom: `1px solid ${C_BORDER}` }}>
-                                <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Upcoming Schedule</Typography>
+                        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
+                            <Box sx={{ px: 2.25, py: 1.75, borderBottom: '1px solid', borderColor: 'divider' }}>
+                                <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>Upcoming Schedule</Typography>
                             </Box>
                             <Box sx={{ p: 2.25 }}>
                                 <Stack spacing={1}>
-                                    <ScheduleRow label={`${form.yearEndWarningDays}-day warning emails`} date={fmt(warningDate)} color="#92400E" bg="#FFFBEB" border="#FDE68A" badge="Scheduled" badgeBg="#FEF3C7" badgeColor="#92400E" />
-                                    <ScheduleRow label={`${form.finalWarningDays}-day final warning`} date={fmt(finalWarnDate)} color="#92400E" bg="#FFFBEB" border="#FDE68A" badge="Scheduled" badgeBg="#FEF3C7" badgeColor="#92400E" />
-                                    <ScheduleRow label="Year-end rollover" date={`${fmt(nextReset)} · midnight`} color="#991B1B" bg="#FEF2F2" border="#FECACA" badge="Year End" badgeBg="#FEE2E2" badgeColor="#991B1B" />
-                                    <ScheduleRow label="New year opens" date={fmt(nextReset)} color="#15803D" bg="#F0FDF4" border="#BBF7D0" badge="New Year" badgeBg="#D1FAE5" badgeColor="#065F46" />
-                                    <Button variant="outlined" fullWidth size="small" sx={{ mt: 0.5, textTransform: 'none', borderColor: C_BORDER, color: C_MUTED, fontSize: 12 }}>
+                                    <ScheduleRow label={`${form.yearEndWarningDays}-day warning emails`} date={fmt(warningDate)} color="warning.dark" bg={softBg('warning')} border="warning.main" badge="Scheduled" badgeBg={softBg('warning')} badgeColor="warning.dark" />
+                                    <ScheduleRow label={`${form.finalWarningDays}-day final warning`} date={fmt(finalWarnDate)} color="warning.dark" bg={softBg('warning')} border="warning.main" badge="Scheduled" badgeBg={softBg('warning')} badgeColor="warning.dark" />
+                                    <ScheduleRow label="Year-end rollover" date={`${fmt(nextReset)} · midnight`} color="error.dark" bg={softBg('error')} border="error.main" badge="Year End" badgeBg={softBg('error')} badgeColor="error.dark" />
+                                    <ScheduleRow label="New year opens" date={fmt(nextReset)} color="success.dark" bg={softBg('success')} border="success.main" badge="New Year" badgeBg={softBg('success')} badgeColor="success.dark" />
+                                    <Button variant="outlined" fullWidth size="small" sx={{ mt: 0.5, textTransform: 'none', borderColor: 'divider', color: 'text.secondary', fontSize: 12 }}>
                                         ▶ Run Rollover Manually
                                     </Button>
                                 </Stack>
@@ -422,26 +420,26 @@ export default function AppSettingsPanel() {
             </Grid>
 
             {/* ── Carryover Preview ─────────────────────────────────────────── */}
-            <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
-                <Box sx={{ px: 2.25, py: 1.75, borderBottom: `1px solid ${C_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>
+            <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
+                <Box sx={{ px: 2.25, py: 1.75, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                         Carryover Preview — End of {yearLabel}
                     </Typography>
-                    <Typography sx={{ fontSize: 12, color: C_MUTED }}>{form.maxCarryoverDays}-day max cap</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{form.maxCarryoverDays}-day max cap</Typography>
                 </Box>
 
                 {/* Example cards */}
                 <Box sx={{ p: 2.25, pb: 0 }}>
                     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '14px', mb: 2 }}>
-                        {[
-                            { bg: '#F0FDF4', border: '#BBF7D0', color: '#15803D', title: `Under cap (< ${form.maxCarryoverDays} days unused)`, icon: '✅', body: 'All days carry over', sub: `New balance = unused + ${form.defaultAnnualEntitlement}` },
-                            { bg: '#FFF7ED', border: '#FED7AA', color: '#C2410C', title: `At cap (= ${form.maxCarryoverDays} days unused)`, icon: '✅', body: `${form.maxCarryoverDays} days carry (cap hit)`, sub: `New balance = ${form.maxCarryoverDays} + ${form.defaultAnnualEntitlement} = ${form.maxCarryoverDays + form.defaultAnnualEntitlement}` },
-                            { bg: '#FEF2F2', border: '#FECACA', color: '#DC2626', title: `Over cap (> ${form.maxCarryoverDays} days unused)`, icon: '⚠️', body: `${form.maxCarryoverDays} carry · excess expires`, sub: `New balance = ${form.maxCarryoverDays} + ${form.defaultAnnualEntitlement} = ${form.maxCarryoverDays + form.defaultAnnualEntitlement}` },
-                        ].map(({ bg, border, color, title, icon, body, sub }) => (
-                            <Box key={title} sx={{ bgcolor: bg, border: `1px solid ${border}`, borderRadius: '10px', p: '14px', textAlign: 'center' }}>
+                        {([
+                            { bg: softBg('success'), border: 'success.main', color: 'success.dark', title: `Under cap (< ${form.maxCarryoverDays} days unused)`, icon: '✅', body: 'All days carry over', sub: `New balance = unused + ${form.defaultAnnualEntitlement}` },
+                            { bg: softBg('warning'), border: 'warning.main', color: 'warning.dark', title: `At cap (= ${form.maxCarryoverDays} days unused)`, icon: '✅', body: `${form.maxCarryoverDays} days carry (cap hit)`, sub: `New balance = ${form.maxCarryoverDays} + ${form.defaultAnnualEntitlement} = ${form.maxCarryoverDays + form.defaultAnnualEntitlement}` },
+                            { bg: softBg('error'),   border: 'error.main',   color: 'error.dark',   title: `Over cap (> ${form.maxCarryoverDays} days unused)`, icon: '⚠️', body: `${form.maxCarryoverDays} carry · excess expires`, sub: `New balance = ${form.maxCarryoverDays} + ${form.defaultAnnualEntitlement} = ${form.maxCarryoverDays + form.defaultAnnualEntitlement}` },
+                        ] as const).map(({ bg, border, color, title, icon, body, sub }) => (
+                            <Box key={title} sx={{ bgcolor: bg, border: '1px solid', borderColor: border, borderRadius: '10px', p: '14px', textAlign: 'center' }}>
                                 <Typography sx={{ fontSize: 11, color, fontWeight: 600, mb: 0.75 }}>{title}</Typography>
-                                <Typography sx={{ fontSize: 18, fontWeight: 700, my: 0.5 }}>{icon} {body}</Typography>
-                                <Typography sx={{ fontSize: 12, color: C_MUTED }}>{sub}</Typography>
+                                <Typography sx={{ fontSize: 18, fontWeight: 700, my: 0.5, color: 'text.primary' }}>{icon} {body}</Typography>
+                                <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{sub}</Typography>
                             </Box>
                         ))}
                     </Box>
@@ -462,21 +460,21 @@ export default function AppSettingsPanel() {
                         <TableBody>
                             {carryoverRows.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} sx={{ ...TD, textAlign: 'center', color: '#9CA3AF', py: 4 }}>
+                                    <TableCell colSpan={6} sx={{ ...TD, textAlign: 'center', color: 'text.disabled', py: 4 }}>
                                         No employee profiles found.
                                     </TableCell>
                                 </TableRow>
                             ) : carryoverRows.map((row) => (
-                                <TableRow key={row.name} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}>
+                                <TableRow key={row.name} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: 'action.hover' } }}>
                                     <TableCell sx={TD}><strong>{row.name}</strong></TableCell>
                                     <TableCell sx={TD}>
-                                        <Box component="span" sx={{ fontSize: 11, px: 1, py: 0.3, bgcolor: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', fontWeight: 500 }}>{row.dept}</Box>
+                                        <Box component="span" sx={{ fontSize: 11, px: 1, py: 0.3, bgcolor: softBg('info'), color: 'info.dark', borderRadius: '4px', fontWeight: 500 }}>{row.dept}</Box>
                                     </TableCell>
                                     <TableCell sx={TD}>{row.closing} days</TableCell>
                                     <TableCell sx={{ ...TD, color: '#7C3AED', fontWeight: 500 }}>
                                         {row.carryover > 0 ? `${row.carryover} days${row.expires > 0 ? ' (cap)' : ''}` : '—'}
                                     </TableCell>
-                                    <TableCell sx={{ ...TD, color: row.expires > 0 ? '#EF4444' : C_MUTED, fontWeight: row.expires > 0 ? 500 : 400 }}>
+                                    <TableCell sx={{ ...TD, color: row.expires > 0 ? 'error.main' : 'text.secondary', fontWeight: row.expires > 0 ? 500 : 400 }}>
                                         {row.expires > 0 ? `${row.expires} days ⚠️` : '—'}
                                     </TableCell>
                                     <TableCell sx={{ ...TD, fontWeight: 600 }}>{row.newBalance} days</TableCell>

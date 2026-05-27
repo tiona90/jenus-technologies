@@ -161,7 +161,7 @@ const AnnualLeaveList = observer(function AnnualLeaveList({
                                     const value = e.target.value
                                     setSelectedYear(value === 'all' ? 'all' : Number(value))
                                 }}
-                                sx={{ borderRadius: 999, backgroundColor: 'rgba(248,250,252,0.9)' }}
+                                sx={{ borderRadius: 999, bgcolor: 'background.paper' }}
                             >
                                 <MenuItem value="all">All years</MenuItem>
                                 {availableYears.map((year) => (
@@ -177,7 +177,7 @@ const AnnualLeaveList = observer(function AnnualLeaveList({
                         <Select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value as AnnualLeaveStatus | 'all')}
-                            sx={{ borderRadius: 999, backgroundColor: 'rgba(248,250,252,0.9)' }}
+                            sx={{ borderRadius: 999, bgcolor: 'background.paper' }}
                         >
                             <MenuItem value="all">All statuses</MenuItem>
                             {availableStatuses.map((status) => (
@@ -190,7 +190,7 @@ const AnnualLeaveList = observer(function AnnualLeaveList({
                         <Select
                             value={leaveTypeFilter}
                             onChange={(e) => setLeaveTypeFilter(String(e.target.value))}
-                            sx={{ borderRadius: 999, backgroundColor: 'rgba(248,250,252,0.9)' }}
+                            sx={{ borderRadius: 999, bgcolor: 'background.paper' }}
                         >
                             <MenuItem value="all">All leave types</MenuItem>
                             {availableLeaveTypes.map((leaveType) => (
@@ -203,7 +203,7 @@ const AnnualLeaveList = observer(function AnnualLeaveList({
                         <Select
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
-                            sx={{ borderRadius: 999, backgroundColor: 'rgba(248,250,252,0.9)' }}
+                            sx={{ borderRadius: 999, bgcolor: 'background.paper' }}
                         >
                             <MenuItem value="newest">Newest first</MenuItem>
                             <MenuItem value="oldest">Oldest first</MenuItem>

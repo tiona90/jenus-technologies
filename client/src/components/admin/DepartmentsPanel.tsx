@@ -29,11 +29,8 @@ import {
 import { useStore } from '../../lib/mobx'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
 import type { AdminUser, Department, DepartmentAttendance, EmployeeProfile } from '../../lib/types'
+import { softBg } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
 
 const DEPT_GRADIENTS = [
     'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)',  // blue
@@ -57,7 +54,7 @@ function initials(name: string) {
 }
 
 function avatarBg(seed: string) {
-    const palette = ['#4F8EF7', '#22C47A', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#FF4D4F']
+    const palette = ['primary.main', 'success.main', 'warning.main', 'secondary.main', '#EC4899', '#06B6D4', '#84CC16', 'error.main']
     let hash = 0
     for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
     return palette[Math.abs(hash) % palette.length]
@@ -180,7 +177,7 @@ function DepartmentsPanel() {
                 headcount,
                 managerName,
                 managerInitials: manager ? initials(manager.displayName || manager.email) : null,
-                managerBg: manager ? avatarBg(manager.displayName || manager.email) : '#9CA3AF',
+                managerBg: manager ? avatarBg(manager.displayName || manager.email) : 'text.disabled',
                 members: deptProfiles.map((p) => ({ id: p.userId, name: p.displayName ?? '?' })),
                 counts,
                 pendingLeave,
@@ -257,19 +254,19 @@ function DepartmentsPanel() {
             }}>
                 <StatCard label="🏢 Departments" value={String(departments.length)}
                           sub={`${derivedAll.filter((d) => !d.needsAttention).length} healthy · ${derivedAll.filter((d) => !d.dept.isActive).length} inactive`} />
-                <StatCard label="👥 Total Headcount" value={String(totalHeadcount)} valueColor={C_BLUE}
+                <StatCard label="👥 Total Headcount" value={String(totalHeadcount)} valueColor={'primary.main'}
                           sub={`${departments.length > 0 ? Math.round(totalHeadcount / departments.length) : 0} per dept · ${totalOnline} working now`} />
                 <StatCard label="⏳ Pending Approvals" value={String(totalPending)} valueColor="#F59E0B"
                           sub="across all departments" />
                 <StatCard label="⚠️ Need Attention" value={String(needAttentionCount)}
-                          valueColor={needAttentionCount > 0 ? '#FF4D4F' : '#22C47A'}
+                          valueColor={needAttentionCount > 0 ? 'error.main' : 'success.main'}
                           sub={needAttentionCount === 0 ? 'all departments OK'
                                 : `department${needAttentionCount === 1 ? '' : 's'} flagged`} />
             </Box>
 
             {/* Toolbar */}
             <Box sx={{
-                bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+                bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
                 p: '10px 12px', display: 'flex', gap: '10px', flexWrap: 'wrap',
                 alignItems: 'center', mb: '14px',
             }}>
@@ -282,8 +279,10 @@ function DepartmentsPanel() {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                         sx={{
                             width: '100%', p: '7px 10px', fontSize: 13, fontFamily: 'inherit',
-                            border: `1px solid ${C_BORDER}`, borderRadius: '6px', outline: 'none',
-                            '&:focus': { borderColor: C_BLUE, boxShadow: '0 0 0 3px rgba(79,142,247,0.1)' },
+                            border: '1px solid', borderColor: 'divider', borderRadius: '6px', outline: 'none',
+                            bgcolor: 'background.paper', color: 'text.primary',
+                            '&::placeholder': { color: 'text.disabled' },
+                            '&:focus': { borderColor: 'primary.main' },
                         }}
                     />
                 </Box>
@@ -298,10 +297,10 @@ function DepartmentsPanel() {
                     component="button"
                     onClick={() => setCreateOpen(true)}
                     sx={{
-                        bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '14px', py: '7px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                         fontFamily: 'inherit', whiteSpace: 'nowrap',
-                        '&:hover': { bgcolor: '#3A7AE4' },
+                        '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
                     + New department
@@ -311,8 +310,8 @@ function DepartmentsPanel() {
             {/* Content */}
             {filtered.length === 0 && viewMode === 'cards' ? (
                 <Box sx={{
-                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                 }}>
                     No departments match the current filters.
                 </Box>
@@ -335,7 +334,7 @@ function DepartmentsPanel() {
                                     showCancelButton: true,
                                     confirmButtonText: 'Yes, delete',
                                     cancelButtonText: 'Cancel',
-                                    confirmButtonColor: '#EF4444',
+                                    confirmButtonColor: 'error.main',
                                     reverseButtons: true,
                                 })
                                 if (result.isConfirmed) deleteMutation.mutate(d.dept.id)
@@ -358,7 +357,7 @@ function DepartmentsPanel() {
                             showCancelButton: true,
                             confirmButtonText: 'Yes, delete',
                             cancelButtonText: 'Cancel',
-                            confirmButtonColor: '#EF4444',
+                            confirmButtonColor: 'error.main',
                             reverseButtons: true,
                         })
                         if (result.isConfirmed) deleteMutation.mutate(d.id)
@@ -411,19 +410,19 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
     const remaining = derived.headcount - visibleMembers.length
 
     const showStatusPill = !dept.isActive ? 'Inactive' : derived.needsAttention ? 'Needs attention' : 'Active'
-    const statusPillBg = !dept.isActive ? 'rgba(255,255,255,0.2)' : derived.needsAttention ? '#FEF3C7' : 'rgba(255,255,255,0.2)'
-    const statusPillFg = !dept.isActive ? '#fff' : derived.needsAttention ? '#92400E' : '#fff'
+    const statusPillBg = !dept.isActive ? 'rgba(255,255,255,0.2)' : derived.needsAttention ? softBg('warning') : 'rgba(255,255,255,0.2)'
+    const statusPillFg = !dept.isActive ? '#fff' : derived.needsAttention ? 'warning.dark' : '#fff'
 
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${derived.needsAttention ? '#FECACA' : C_BORDER}`,
+            bgcolor: 'background.paper', border: `1px solid ${derived.needsAttention ? 'error.main' : 'divider'}`,
             borderRadius: '12px', overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
             ...(derived.needsAttention && { boxShadow: '0 0 0 1px #FECACA' }),
         }}>
             {/* Header */}
             <Box sx={{
-                background: dept.isActive ? derived.gradient : '#9CA3AF',
+                background: dept.isActive ? derived.gradient : 'text.disabled',
                 color: '#fff', p: '16px 18px',
                 position: 'relative', overflow: 'hidden',
                 '&::before': {
@@ -461,7 +460,7 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                 {derived.alert && (
                     <Box sx={{
                         p: '8px 12px', borderRadius: '6px',
-                        bgcolor: '#FEE2E2', color: '#991B1B',
+                        bgcolor: softBg('error'), color: 'error.dark',
                         fontSize: 11, fontWeight: 500,
                         display: 'flex', alignItems: 'center', gap: '6px',
                         borderLeft: '3px solid #FF4D4F',
@@ -475,8 +474,8 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                 {managerName ? (
                     <Box sx={{
                         display: 'flex', alignItems: 'center', gap: '10px',
-                        p: '10px 12px', bgcolor: '#F9FAFB',
-                        border: `1px solid ${C_BORDER}`, borderRadius: '8px',
+                        p: '10px 12px', bgcolor: 'action.hover',
+                        border: '1px solid', borderColor: 'divider', borderRadius: '8px',
                     }}>
                         <Box sx={{
                             width: 36, height: 36, borderRadius: '50%',
@@ -485,10 +484,10 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                             fontSize: 12, fontWeight: 600,
                         }}>{managerInitials}</Box>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Box sx={{ fontSize: 10, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <Box sx={{ fontSize: 10, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 Department manager
                             </Box>
-                            <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {managerName}
                             </Box>
                         </Box>
@@ -501,12 +500,12 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                     }}>
                         <Box sx={{
                             width: 36, height: 36, borderRadius: '50%',
-                            bgcolor: '#FEF3C7', color: '#92400E',
+                            bgcolor: softBg('warning'), color: 'warning.dark',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: 14,
                         }}>⚠</Box>
                         <Box sx={{ flex: 1 }}>
-                            <Box sx={{ fontSize: 12, fontWeight: 600, color: '#92400E' }}>No manager assigned</Box>
+                            <Box sx={{ fontSize: 12, fontWeight: 600, color: 'warning.dark' }}>No manager assigned</Box>
                             <Box sx={{ fontSize: 11, color: '#78350F' }}>Approvals are routed to Admin</Box>
                         </Box>
                     </Box>
@@ -515,18 +514,18 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                 {/* Team members */}
                 <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '8px' }}>
-                        <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                        <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                             Team members
                         </Box>
-                        <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>
+                        <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
                             {headcount}
-                            <Box component="span" sx={{ fontSize: 11, color: C_MUTED, fontWeight: 500, ml: '4px' }}>
+                            <Box component="span" sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 500, ml: '4px' }}>
                                 {headcount === 1 ? 'person' : 'people'}
                             </Box>
                         </Box>
                     </Box>
                     {visibleMembers.length === 0 ? (
-                        <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>No members yet</Box>
+                        <Box sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>No members yet</Box>
                     ) : (
                         <Box sx={{ display: 'flex' }}>
                             {visibleMembers.map((m) => (
@@ -546,7 +545,7 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                             {remaining > 0 && (
                                 <Box sx={{
                                     width: 32, height: 32, borderRadius: '50%',
-                                    bgcolor: '#E4E6EA', color: C_MUTED,
+                                    bgcolor: 'divider', color: 'text.secondary',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: 10, fontWeight: 600,
                                     border: '2px solid #fff', marginLeft: '-6px',
@@ -560,24 +559,24 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                 {counts.total > 0 && (
                     <Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '6px' }}>
-                            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                                 Right now
                             </Box>
-                            <Box sx={{ fontSize: 11, color: '#22C47A', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#22C47A' }} />
+                            <Box sx={{ fontSize: 11, color: 'success.main', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
                                 Live
                             </Box>
                         </Box>
-                        <Box sx={{ display: 'flex', height: 10, bgcolor: '#F4F5F7', borderRadius: '4px', overflow: 'hidden', mb: '8px' }}>
-                            {inPct > 0 && <Box title={`${counts.in} working`} sx={{ width: `${inPct}%`, bgcolor: '#22C47A' }} />}
-                            {brkPct > 0 && <Box title={`${counts.break} on break`} sx={{ width: `${brkPct}%`, bgcolor: '#F59E0B' }} />}
-                            {lvPct > 0 && <Box title={`${counts.leave} on leave`} sx={{ width: `${lvPct}%`, bgcolor: C_BLUE }} />}
-                            {outPct > 0 && <Box title={`${counts.out} not in`} sx={{ width: `${outPct}%`, bgcolor: '#E4E6EA' }} />}
+                        <Box sx={{ display: 'flex', height: 10, bgcolor: 'action.hover', borderRadius: '4px', overflow: 'hidden', mb: '8px' }}>
+                            {inPct > 0 && <Box title={`${counts.in} working`} sx={{ width: `${inPct}%`, bgcolor: 'success.main' }} />}
+                            {brkPct > 0 && <Box title={`${counts.break} on break`} sx={{ width: `${brkPct}%`, bgcolor: 'warning.main' }} />}
+                            {lvPct > 0 && <Box title={`${counts.leave} on leave`} sx={{ width: `${lvPct}%`, bgcolor: 'primary.main' }} />}
+                            {outPct > 0 && <Box title={`${counts.out} not in`} sx={{ width: `${outPct}%`, bgcolor: 'divider' }} />}
                         </Box>
-                        <Box sx={{ display: 'flex', gap: '10px', fontSize: 10, color: C_MUTED, flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', gap: '10px', fontSize: 10, color: 'text.secondary', flexWrap: 'wrap' }}>
                             <LegendPill color="#22C47A" count={counts.in} label="working" />
                             {counts.break > 0 && <LegendPill color="#F59E0B" count={counts.break} label="break" />}
-                            {counts.leave > 0 && <LegendPill color={C_BLUE} count={counts.leave} label="leave" />}
+                            {counts.leave > 0 && <LegendPill color={'primary.main'} count={counts.leave} label="leave" />}
                             {counts.out > 0 && <LegendPill color="#9CA3AF" count={counts.out} label="not in" />}
                         </Box>
                     </Box>
@@ -594,13 +593,13 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
                     <MiniStat
                         label="Pending"
                         value={String(totalPending)}
-                        valueColor={totalPending > 0 ? '#F59E0B' : '#22C47A'}
+                        valueColor={totalPending > 0 ? 'warning.main' : 'success.main'}
                         sub={`${derived.pendingLeave}L · ${derived.pendingTs}TS`}
                     />
                     <MiniStat
                         label="In today"
                         value={counts.total > 0 ? `${inPercent}%` : '—'}
-                        valueColor={inPercent >= 80 ? '#22C47A' : inPercent >= 60 ? '#F59E0B' : '#FF4D4F'}
+                        valueColor={inPercent >= 80 ? 'success.main' : inPercent >= 60 ? 'warning.main' : 'error.main'}
                         sub={counts.total > 0 ? `${counts.in} of ${counts.total}` : 'no attendance'}
                     />
                 </Box>
@@ -609,7 +608,7 @@ function DepartmentCard({ derived, onEdit, onDelete, onViewTeam, onReport }: {
             {/* Footer */}
             <Box sx={{
                 display: 'flex', gap: '6px', p: '12px 16px',
-                borderTop: '1px solid #F3F4F6', bgcolor: '#FAFBFC',
+                borderTop: '1px solid #F3F4F6', bgcolor: 'action.hover',
             }}>
                 <OutlineBtn onClick={onViewTeam} flex>👥 View team</OutlineBtn>
                 <OutlineBtn onClick={onReport} flex>📊 Report</OutlineBtn>
@@ -624,18 +623,18 @@ function AddCard({ onClick }: { onClick: () => void }) {
             component="button"
             onClick={onClick}
             sx={{
-                bgcolor: 'transparent', border: `2px dashed ${C_BORDER}`,
+                bgcolor: 'transparent', border: `2px dashed ${'divider'}`,
                 borderRadius: '12px', p: '24px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center',
-                minHeight: 300, color: C_MUTED,
+                minHeight: 300, color: 'text.secondary',
                 transition: 'all 0.15s',
-                '&:hover': { borderColor: C_BLUE, color: C_BLUE, bgcolor: '#EEF4FF' },
+                '&:hover': { borderColor: 'primary.main', color: 'primary.main', bgcolor: softBg('primary') },
             }}
         >
             <Box sx={{ fontSize: 36, fontWeight: 300, mb: '12px', lineHeight: 1 }}>+</Box>
-            <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, mb: '4px' }}>Create a new department</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, lineHeight: 1.5 }}>
+            <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: '4px' }}>Create a new department</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.5 }}>
                 Set up structure, assign a manager,<br/>and onboard team members
             </Box>
         </Box>
@@ -647,11 +646,11 @@ function AddCard({ onClick }: { onClick: () => void }) {
 /* ════════════════════════════════════════════════════════════════════════ */
 
 const TH = {
-    py: '10px', px: '14px', fontSize: 11, fontWeight: 600, color: C_MUTED,
+    py: '10px', px: '14px', fontSize: 11, fontWeight: 600, color: 'text.secondary',
     textTransform: 'uppercase' as const, letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB', borderBottom: `1px solid ${C_BORDER}`,
+    bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider',
 }
-const TD = { py: '11px', px: '14px', fontSize: 13, color: '#374151', borderBottom: '1px solid #F3F4F6' }
+const TD = { py: '11px', px: '14px', fontSize: 13, color: 'text.primary', borderBottom: '1px solid #F3F4F6' }
 
 function TableView({ rows, onEdit, onDelete }: {
     rows: DerivedDept[]
@@ -659,7 +658,7 @@ function TableView({ rows, onEdit, onDelete }: {
     onDelete: (d: Department) => void
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
             <Box sx={{ overflowX: 'auto' }}>
                 <Table sx={{ width: '100%', borderCollapse: 'collapse' }}>
                     <TableHead>
@@ -678,7 +677,7 @@ function TableView({ rows, onEdit, onDelete }: {
                     <TableBody>
                         {rows.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={9} sx={{ ...TD, textAlign: 'center', color: C_MUTED, py: 4 }}>
+                                <TableCell colSpan={9} sx={{ ...TD, textAlign: 'center', color: 'text.secondary', py: 4 }}>
                                     No departments match the current filters.
                                 </TableCell>
                             </TableRow>
@@ -686,15 +685,15 @@ function TableView({ rows, onEdit, onDelete }: {
                             const inPct = d.counts.total > 0 ? Math.round((d.counts.in / d.counts.total) * 100) : 0
                             const totalPending = d.pendingLeave + d.pendingTs
                             return (
-                                <TableRow key={d.dept.id} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}>
+                                <TableRow key={d.dept.id} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: 'action.hover' } }}>
                                     <TableCell sx={TD}><strong>{d.dept.name}</strong></TableCell>
                                     <TableCell sx={TD}>
                                         <Box component="span" sx={{
-                                            display: 'inline-block', bgcolor: '#EFF6FF', color: '#1D4ED8',
+                                            display: 'inline-block', bgcolor: softBg('info'), color: 'info.dark',
                                             borderRadius: '4px', px: 1, py: 0.25, fontSize: 11, fontWeight: 500,
                                         }}>{d.dept.code}</Box>
                                     </TableCell>
-                                    <TableCell sx={{ ...TD, color: d.managerName ? '#374151' : '#92400E' }}>
+                                    <TableCell sx={{ ...TD, color: d.managerName ? 'text.primary' : 'warning.dark' }}>
                                         {d.managerName ?? '⚠ Vacant'}
                                     </TableCell>
                                     <TableCell sx={TD}>{d.headcount}</TableCell>
@@ -704,28 +703,28 @@ function TableView({ rows, onEdit, onDelete }: {
                                         <Box component="span" sx={{
                                             display: 'inline-flex', px: 1.25, py: 0.35, borderRadius: '20px',
                                             fontSize: 11, fontWeight: 500, whiteSpace: 'nowrap',
-                                            bgcolor: !d.dept.isActive ? '#F3F4F6' : d.needsAttention ? '#FEE2E2' : '#D1FAE5',
-                                            color: !d.dept.isActive ? '#6B7280' : d.needsAttention ? '#991B1B' : '#065F46',
+                                            bgcolor: !d.dept.isActive ? 'divider' : d.needsAttention ? softBg('error') : softBg('success'),
+                                            color: !d.dept.isActive ? 'text.secondary' : d.needsAttention ? 'error.dark' : 'success.dark',
                                         }}>
                                             {!d.dept.isActive ? 'Inactive' : d.needsAttention ? 'Attention' : 'Active'}
                                         </Box>
                                     </TableCell>
-                                    <TableCell sx={{ ...TD, color: C_MUTED }}>{fmtJoined(d.dept.createdAt)}</TableCell>
+                                    <TableCell sx={{ ...TD, color: 'text.secondary' }}>{fmtJoined(d.dept.createdAt)}</TableCell>
                                     <TableCell sx={TD}>
                                         <Stack direction="row" spacing={0.75}>
                                             <Button size="small" variant="outlined"
                                                     onClick={() => onEdit(d.dept)}
                                                     sx={{
                                                         fontSize: 12, py: '5px', px: 1.5, minWidth: 'unset',
-                                                        color: C_MUTED, borderColor: C_BORDER, textTransform: 'none',
-                                                        '&:hover': { bgcolor: '#F4F5F7', borderColor: C_BORDER },
+                                                        color: 'text.secondary', borderColor: 'divider', textTransform: 'none',
+                                                        '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' },
                                                     }}>Edit</Button>
                                             <Button size="small" variant="outlined"
                                                     onClick={() => onDelete(d.dept)}
                                                     sx={{
                                                         fontSize: 12, py: '5px', px: 1.5, minWidth: 'unset',
-                                                        color: '#FF4D4F', borderColor: '#FECACA', textTransform: 'none',
-                                                        '&:hover': { bgcolor: '#FFF5F5', borderColor: '#FECACA' },
+                                                        color: 'error.main', borderColor: 'error.main', textTransform: 'none',
+                                                        '&:hover': { bgcolor: '#FFF5F5', borderColor: 'error.main' },
                                                     }}>Delete</Button>
                                         </Stack>
                                     </TableCell>
@@ -745,12 +744,12 @@ function TableView({ rows, onEdit, onDelete }: {
 
 function StatCard({ label, value, sub, valueColor }: { label: string; value: string; sub: string; valueColor?: string }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px' }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', p: '14px 16px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -759,15 +758,15 @@ function MiniStat({ label, value, suffix, sub, valueColor }: {
     label: string; value: string; suffix?: string; sub: string; valueColor?: string
 }) {
     return (
-        <Box sx={{ p: '8px', bgcolor: '#F9FAFB', borderRadius: '6px', textAlign: 'center' }}>
-            <Box sx={{ fontSize: 9, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '4px' }}>
+        <Box sx={{ p: '8px', bgcolor: 'action.hover', borderRadius: '6px', textAlign: 'center' }}>
+            <Box sx={{ fontSize: 9, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '4px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 14, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>
+            <Box sx={{ fontSize: 14, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>
                 {value}
-                {suffix && <Box component="span" sx={{ fontSize: 10, color: '#9CA3AF', fontWeight: 500 }}>{suffix}</Box>}
+                {suffix && <Box component="span" sx={{ fontSize: 10, color: 'text.disabled', fontWeight: 500 }}>{suffix}</Box>}
             </Box>
-            <Box sx={{ fontSize: 9, color: C_MUTED, mt: '3px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 9, color: 'text.secondary', mt: '3px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -776,7 +775,7 @@ function LegendPill({ color, count, label }: { color: string; count: number; lab
     return (
         <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color }} />
-            <Box component="strong" sx={{ color: C_HEADING, fontWeight: 600 }}>{count}</Box>
+            <Box component="strong" sx={{ color: 'text.primary', fontWeight: 600 }}>{count}</Box>
             {label}
         </Box>
     )
@@ -810,11 +809,11 @@ function OutlineBtn({ onClick, flex, children }: { onClick: () => void; flex?: b
             component="button"
             onClick={onClick}
             sx={{
-                bgcolor: '#fff', color: C_HEADING, border: `1px solid ${C_BORDER}`,
+                bgcolor: 'background.paper', color: 'text.primary', border: '1px solid', borderColor: 'divider',
                 borderRadius: '6px', px: '12px', py: '6px',
                 fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
                 flex: flex ? 1 : 'initial',
-                '&:hover': { bgcolor: '#F4F5F7', borderColor: C_BLUE, color: C_BLUE },
+                '&:hover': { bgcolor: 'action.hover', borderColor: 'primary.main', color: 'primary.main' },
             }}
         >
             {children}
@@ -825,7 +824,7 @@ function OutlineBtn({ onClick, flex, children }: { onClick: () => void; flex?: b
 function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode) => void }) {
     return (
         <Box sx={{
-            display: 'flex', bgcolor: '#F4F5F7', borderRadius: '6px', p: '2px',
+            display: 'flex', bgcolor: 'action.hover', borderRadius: '6px', p: '2px',
         }}>
             {(['cards', 'table'] as ViewMode[]).map((m) => (
                 <Box
@@ -833,11 +832,10 @@ function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode
                     component="button"
                     onClick={() => onChange(m)}
                     sx={{
-                        bgcolor: mode === m ? '#fff' : 'transparent',
-                        border: 'none', color: mode === m ? C_HEADING : C_MUTED,
+                        bgcolor: mode === m ? 'background.paper' : 'transparent',
+                        border: 'none', color: mode === m ? 'text.primary' : 'text.secondary',
                         px: '12px', py: '5px', borderRadius: '5px',
                         fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                        boxShadow: mode === m ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                         transition: 'all 0.15s',
                     }}
                 >
@@ -860,9 +858,9 @@ function SelectFilter({ value, onChange, options }: {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
             sx={{
                 fontSize: 12, fontFamily: 'inherit', p: '7px 10px',
-                border: `1px solid ${C_BORDER}`, borderRadius: '6px',
-                color: '#374151', bgcolor: '#fff', outline: 'none', cursor: 'pointer',
-                '&:focus': { borderColor: C_BLUE },
+                border: '1px solid', borderColor: 'divider', borderRadius: '6px',
+                color: 'text.primary', bgcolor: 'background.paper', outline: 'none', cursor: 'pointer',
+                '&:focus': { borderColor: 'primary.main' },
             }}
         >
             {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

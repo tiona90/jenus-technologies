@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
+import { softBg } from '../../lib/theme-tokens'
 import {
     formatElapsed,
     formatTime12,
@@ -10,14 +11,11 @@ import {
     useLiveElapsedMinutes,
 } from '../../lib/hooks/useAttendance'
 
-const C_BORDER = '#E4E6EA'
-const C_MUTED = '#6B7280'
-const C_HEADING = '#1A1A2E'
-const GREEN = '#22C47A'
-const GREEN_HOVER = '#18A867'
-const AMBER = '#F59E0B'
-const RED = '#FF4D4F'
-const RED_HOVER = '#E03C3E'
+const GREEN = 'success.main'
+const GREEN_HOVER = 'success.dark'
+const AMBER = 'warning.main'
+const RED = 'error.main'
+const RED_HOVER = 'error.dark'
 
 const solidBtnSx = (bg: string, hover: string) => ({
     bgcolor: bg,
@@ -38,8 +36,8 @@ const solidBtnSx = (bg: string, hover: string) => ({
 
 const ghostBtnSx = {
     bgcolor: 'transparent',
-    color: C_MUTED,
-    border: `1px solid ${C_BORDER}`,
+    color: 'text.secondary',
+    border: '1px solid', borderColor: 'divider',
     textTransform: 'none' as const,
     fontSize: 12,
     fontWeight: 500,
@@ -51,7 +49,7 @@ const ghostBtnSx = {
     borderRadius: '6px',
     boxShadow: 'none',
     whiteSpace: 'nowrap' as const,
-    '&:hover': { bgcolor: '#fff', borderColor: C_BORDER, boxShadow: 'none' },
+    '&:hover': { bgcolor: 'background.paper', borderColor: 'divider', boxShadow: 'none' },
 }
 
 export default function AttendanceWidget({ enabled }: { enabled: boolean }) {
@@ -63,9 +61,9 @@ export default function AttendanceWidget({ enabled }: { enabled: boolean }) {
 
     const status = today?.status ?? 'out'
 
-    const bg = status === 'in' ? '#ECFDF5' : status === 'break' ? '#FEF3C7' : '#F9FAFB'
-    const border = status === 'in' ? '#A7F3D0' : status === 'break' ? '#FDE68A' : C_BORDER
-    const dotColor = status === 'in' ? GREEN : status === 'break' ? AMBER : '#9CA3AF'
+    const bg = status === 'in' ? softBg('success') : status === 'break' ? softBg('warning') : 'action.hover'
+    const border = status === 'in' ? '#A7F3D0' : status === 'break' ? '#FDE68A' : 'divider'
+    const dotColor = status === 'in' ? GREEN : status === 'break' ? AMBER : 'text.disabled'
 
     return (
         <Box sx={{
@@ -92,39 +90,39 @@ export default function AttendanceWidget({ enabled }: { enabled: boolean }) {
                     flexShrink: 0,
                 }} />
                 {isLoading && !today ? (
-                    <Typography sx={{ fontSize: 12, color: C_MUTED, whiteSpace: 'nowrap' }}>Loading…</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', whiteSpace: 'nowrap' }}>Loading…</Typography>
                 ) : status === 'out' ? (
-                    <Typography sx={{ fontSize: 12, color: C_MUTED, whiteSpace: 'nowrap' }}>Not checked in</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', whiteSpace: 'nowrap' }}>Not checked in</Typography>
                 ) : status === 'in' ? (
-                    <Typography sx={{ fontSize: 12, color: C_MUTED, whiteSpace: 'nowrap' }}>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', whiteSpace: 'nowrap' }}>
                         In since{' '}
                         <Box component="span" sx={{
                             fontVariantNumeric: 'tabular-nums',
                             fontWeight: 600,
-                            color: C_HEADING,
+                            color: 'text.primary',
                             fontSize: 13,
                         }}>
                             {today?.checkInAt ? formatTime12(today.checkInAt) : ''}
                         </Box>
                     </Typography>
                 ) : status === 'break' ? (
-                    <Typography sx={{ fontSize: 12, color: C_MUTED, whiteSpace: 'nowrap' }}>On break</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', whiteSpace: 'nowrap' }}>On break</Typography>
                 ) : (
-                    <Typography sx={{ fontSize: 12, color: C_MUTED, whiteSpace: 'nowrap' }}>Done for today</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'text.secondary', whiteSpace: 'nowrap' }}>Done for today</Typography>
                 )}
             </Box>
 
             {(status === 'in' || status === 'break') && (
                 <>
-                    <Box sx={{ width: '1px', height: 18, bgcolor: C_BORDER, flexShrink: 0 }} />
+                    <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', flexShrink: 0 }} />
                     <Typography sx={{
                         fontSize: 11,
-                        color: C_MUTED,
+                        color: 'text.secondary',
                         fontVariantNumeric: 'tabular-nums',
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
                     }}>
-                        <Box component="strong" sx={{ color: C_HEADING, fontWeight: 700, fontSize: 13 }}>
+                        <Box component="strong" sx={{ color: 'text.primary', fontWeight: 700, fontSize: 13 }}>
                             {formatElapsed(elapsed)}
                         </Box>
                         {status === 'break' && ' worked'}

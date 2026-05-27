@@ -20,14 +20,12 @@ import {
 } from '../../lib/api'
 import type { Timesheet, TimesheetProjectSummary } from '../../lib/types/timesheet'
 import type { TimesheetEntry } from '../../lib/types/timesheet-entry'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const BLUE = '#4F8EF7'
-const GREEN = '#22C47A'
-const AMBER = '#F59E0B'
-const RED = '#FF4D4F'
+const BLUE = 'primary.main'
+const GREEN = 'success.main'
+const AMBER = 'warning.main'
+const RED = 'error.main'
 
 type FilterTab = 'all' | 'pending' | 'approved' | 'rejected'
 
@@ -87,14 +85,14 @@ function isLateSubmission(periodStart: string, submittedAt?: string | null) {
 }
 
 function statusBadge(status: string) {
-    const map: Record<string, { bg: string; color: string; label: string }> = {
-        Submitted:   { bg: '#FEF3C7', color: '#92400E', label: 'Pending review' },
-        Resubmitted: { bg: '#F3E8FF', color: '#6D28D9', label: 'Resubmitted' },
-        Approved:    { bg: '#D1FAE5', color: '#065F46', label: 'Approved' },
-        Rejected:    { bg: '#FEE2E2', color: '#991B1B', label: 'Needs changes' },
-        Draft:       { bg: '#EFF6FF', color: '#1D4ED8', label: 'Draft' },
+    const map: Record<string, { bg: SxColor; color: string; label: string }> = {
+        Submitted:   { bg: softBg('warning'), color: 'warning.dark', label: 'Pending review' },
+        Resubmitted: { bg: softBg('primary'), color: 'primary.dark', label: 'Resubmitted' },
+        Approved:    { bg: softBg('success'), color: 'success.dark', label: 'Approved' },
+        Rejected:    { bg: softBg('error'), color: 'error.dark', label: 'Needs changes' },
+        Draft:       { bg: softBg('info'), color: 'info.dark', label: 'Draft' },
     }
-    return map[status] ?? { bg: '#F3F4F6', color: C_MUTED, label: status }
+    return map[status] ?? { bg: 'divider', color: 'text.secondary', label: status }
 }
 
 function StatMini({
@@ -108,11 +106,11 @@ function StatMini({
 }) {
     return (
         <Paper elevation={0} sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
             p: '14px 16px',
         }}>
             <Typography sx={{
-                fontSize: 11, color: C_MUTED,
+                fontSize: 11, color: 'text.secondary',
                 textTransform: 'uppercase', letterSpacing: '0.05em',
                 mb: 0.75,
                 display: 'flex', alignItems: 'center', gap: 0.75,
@@ -120,10 +118,10 @@ function StatMini({
                 <Box component="span" sx={{ fontSize: 12 }}>{icon}</Box>
                 {label}
             </Typography>
-            <Typography sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>
                 {value}
             </Typography>
-            <Typography sx={{ fontSize: 11, color: C_MUTED, mt: 0.5 }}>{sub}</Typography>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5 }}>{sub}</Typography>
         </Paper>
     )
 }
@@ -131,7 +129,7 @@ function StatMini({
 function ProjectChip({ p }: { p: TimesheetProjectSummary }) {
     return (
         <Box sx={{
-            bgcolor: '#EEF4FF', color: '#1D4ED8',
+            bgcolor: softBg('primary'), color: 'info.dark',
             px: 1, py: '2px',
             borderRadius: '10px',
             fontSize: 11,
@@ -180,7 +178,7 @@ function DailyBreakdown({ ts }: { ts: Timesheet }) {
     return (
         <>
             <Typography sx={{
-                fontSize: 11, color: C_MUTED,
+                fontSize: 11, color: 'text.secondary',
                 textTransform: 'uppercase', letterSpacing: '0.05em',
                 mb: 1,
             }}>
@@ -191,26 +189,26 @@ function DailyBreakdown({ ts }: { ts: Timesheet }) {
                     const isEmpty = d.total === 0
                     return (
                         <Box key={d.name} sx={{
-                            bgcolor: '#fff', border: `1px solid ${C_BORDER}`,
+                            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider',
                             borderRadius: '6px', p: '10px 12px',
                         }}>
                             <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 0.75 }}>
                                 <Typography sx={{
-                                    fontSize: 11, fontWeight: 600, color: C_MUTED,
+                                    fontSize: 11, fontWeight: 600, color: 'text.secondary',
                                     textTransform: 'uppercase', letterSpacing: '0.05em',
                                 }}>
                                     {d.name}
                                 </Typography>
                                 <Typography sx={{
                                     fontSize: 13, fontWeight: 700,
-                                    color: isEmpty ? '#9CA3AF' : C_HEADING,
+                                    color: isEmpty ? 'text.disabled' : 'text.primary',
                                 }}>
                                     {d.total.toFixed(1)}h
                                 </Typography>
                             </Stack>
                             <Box sx={{
                                 fontSize: 11,
-                                color: isEmpty ? '#9CA3AF' : '#374151',
+                                color: isEmpty ? 'text.disabled' : 'text.primary',
                                 fontStyle: isEmpty ? 'italic' : 'normal',
                                 lineHeight: 1.4,
                             }}>
@@ -260,11 +258,11 @@ function ReviewRow({
     const pending = isPendingStatus(ts.status)
     const target = 40
     const hoursDiff = Number(ts.totalHours) < target * 0.9 ? 'under' : Number(ts.totalHours) > target ? 'over' : 'ok'
-    const hoursColor = hoursDiff === 'under' ? AMBER : hoursDiff === 'over' ? BLUE : C_HEADING
+    const hoursColor = hoursDiff === 'under' ? AMBER : hoursDiff === 'over' ? BLUE : 'text.primary'
     const late = isLateSubmission(ts.periodStart, ts.submittedAt)
     const submitted = ts.submittedAt
 
-    const rowBg = selected ? '#EEF4FF' : expanded ? '#FAFBFC' : 'transparent'
+    const rowBg = selected ? softBg('primary') : expanded ? 'action.hover' : 'transparent'
 
     return (
         <>
@@ -276,11 +274,11 @@ function ReviewRow({
                     gap: 1.75,
                     alignItems: 'center',
                     p: '12px 16px',
-                    borderBottom: '1px solid #F3F4F6',
+                    borderBottom: '1px solid', borderBottomColor: 'divider',
                     bgcolor: rowBg,
                     transition: 'background 0.15s',
                     cursor: 'pointer',
-                    '&:hover': { bgcolor: selected ? '#EEF4FF' : '#FAFBFC' },
+                    '&:hover': { bgcolor: selected ? softBg('primary') : 'action.hover' },
                 }}
             >
                 <Box onClick={(e) => e.stopPropagation()}>
@@ -303,14 +301,14 @@ function ReviewRow({
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
                         <Typography sx={{
-                            fontSize: 13, fontWeight: 600, color: C_HEADING,
+                            fontSize: 13, fontWeight: 600, color: 'text.primary',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
                             {ts.employeeName}
                         </Typography>
                         <Box sx={{
                             display: 'inline-block',
-                            bgcolor: '#EFF6FF', color: '#1D4ED8',
+                            bgcolor: softBg('info'), color: 'info.dark',
                             borderRadius: '4px', px: 0.75, py: '1px',
                             fontSize: 11, fontWeight: 500,
                             mt: '2px',
@@ -328,7 +326,7 @@ function ReviewRow({
                     }}>
                         {Number(ts.totalHours).toFixed(1)}h
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: C_MUTED }}>
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
                         of {target}h
                     </Typography>
                 </Box>
@@ -337,7 +335,7 @@ function ReviewRow({
                     {(ts.projectSummaries ?? []).slice(0, 4).map((p) => <ProjectChip key={p.projectId} p={p} />)}
                     {(ts.projectSummaries?.length ?? 0) > 4 && (
                         <Box sx={{
-                            bgcolor: '#F4F5F7', color: C_MUTED,
+                            bgcolor: 'action.hover', color: 'text.secondary',
                             px: 1, py: '2px',
                             borderRadius: '10px',
                             fontSize: 11,
@@ -350,10 +348,10 @@ function ReviewRow({
                 <Box>
                     {submitted ? (
                         <>
-                            <Typography sx={{ fontSize: 12, color: C_HEADING, fontWeight: 600 }}>
+                            <Typography sx={{ fontSize: 12, color: 'text.primary', fontWeight: 600 }}>
                                 {formatSubmittedDay(submitted)}
                             </Typography>
-                            <Typography sx={{ fontSize: 11, color: C_MUTED }}>
+                            <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
                                 {formatSubmittedTime(submitted)}
                                 {' '}
                                 {late ? (
@@ -364,7 +362,7 @@ function ReviewRow({
                             </Typography>
                         </>
                     ) : (
-                        <Typography sx={{ fontSize: 11, color: C_MUTED }}>Not submitted</Typography>
+                        <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>Not submitted</Typography>
                     )}
                 </Box>
 
@@ -381,7 +379,7 @@ function ReviewRow({
                                     bgcolor: GREEN, color: '#fff',
                                     px: 1.5, py: '5px', minWidth: 'unset',
                                     boxShadow: 'none',
-                                    '&:hover': { bgcolor: '#18A867', boxShadow: 'none' },
+                                    '&:hover': { bgcolor: 'success.dark', boxShadow: 'none' },
                                 }}
                             >
                                 ✓ Approve
@@ -396,7 +394,7 @@ function ReviewRow({
                                     bgcolor: RED, color: '#fff',
                                     px: 1.5, py: '5px', minWidth: 'unset',
                                     boxShadow: 'none',
-                                    '&:hover': { bgcolor: '#E03C3E', boxShadow: 'none' },
+                                    '&:hover': { bgcolor: 'error.dark', boxShadow: 'none' },
                                 }}
                             >
                                 ✕ Reject
@@ -422,9 +420,9 @@ function ReviewRow({
                 <Box sx={{
                     gridColumn: '1 / -1',
                     p: '14px 16px',
-                    bgcolor: '#F9FAFB',
-                    borderTop: '1px solid #F3F4F6',
-                    borderBottom: '1px solid #F3F4F6',
+                    bgcolor: 'action.hover',
+                    borderTop: '1px solid', borderTopColor: 'divider',
+                    borderBottom: '1px solid', borderBottomColor: 'divider',
                 }}>
                     <DailyBreakdown ts={ts} />
                 </Box>
@@ -748,8 +746,9 @@ export default function AllTimesheetsPage() {
             {/* Bulk action bar */}
             {selectedIds.size > 0 && (
                 <Box sx={{
-                    bgcolor: C_HEADING,
-                    color: '#fff',
+                    bgcolor: 'background.paper',
+                    color: 'text.primary',
+                    border: '1px solid', borderColor: 'divider',
                     borderRadius: '10px',
                     p: '10px 16px',
                     display: 'flex',
@@ -767,10 +766,10 @@ export default function AllTimesheetsPage() {
                             onClick={clearSelection}
                             sx={{
                                 fontSize: 12, textTransform: 'none',
-                                color: '#fff', borderColor: '#fff',
+                                color: 'text.primary', borderColor: 'divider',
                                 bgcolor: 'transparent',
                                 px: 1.5, py: '5px',
-                                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: '#fff' },
+                                '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' },
                             }}
                         >
                             Clear
@@ -784,7 +783,7 @@ export default function AllTimesheetsPage() {
                                 bgcolor: GREEN, color: '#fff',
                                 px: 1.5, py: '5px',
                                 boxShadow: 'none',
-                                '&:hover': { bgcolor: '#18A867', boxShadow: 'none' },
+                                '&:hover': { bgcolor: 'success.dark', boxShadow: 'none' },
                             }}
                         >
                             ✓ Approve Selected
@@ -798,7 +797,7 @@ export default function AllTimesheetsPage() {
                                 bgcolor: RED, color: '#fff',
                                 px: 1.5, py: '5px',
                                 boxShadow: 'none',
-                                '&:hover': { bgcolor: '#E03C3E', boxShadow: 'none' },
+                                '&:hover': { bgcolor: 'error.dark', boxShadow: 'none' },
                             }}
                         >
                             ✕ Reject Selected
@@ -811,7 +810,7 @@ export default function AllTimesheetsPage() {
             <Box sx={{
                 display: 'flex',
                 gap: '2px',
-                borderBottom: `1px solid ${C_BORDER}`,
+                borderBottom: '1px solid', borderColor: 'divider',
                 px: '2px',
             }}>
                 {tabs.map((t) => {
@@ -825,17 +824,17 @@ export default function AllTimesheetsPage() {
                                 px: 2, py: '9px',
                                 fontSize: 13,
                                 fontWeight: active ? 600 : 500,
-                                color: active ? BLUE : C_MUTED,
+                                color: active ? BLUE : 'text.secondary',
                                 cursor: 'pointer',
                                 borderBottom: active ? `2px solid ${BLUE}` : '2px solid transparent',
                                 mb: '-1px',
-                                '&:hover': { color: active ? BLUE : C_HEADING },
+                                '&:hover': { color: active ? BLUE : 'text.primary' },
                             }}
                         >
                             {t.label}
                             <Box sx={{
-                                bgcolor: active ? '#EEF4FF' : '#F4F5F7',
-                                color: active ? BLUE : C_MUTED,
+                                bgcolor: active ? softBg('primary') : 'action.hover',
+                                color: active ? BLUE : 'text.secondary',
                                 fontSize: 10, fontWeight: 600,
                                 px: '7px', py: '1px',
                                 borderRadius: '10px',
@@ -854,8 +853,8 @@ export default function AllTimesheetsPage() {
                 justifyContent: 'space-between',
                 gap: 1.5,
                 p: '12px 16px',
-                bgcolor: '#fff',
-                border: `1px solid ${C_BORDER}`,
+                bgcolor: 'background.paper',
+                border: '1px solid', borderColor: 'divider',
                 borderRadius: '10px',
                 flexWrap: 'wrap',
             }}>
@@ -868,7 +867,7 @@ export default function AllTimesheetsPage() {
                         sx={{
                             minWidth: 220,
                             '& .MuiInputBase-input': { fontSize: 12, py: '7px' },
-                            '& fieldset': { borderColor: C_BORDER, borderRadius: '6px' },
+                            '& fieldset': { borderColor: 'divider', borderRadius: '6px' },
                         }}
                     />
                     <Select
@@ -878,7 +877,7 @@ export default function AllTimesheetsPage() {
                         sx={{
                             fontSize: 12,
                             '& .MuiSelect-select': { py: '7px', px: '12px' },
-                            '& fieldset': { borderColor: C_BORDER, borderRadius: '6px' },
+                            '& fieldset': { borderColor: 'divider', borderRadius: '6px' },
                         }}
                     >
                         <MenuItem value="all">All departments</MenuItem>
@@ -891,7 +890,7 @@ export default function AllTimesheetsPage() {
                         sx={{
                             fontSize: 12,
                             '& .MuiSelect-select': { py: '7px', px: '12px' },
-                            '& fieldset': { borderColor: C_BORDER, borderRadius: '6px' },
+                            '& fieldset': { borderColor: 'divider', borderRadius: '6px' },
                         }}
                     >
                         <MenuItem value="all">All weeks</MenuItem>
@@ -906,7 +905,7 @@ export default function AllTimesheetsPage() {
                         sx={{
                             fontSize: 12,
                             '& .MuiSelect-select': { py: '7px', px: '12px' },
-                            '& fieldset': { borderColor: C_BORDER, borderRadius: '6px' },
+                            '& fieldset': { borderColor: 'divider', borderRadius: '6px' },
                         }}
                     >
                         <MenuItem value="all">All projects</MenuItem>
@@ -924,7 +923,7 @@ export default function AllTimesheetsPage() {
                         fontSize: 12, textTransform: 'none',
                         color: BLUE, borderColor: BLUE,
                         px: 1.5, py: '5px',
-                        '&:hover': { bgcolor: '#EEF4FF', borderColor: BLUE },
+                        '&:hover': { bgcolor: softBg('primary'), borderColor: BLUE },
                     }}
                 >
                     {exporting ? 'Preparing CSV…' : '⤓ Export CSV'}
@@ -938,13 +937,13 @@ export default function AllTimesheetsPage() {
                 </Box>
             ) : weekGroups.length === 0 ? (
                 <Box sx={{
-                    bgcolor: '#fff',
-                    border: `1px solid ${C_BORDER}`,
+                    bgcolor: 'background.paper',
+                    border: '1px solid', borderColor: 'divider',
                     borderRadius: '10px',
                     py: 6,
                     textAlign: 'center',
                 }}>
-                    <Typography sx={{ fontSize: 13, color: '#9CA3AF' }}>No timesheets match the filters.</Typography>
+                    <Typography sx={{ fontSize: 13, color: 'text.disabled' }}>No timesheets match the filters.</Typography>
                 </Box>
             ) : (
                 weekGroups.map(({ weekStart, items }) => {
@@ -955,21 +954,21 @@ export default function AllTimesheetsPage() {
 
                     return (
                         <Box key={weekStart} sx={{
-                            bgcolor: '#fff',
-                            border: `1px solid ${C_BORDER}`,
+                            bgcolor: 'background.paper',
+                            border: '1px solid', borderColor: 'divider',
                             borderRadius: '10px',
                             overflow: 'hidden',
                         }}>
                             <Box sx={{
                                 p: '12px 16px',
-                                bgcolor: '#F9FAFB',
-                                borderBottom: `1px solid ${C_BORDER}`,
+                                bgcolor: 'action.hover',
+                                borderBottom: '1px solid', borderColor: 'divider',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                             }}>
                                 <Box>
-                                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>
+                                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
                                         {formatWeekHeader(weekStart)}
                                         {isCurrent && (
                                             <Box component="span" sx={{ fontSize: 11, fontWeight: 500, color: GREEN, ml: 0.75 }}>
@@ -977,22 +976,22 @@ export default function AllTimesheetsPage() {
                                             </Box>
                                         )}
                                     </Typography>
-                                    <Typography sx={{ fontSize: 11, color: C_MUTED, mt: '2px' }}>
+                                    <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: '2px' }}>
                                         {items.length} submitted
                                     </Typography>
                                 </Box>
-                                <Stack direction="row" spacing={2} sx={{ fontSize: 11, color: C_MUTED }}>
+                                <Stack direction="row" spacing={2} sx={{ fontSize: 11, color: 'text.secondary' }}>
                                     <Box>
-                                        <Box component="strong" sx={{ color: C_HEADING, fontSize: 12 }}>{totalHrs.toFixed(1)}</Box>
+                                        <Box component="strong" sx={{ color: 'text.primary', fontSize: 12 }}>{totalHrs.toFixed(1)}</Box>
                                         {' total hrs'}
                                     </Box>
                                     <Box>
-                                        <Box component="strong" sx={{ color: C_HEADING, fontSize: 12 }}>{avg.toFixed(1)}</Box>
+                                        <Box component="strong" sx={{ color: 'text.primary', fontSize: 12 }}>{avg.toFixed(1)}</Box>
                                         {' avg/person'}
                                     </Box>
                                     {pendingInWeek > 0 ? (
                                         <Box>
-                                            <Box component="strong" sx={{ color: C_HEADING, fontSize: 12 }}>{pendingInWeek}</Box>
+                                            <Box component="strong" sx={{ color: 'text.primary', fontSize: 12 }}>{pendingInWeek}</Box>
                                             {' pending'}
                                         </Box>
                                     ) : (
@@ -1010,10 +1009,10 @@ export default function AllTimesheetsPage() {
                                 gridTemplateColumns: '32px 240px 100px 1fr 160px auto',
                                 gap: 1.75,
                                 alignItems: 'center',
-                                bgcolor: '#FAFBFC',
-                                borderBottom: '1px solid #F3F4F6',
+                                bgcolor: 'action.hover',
+                                borderBottom: '1px solid', borderBottomColor: 'divider',
                                 fontSize: 10,
-                                color: '#9CA3AF',
+                                color: 'text.disabled',
                                 fontWeight: 600,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.05em',

@@ -1,4 +1,5 @@
 import { useMemo, useState, type MouseEvent } from 'react'
+import { softBg } from '../../lib/theme-tokens'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
@@ -102,12 +103,12 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
 
     const statusAccentColor =
         leave.status === 'Approved'
-            ? 'rgba(5, 150, 105, 0.78)'
+            ? 'success.main'
             : leave.status === 'Rejected'
-                ? 'rgba(239, 68, 68, 0.34)'
+                ? 'error.main'
                 : leave.status === 'Cancelled'
-                    ? 'rgba(107, 114, 128, 0.45)'
-                    : 'rgba(217, 119, 6, 0.78)'
+                    ? 'text.disabled'
+                    : 'warning.main'
 
     return (
         <>
@@ -118,15 +119,13 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                     p: { xs: 1.15, sm: 1.25 },
                     borderRadius: 2.5,
                     border: '1px solid',
-                    borderColor: 'rgba(15, 23, 42, 0.08)',
+                    borderColor: 'divider',
                     borderLeft: '2px solid',
                     borderLeftColor: statusAccentColor,
-                    backgroundColor: 'rgba(248,250,252,0.72)',
-                    boxShadow: '0 6px 16px rgba(15, 23, 42, 0.03)',
+                    bgcolor: 'background.paper',
                     transition: 'background-color 0.15s ease, box-shadow 0.15s ease',
                     '&:hover': {
-                        backgroundColor: 'rgba(248,250,252,0.9)',
-                        boxShadow: '0 8px 18px rgba(15, 23, 42, 0.05)',
+                        bgcolor: 'action.hover',
                     },
                 }}
             >
@@ -152,8 +151,8 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                     color="info"
                                     sx={{
                                         fontWeight: 700,
-                                        backgroundColor: 'rgba(255,255,255,0.6)',
-                                        borderColor: 'rgba(14, 116, 144, 0.18)',
+                                        bgcolor: 'background.paper',
+                                        borderColor: 'info.main',
                                     }}
                                 />
                                 <Chip
@@ -162,8 +161,8 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                     variant="outlined"
                                     sx={{
                                         fontWeight: 700,
-                                        borderColor: 'rgba(15, 23, 42, 0.1)',
-                                        backgroundColor: 'rgba(255,255,255,0.5)',
+                                        borderColor: 'divider',
+                                        bgcolor: 'background.paper',
                                     }}
                                 />
                             </Stack>
@@ -209,7 +208,7 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                             color="success"
                                             disabled={statusMutation.isPending}
                                             onClick={() => statusMutation.mutate({ id: leave.id, status: 'Approved' })}
-                                            sx={{ border: '1px solid', borderColor: 'rgba(34,197,94,0.25)', backgroundColor: 'rgba(34,197,94,0.06)' }}
+                                            sx={{ border: '1px solid', borderColor: 'success.main', bgcolor: softBg('success') }}
                                         >
                                             {statusMutation.isPending
                                                 ? <CircularProgress size={16} />
@@ -222,7 +221,7 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                             color="error"
                                             disabled={statusMutation.isPending}
                                             onClick={() => setRejectOpen(true)}
-                                            sx={{ border: '1px solid', borderColor: 'rgba(239,68,68,0.2)', backgroundColor: 'rgba(239,68,68,0.05)' }}
+                                            sx={{ border: '1px solid', borderColor: 'error.main', bgcolor: softBg('error') }}
                                         >
                                             <CloseIcon fontSize="small" />
                                         </IconButton>
@@ -239,11 +238,11 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                             disabled={deleteMutation.isPending || statusMutation.isPending}
                                             sx={{
                                                 border: '1px solid',
-                                                borderColor: 'rgba(15,23,42,0.10)',
-                                                backgroundColor: 'rgba(248,250,252,0.95)',
+                                                borderColor: 'divider',
+                                                bgcolor: 'background.paper',
                                                 color: 'text.secondary',
                                                 '&:hover': {
-                                                    backgroundColor: 'rgba(255,255,255,0.92)',
+                                                    bgcolor: 'action.hover',
                                                 },
                                             }}
                                         >
@@ -265,8 +264,7 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                                     minWidth: 170,
                                                     borderRadius: 2.5,
                                                     border: '1px solid',
-                                                    borderColor: 'rgba(15, 23, 42, 0.08)',
-                                                    boxShadow: '0 12px 24px rgba(15, 23, 42, 0.08)',
+                                                    borderColor: 'divider',
                                                 },
                                             },
                                         }}
@@ -308,7 +306,7 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                 px: 0.9,
                                 py: 0.5,
                                 borderRadius: 2.5,
-                                backgroundColor: 'rgba(15, 23, 42, 0.035)',
+                                bgcolor: 'action.hover',
                             }}
                         >
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
@@ -323,8 +321,9 @@ function AnnualLeaveCard({ leave, user }: AnnualLeaveCardProps) {
                                 px: 1.05,
                                 py: 0.8,
                                 borderRadius: 1.5,
-                                backgroundColor: 'rgba(255, 255, 255, 0.56)',
-                                border: '1px solid rgba(15, 23, 42, 0.06)',
+                                bgcolor: 'action.hover',
+                                border: '1px solid',
+                                borderColor: 'divider',
                             }}
                         >
                             <Typography

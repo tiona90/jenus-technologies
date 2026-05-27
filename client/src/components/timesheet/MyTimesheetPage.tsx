@@ -9,16 +9,13 @@ import { deleteTimesheet, getMyTimesheets, getTimesheetStatusHistories } from '.
 import { getApiErrorMessage } from '../../lib/api/error-utils'
 import { useStore } from '../../lib/mobx'
 import type { Timesheet, TimesheetStatus, TimesheetStatusHistory, UserInfo } from '../../lib/types'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
 
 const WEEKLY_TARGET = 40
 const MONTHLY_TARGET = 160
 
-const PROJECT_PALETTE = ['#4F8EF7', '#22C47A', '#F59E0B', '#8B5CF6', '#FF4D4F', '#06B6D4', '#EC4899', '#84CC16']
+const PROJECT_PALETTE = ['primary.main', 'success.main', 'warning.main', '#8B5CF6', 'error.main', '#06B6D4', '#EC4899', '#84CC16']
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
@@ -244,7 +241,7 @@ export default function MyTimesheetPage({ user: _user }: { user: UserInfo }) {
                 <ThisWeekStat current={currentTimesheet} />
                 <MiniStat label="⏳ Pending" value={String(pendingCount)} valueColor="#F59E0B"
                           sub={`timesheet${pendingCount === 1 ? '' : 's'} awaiting approval`} />
-                <MiniStat label="📊 Year to date" value={totalYTD.toFixed(0)} valueColor={C_BLUE}
+                <MiniStat label="📊 Year to date" value={totalYTD.toFixed(0)} valueColor={'primary.main'}
                           sub={`hours · ${(totalYTD / WEEKLY_TARGET).toFixed(0)} weeks logged`} />
                 <MiniStat label="🔥 On-time streak" value={String(onTimeStreak)} valueColor="#22C47A"
                           sub="weeks submitted on time" />
@@ -273,22 +270,22 @@ export default function MyTimesheetPage({ user: _user }: { user: UserInfo }) {
 
             {/* Tabs + Open this week */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: '18px', mx: '4px', mb: '10px' }}>
-                <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>All timesheets</Box>
+                <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>All timesheets</Box>
                 <Box
                     component="button"
                     onClick={() => uiStore.navigateToNewTimesheet()}
                     sx={{
-                        bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '14px', py: '6px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                         fontFamily: 'inherit', transition: 'background 0.15s',
-                        '&:hover': { bgcolor: '#3A7AE4' },
+                        '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
                     📝 Open this week
                 </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: `1px solid ${C_BORDER}`, px: '2px', flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: '1px solid', borderColor: 'divider', px: '2px', flexWrap: 'wrap' }}>
                 {STATUS_TABS.map((tab) => {
                     const active = statusTab === tab.value
                     const c =
@@ -303,19 +300,19 @@ export default function MyTimesheetPage({ user: _user }: { user: UserInfo }) {
                             onClick={() => setStatusTab(tab.value)}
                             sx={{
                                 p: '9px 16px', fontSize: 13,
-                                color: active ? C_BLUE : danger ? '#991B1B' : C_MUTED,
+                                color: active ? 'primary.main' : danger ? 'error.dark' : 'text.secondary',
                                 cursor: 'pointer',
-                                borderBottom: active ? `2px solid ${C_BLUE}` : '2px solid transparent',
+                                borderBottom: active ? `2px solid ${'primary.main'}` : '2px solid transparent',
                                 mb: '-1px', display: 'flex', alignItems: 'center', gap: '6px',
                                 background: 'none', border: 'none', fontFamily: 'inherit',
                                 fontWeight: active ? 600 : 500,
-                                '&:hover': { color: active ? C_BLUE : C_HEADING },
+                                '&:hover': { color: active ? 'primary.main' : 'text.primary' },
                             }}
                         >
                             {tab.label}
                             <Box component="span" sx={{
-                                bgcolor: active ? '#EEF4FF' : danger ? '#FEE2E2' : '#F4F5F7',
-                                color: active ? C_BLUE : danger ? '#991B1B' : C_MUTED,
+                                bgcolor: active ? softBg('primary') : danger ? softBg('error') : 'action.hover',
+                                color: active ? 'primary.main' : danger ? 'error.dark' : 'text.secondary',
                                 fontSize: 10, fontWeight: 600,
                                 px: '7px', borderRadius: '10px',
                             }}>{c}</Box>
@@ -326,8 +323,8 @@ export default function MyTimesheetPage({ user: _user }: { user: UserInfo }) {
 
             {timesheets.length === 0 ? (
                 <Box sx={{
-                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                 }}>
                     No timesheets yet. Start tracking your time by opening this week.
                 </Box>
@@ -376,8 +373,8 @@ export default function MyTimesheetPage({ user: _user }: { user: UserInfo }) {
                     <SectionHeader title={STATUS_TABS.find((s) => s.value === statusTab)?.label ?? ''} />
                     {listForTab.length === 0 ? (
                         <Box sx={{
-                            bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                            py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                            py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                         }}>
                             No timesheets in this category.
                         </Box>
@@ -399,12 +396,12 @@ function MiniStat({ label, value, sub, valueColor }: {
     label: string; value: string; sub: string; valueColor?: string
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px' }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', p: '14px 16px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -416,15 +413,15 @@ function ThisWeekStat({ current }: { current: Timesheet | null }) {
     const hours = Number(current.totalHours)
     const isUnder = hours < WEEKLY_TARGET
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px' }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', p: '14px 16px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 📝 This week
             </Box>
-            <Box sx={{ fontSize: 22, fontWeight: 700, color: isUnder ? '#F59E0B' : '#22C47A', lineHeight: 1 }}>
+            <Box sx={{ fontSize: 22, fontWeight: 700, color: isUnder ? 'warning.main' : 'success.main', lineHeight: 1 }}>
                 {hours.toFixed(1)}
-                <Box component="span" sx={{ fontSize: 14, color: '#9CA3AF', fontWeight: 500 }}>{` / ${WEEKLY_TARGET}h`}</Box>
+                <Box component="span" sx={{ fontSize: 14, color: 'text.disabled', fontWeight: 500 }}>{` / ${WEEKLY_TARGET}h`}</Box>
             </Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>
                 {isUnder ? `${(WEEKLY_TARGET - hours).toFixed(1)}h to go` : 'Week complete'}
             </Box>
         </Box>
@@ -477,7 +474,7 @@ function CurrentWeekCard({ timesheet, dayHours, today, onContinue }: {
                     }}>{remaining > 0 ? `${remaining.toFixed(1)}h to go` : '✓ Complete'}</Box>
                 </Box>
                 <Box sx={{ height: 8, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '4px', overflow: 'hidden', mb: '12px' }}>
-                    <Box sx={{ height: '100%', bgcolor: C_BLUE, borderRadius: '4px', width: `${pct}%`, transition: 'width 0.3s' }} />
+                    <Box sx={{ height: '100%', bgcolor: 'primary.main', borderRadius: '4px', width: `${pct}%`, transition: 'width 0.3s' }} />
                 </Box>
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
                     {DAY_LABELS.map((d, i) => {
@@ -491,7 +488,7 @@ function CurrentWeekCard({ timesheet, dayHours, today, onContinue }: {
                         return (
                             <Box key={d} sx={{
                                 bgcolor: bg, borderRadius: '6px', p: '8px 4px', textAlign: 'center',
-                                boxShadow: isToday ? `inset 0 0 0 1px ${C_BLUE}` : 'none',
+                                boxShadow: isToday ? `inset 0 0 0 1px ${'primary.main'}` : 'none',
                             }}>
                                 <Box sx={{ fontSize: 10, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{d}</Box>
                                 <Box sx={{ fontSize: 12, fontWeight: 600, mt: '4px', fontVariantNumeric: 'tabular-nums', color }}>
@@ -508,10 +505,10 @@ function CurrentWeekCard({ timesheet, dayHours, today, onContinue }: {
                     component="button"
                     onClick={onContinue}
                     sx={{
-                        flex: 1, bgcolor: C_BLUE, color: '#fff', border: 'none',
+                        flex: 1, bgcolor: 'primary.main', color: '#fff', border: 'none',
                         p: '10px 16px', borderRadius: '8px', fontSize: 13, fontWeight: 600,
                         cursor: 'pointer', fontFamily: 'inherit',
-                        '&:hover': { bgcolor: '#3A7AE4' },
+                        '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
                     {status === 'Draft' ? 'Continue filling' : 'Open week'}
@@ -522,12 +519,12 @@ function CurrentWeekCard({ timesheet, dayHours, today, onContinue }: {
 }
 
 function CurrentStatusTag({ status }: { status: TimesheetStatus }) {
-    const config: Record<TimesheetStatus, { bg: string; fg: string; dot: string; label: string }> = {
-        Draft:       { bg: 'rgba(245,158,11,0.2)', fg: '#FCD34D', dot: '#F59E0B', label: 'Draft' },
-        Submitted:   { bg: 'rgba(245,158,11,0.2)', fg: '#FCD34D', dot: '#F59E0B', label: 'Pending review' },
-        Resubmitted: { bg: 'rgba(245,158,11,0.2)', fg: '#FCD34D', dot: '#F59E0B', label: 'Re-submitted' },
-        Approved:    { bg: 'rgba(34,196,122,0.2)', fg: '#6EE7B7', dot: '#22C47A', label: 'Approved' },
-        Rejected:    { bg: 'rgba(255,77,79,0.2)',  fg: '#FCA5A5', dot: '#FF4D4F', label: 'Needs changes' },
+    const config: Record<TimesheetStatus, { bg: SxColor; fg: string; dot: string; label: string }> = {
+        Draft:       { bg: 'rgba(245,158,11,0.2)', fg: '#FCD34D', dot: 'warning.main', label: 'Draft' },
+        Submitted:   { bg: 'rgba(245,158,11,0.2)', fg: '#FCD34D', dot: 'warning.main', label: 'Pending review' },
+        Resubmitted: { bg: 'rgba(245,158,11,0.2)', fg: '#FCD34D', dot: 'warning.main', label: 'Re-submitted' },
+        Approved:    { bg: 'rgba(34,196,122,0.2)', fg: '#6EE7B7', dot: 'success.main', label: 'Approved' },
+        Rejected:    { bg: 'rgba(255,77,79,0.2)',  fg: '#FCA5A5', dot: 'error.main', label: 'Needs changes' },
     }
     const s = config[status]
     return (
@@ -561,10 +558,10 @@ function EmptyCurrentWeek({ onOpen }: { onOpen: () => void }) {
                 component="button"
                 onClick={onOpen}
                 sx={{
-                    bgcolor: C_BLUE, color: '#fff', border: 'none',
+                    bgcolor: 'primary.main', color: '#fff', border: 'none',
                     p: '10px 18px', borderRadius: '8px', fontSize: 13, fontWeight: 600,
                     cursor: 'pointer', fontFamily: 'inherit', position: 'relative', zIndex: 1,
-                    '&:hover': { bgcolor: '#3A7AE4' },
+                    '&:hover': { bgcolor: 'primary.dark' },
                 }}
             >
                 📝 Start this week
@@ -579,25 +576,25 @@ function ProjectBreakdown({ projects, total }: {
 }) {
     if (projects.length === 0) {
         return (
-            <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '18px 20px' }}>
-                <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, mb: '4px' }}>Time by project</Box>
-                <Box sx={{ fontSize: 12, color: C_MUTED }}>No hours logged this year yet.</Box>
+            <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '18px 20px' }}>
+                <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: '4px' }}>Time by project</Box>
+                <Box sx={{ fontSize: 12, color: 'text.secondary' }}>No hours logged this year yet.</Box>
             </Box>
         )
     }
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '18px 20px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '18px 20px' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '14px' }}>
-                <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>Time by project</Box>
-                <Box sx={{ fontSize: 11, color: C_MUTED }}>YTD · {total.toFixed(0)}h total</Box>
+                <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>Time by project</Box>
+                <Box sx={{ fontSize: 11, color: 'text.secondary' }}>YTD · {total.toFixed(0)}h total</Box>
             </Box>
-            <Box sx={{ fontSize: 26, fontWeight: 700, color: C_HEADING, lineHeight: 1, mb: '14px' }}>
+            <Box sx={{ fontSize: 26, fontWeight: 700, color: 'text.primary', lineHeight: 1, mb: '14px' }}>
                 {total.toFixed(0)}
-                <Box component="span" sx={{ fontSize: 13, fontWeight: 500, color: C_MUTED, ml: '4px' }}>
+                <Box component="span" sx={{ fontSize: 13, fontWeight: 500, color: 'text.secondary', ml: '4px' }}>
                     hours across {projects.length} project{projects.length === 1 ? '' : 's'}
                 </Box>
             </Box>
-            <Box sx={{ height: 12, bgcolor: '#F4F5F7', borderRadius: '6px', overflow: 'hidden', display: 'flex', mb: '14px' }}>
+            <Box sx={{ height: 12, bgcolor: 'action.hover', borderRadius: '6px', overflow: 'hidden', display: 'flex', mb: '14px' }}>
                 {projects.map((p) => (
                     <Box
                         key={p.id}
@@ -614,14 +611,14 @@ function ProjectBreakdown({ projects, total }: {
                 {projects.map((p) => (
                     <Box key={p.id} sx={{ display: 'grid', gridTemplateColumns: '10px 1fr auto auto', gap: '10px', alignItems: 'center' }}>
                         <Box sx={{ width: 10, height: 10, borderRadius: '3px', bgcolor: projectColor(p.id) }} />
-                        <Box sx={{ fontSize: 12, color: C_HEADING, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <Box sx={{ fontSize: 12, color: 'text.primary', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             <Box component="strong" sx={{ fontWeight: 600 }}>{p.code}</Box>
-                            <Box component="span" sx={{ color: C_MUTED, fontWeight: 400 }}>{` · ${p.name}`}</Box>
+                            <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}>{` · ${p.name}`}</Box>
                         </Box>
-                        <Box sx={{ fontSize: 12, color: C_HEADING, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                        <Box sx={{ fontSize: 12, color: 'text.primary', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                             {p.hours.toFixed(1)}h
                         </Box>
-                        <Box sx={{ fontSize: 11, color: C_MUTED, minWidth: 38, textAlign: 'right' }}>
+                        <Box sx={{ fontSize: 11, color: 'text.secondary', minWidth: 38, textAlign: 'right' }}>
                             {Math.round((p.hours / total) * 100)}%
                         </Box>
                     </Box>
@@ -638,15 +635,15 @@ function YearActivity({ monthHours, maxMonth, currentMonth, totalYTD }: {
     totalYTD: number
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '18px 20px', mb: '14px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '18px 20px', mb: '14px' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '14px', flexWrap: 'wrap', gap: '8px' }}>
-                <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>
+                <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
                     {new Date().getFullYear()} hours by month ·{' '}
-                    <Box component="strong" sx={{ color: C_BLUE, fontSize: 15 }}>{totalYTD.toFixed(0)}h</Box>
+                    <Box component="strong" sx={{ color: 'primary.main', fontSize: 15 }}>{totalYTD.toFixed(0)}h</Box>
                     {' '}year to date
                 </Box>
-                <Box sx={{ display: 'flex', gap: '12px', fontSize: 11, color: C_MUTED }}>
-                    <LegendSwatch color={C_BLUE} label="Logged" />
+                <Box sx={{ display: 'flex', gap: '12px', fontSize: 11, color: 'text.secondary' }}>
+                    <LegendSwatch color={'primary.main'} label="Logged" />
                     <LegendSwatch color="linear-gradient(180deg, #4F8EF7 0%, #3A7AE4 100%)" label="Current" />
                     <LegendSwatch color="#E4E6EA" label="Future" />
                 </Box>
@@ -659,7 +656,7 @@ function YearActivity({ monthHours, maxMonth, currentMonth, totalYTD }: {
                 }}>
                     <Box component="span" sx={{
                         position: 'absolute', right: 0, top: -16,
-                        fontSize: 10, color: '#92400E', bgcolor: '#FFFBEB',
+                        fontSize: 10, color: 'warning.dark', bgcolor: softBg('warning'),
                         px: '6px', py: '1px', borderRadius: '3px', border: '1px solid #FDE68A',
                     }}>Target {MONTHLY_TARGET}h/mo</Box>
                 </Box>
@@ -668,12 +665,12 @@ function YearActivity({ monthHours, maxMonth, currentMonth, totalYTD }: {
                         const isFuture = i > currentMonth
                         const isCurrent = i === currentMonth
                         const heightPct = maxMonth > 0 ? (h / maxMonth) * 100 : 0
-                        const bg = isFuture ? '#E4E6EA'
+                        const bg = isFuture ? 'divider'
                             : isCurrent ? 'linear-gradient(180deg, #4F8EF7 0%, #3A7AE4 100%)'
-                            : C_BLUE
+                            : 'primary.main'
                         return (
                             <Box key={i} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', height: '100%', justifyContent: 'flex-end' }}>
-                                <Box sx={{ fontSize: 10, color: isFuture ? '#9CA3AF' : C_HEADING, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                                <Box sx={{ fontSize: 10, color: isFuture ? 'text.disabled' : 'text.primary', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                                     {h > 0 ? Math.round(h) : ''}
                                 </Box>
                                 <Box sx={{ width: '100%', height: 'calc(100% - 18px)', display: 'flex', alignItems: 'flex-end' }}>
@@ -685,7 +682,7 @@ function YearActivity({ monthHours, maxMonth, currentMonth, totalYTD }: {
                                         '&:hover': { opacity: 0.85 },
                                     }} />
                                 </Box>
-                                <Box sx={{ fontSize: 10, color: isCurrent ? C_HEADING : C_MUTED, fontWeight: isCurrent ? 700 : 500 }}>
+                                <Box sx={{ fontSize: 10, color: isCurrent ? 'text.primary' : 'text.secondary', fontWeight: isCurrent ? 700 : 500 }}>
                                     {MONTH_LABELS[i]}
                                 </Box>
                             </Box>
@@ -711,7 +708,7 @@ function SectionHeader({ title, tone }: { title: string; tone?: 'danger' }) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: '18px', mx: '4px', mb: '10px' }}>
             <Box sx={{
                 fontSize: 12, fontWeight: 600,
-                color: tone === 'danger' ? '#991B1B' : C_MUTED,
+                color: tone === 'danger' ? 'error.dark' : 'text.secondary',
                 textTransform: 'uppercase', letterSpacing: '0.05em',
             }}>
                 {title}
@@ -736,14 +733,14 @@ function TimesheetCard({ t, comment, onEdit, onView, onDelete }: {
     const projects = (t.projectSummaries ?? []).slice(0, 6)
 
     const borderLeftColor =
-        status === 'Submitted' || status === 'Resubmitted' ? '#F59E0B' :
-        status === 'Approved' ? '#22C47A' :
-        status === 'Rejected' ? '#FF4D4F' :
-        '#6B7280'
+        status === 'Submitted' || status === 'Resubmitted' ? 'warning.main' :
+        status === 'Approved' ? 'success.main' :
+        status === 'Rejected' ? 'error.main' :
+        'text.secondary'
 
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`,
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider',
             borderLeft: `3px solid ${borderLeftColor}`,
             borderRadius: '10px', p: '16px 18px', mb: '10px',
             transition: 'all 0.15s',
@@ -756,9 +753,9 @@ function TimesheetCard({ t, comment, onEdit, onView, onDelete }: {
             }}>
                 <Box sx={{ minWidth: 0 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', mb: '8px' }}>
-                        <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>
+                        <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                             {formatPeriod(t.periodStart, t.periodEnd)}
-                            <Box component="span" sx={{ color: '#9CA3AF', fontWeight: 500, ml: '8px', fontSize: 12 }}>
+                            <Box component="span" sx={{ color: 'text.disabled', fontWeight: 500, ml: '8px', fontSize: 12 }}>
                                 Week {weekNum}
                             </Box>
                         </Box>
@@ -778,12 +775,12 @@ function TimesheetCard({ t, comment, onEdit, onView, onDelete }: {
                                 <Box key={d} sx={{
                                     flex: 1, p: '6px 8px', borderRadius: '5px', textAlign: 'center',
                                     fontSize: 11, minWidth: 0,
-                                    bgcolor: filled ? '#ECFDF5' : '#F9FAFB',
+                                    bgcolor: filled ? softBg('success') : 'action.hover',
                                 }}>
-                                    <Box sx={{ fontSize: 9, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{d}</Box>
+                                    <Box sx={{ fontSize: 9, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{d}</Box>
                                     <Box sx={{
                                         fontWeight: filled ? 600 : 500,
-                                        color: filled ? '#065F46' : '#9CA3AF',
+                                        color: filled ? 'success.dark' : 'text.disabled',
                                         fontVariantNumeric: 'tabular-nums', mt: '2px',
                                     }}>
                                         {filled ? `${h.toFixed(1)}h` : '—'}
@@ -798,12 +795,12 @@ function TimesheetCard({ t, comment, onEdit, onView, onDelete }: {
                             {projects.map((p) => (
                                 <Box key={p.projectId} sx={{
                                     display: 'inline-flex', alignItems: 'center', gap: '5px',
-                                    bgcolor: '#F9FAFB', border: `1px solid ${C_BORDER}`,
-                                    p: '3px 9px', borderRadius: '12px', fontSize: 11, color: '#374151',
+                                    bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider',
+                                    p: '3px 9px', borderRadius: '12px', fontSize: 11, color: 'text.primary',
                                 }}>
                                     <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: projectColor(p.projectId) }} />
-                                    <Box component="strong" sx={{ color: C_HEADING, fontWeight: 600 }}>{p.code}</Box>
-                                    <Box component="span" sx={{ color: C_MUTED }}>· {Number(p.hours).toFixed(1)}h</Box>
+                                    <Box component="strong" sx={{ color: 'text.primary', fontWeight: 600 }}>{p.code}</Box>
+                                    <Box component="span" sx={{ color: 'text.secondary' }}>· {Number(p.hours).toFixed(1)}h</Box>
                                 </Box>
                             ))}
                         </Box>
@@ -840,10 +837,10 @@ function SummaryItem({ label, value, tone, muted }: {
 }) {
     return (
         <Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</Box>
             <Box sx={{
                 fontSize: muted ? 14 : 16, fontWeight: muted ? 500 : 700,
-                color: tone === 'amber' ? '#F59E0B' : muted ? C_MUTED : C_HEADING,
+                color: tone === 'amber' ? 'warning.main' : muted ? 'text.secondary' : 'text.primary',
                 lineHeight: 1, mt: '3px', fontVariantNumeric: 'tabular-nums',
             }}>{value}</Box>
         </Box>
@@ -851,12 +848,12 @@ function SummaryItem({ label, value, tone, muted }: {
 }
 
 function StatusBadge({ status }: { status: TimesheetStatus }) {
-    const config: Record<TimesheetStatus, { bg: string; color: string; label: string }> = {
-        Draft:       { bg: '#EFF6FF', color: '#1D4ED8', label: 'Draft' },
-        Submitted:   { bg: '#FEF3C7', color: '#92400E', label: 'Pending review' },
+    const config: Record<TimesheetStatus, { bg: SxColor; color: string; label: string }> = {
+        Draft:       { bg: softBg('info'), color: 'info.dark', label: 'Draft' },
+        Submitted:   { bg: softBg('warning'), color: 'warning.dark', label: 'Pending review' },
         Resubmitted: { bg: '#F3E8FF', color: '#6D28D9', label: 'Re-submitted' },
-        Approved:    { bg: '#D1FAE5', color: '#065F46', label: 'Approved' },
-        Rejected:    { bg: '#FEE2E2', color: '#991B1B', label: 'Needs changes' },
+        Approved:    { bg: softBg('success'), color: 'success.dark', label: 'Approved' },
+        Rejected:    { bg: softBg('error'), color: 'error.dark', label: 'Needs changes' },
     }
     const c = config[status]
     return (
@@ -871,7 +868,7 @@ function StatusBadge({ status }: { status: TimesheetStatus }) {
 function FeedbackBox({ t, comment }: { t: Timesheet; comment?: TimesheetStatusHistory }) {
     if (t.status === 'Submitted' || t.status === 'Resubmitted') {
         return (
-            <Box sx={feedbackSx('#FEF3C7', '#92400E', '#F59E0B')}>
+            <Box sx={feedbackSx(softBg('warning'), 'warning.dark', 'warning.main')}>
                 <Box component="span">⏳</Box>
                 <Box>Submitted {t.submittedAt ? formatDateTime(t.submittedAt) : ''} · waiting for manager to review</Box>
             </Box>
@@ -879,7 +876,7 @@ function FeedbackBox({ t, comment }: { t: Timesheet; comment?: TimesheetStatusHi
     }
     if (t.status === 'Approved') {
         return (
-            <Box sx={feedbackSx('#D1FAE5', '#065F46', '#22C47A')}>
+            <Box sx={feedbackSx(softBg('success'), 'success.dark', 'success.main')}>
                 <Box component="span">✓</Box>
                 <Box>
                     Approved{comment ? <> by <Box component="strong">{comment.changedByUserName}</Box></> : ''}
@@ -890,7 +887,7 @@ function FeedbackBox({ t, comment }: { t: Timesheet; comment?: TimesheetStatusHi
     }
     if (t.status === 'Rejected' && comment?.comment) {
         return (
-            <Box sx={feedbackSx('#FEE2E2', '#991B1B', '#FF4D4F')}>
+            <Box sx={feedbackSx(softBg('error'), 'error.dark', 'error.main')}>
                 <Box component="span">💬</Box>
                 <Box>
                     <Box component="strong">{comment.changedByUserName}:</Box> "{comment.comment}"
@@ -901,7 +898,7 @@ function FeedbackBox({ t, comment }: { t: Timesheet; comment?: TimesheetStatusHi
     return null
 }
 
-function feedbackSx(bg: string, color: string, accent: string) {
+function feedbackSx(bg: SxColor, color: string, accent: string) {
     return {
         mt: '10px', p: '10px 12px', borderRadius: '6px', fontSize: 12,
         display: 'flex', alignItems: 'flex-start', gap: '8px',
@@ -915,10 +912,10 @@ function ActionButton({ onClick, variant, children }: {
     children: React.ReactNode
 }) {
     const styles =
-        variant === 'primary' ? { bg: C_BLUE, color: '#fff', border: 'none', hover: '#3A7AE4', hoverColor: '#fff' } :
-        variant === 'outline' ? { bg: '#fff', color: C_BLUE, border: `1px solid ${C_BLUE}`, hover: '#EEF4FF', hoverColor: C_BLUE } :
-        variant === 'danger'  ? { bg: 'transparent', color: '#991B1B', border: `1px solid ${C_BORDER}`, hover: '#FEE2E2', hoverColor: '#991B1B' } :
-                                 { bg: 'transparent', color: C_MUTED, border: `1px solid ${C_BORDER}`, hover: '#F4F5F7', hoverColor: C_HEADING }
+        variant === 'primary' ? { bg: 'primary.main', color: '#fff', border: 'none', hover: 'primary.dark', hoverColor: '#fff' } :
+        variant === 'outline' ? { bg: '#fff', color: 'primary.main', border: `1px solid ${'primary.main'}`, hover: softBg('primary'), hoverColor: 'primary.main' } :
+        variant === 'danger'  ? { bg: 'transparent', color: 'error.dark', border: '1px solid', borderColor: 'divider', hover: softBg('error'), hoverColor: 'error.dark' } :
+                                 { bg: 'transparent', color: 'text.secondary', border: '1px solid', borderColor: 'divider', hover: 'action.hover', hoverColor: 'text.primary' }
     return (
         <Box
             component="button"

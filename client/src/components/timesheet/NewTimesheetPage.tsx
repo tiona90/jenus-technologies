@@ -31,21 +31,18 @@ import { formatElapsed, formatTime12, useAttendanceToday, useLiveElapsedMinutes 
 import type { Project, UserInfo } from '../../lib/types'
 import type { Timesheet, TimesheetStatus } from '../../lib/types/timesheet'
 import type { TimesheetEntry } from '../../lib/types/timesheet-entry'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BG = '#F4F5F7'
-const BLUE = '#4F8EF7'
-const GREEN = '#22C47A'
-const AMBER = '#F59E0B'
+const BLUE = 'primary.main'
+const GREEN = 'success.main'
+const AMBER = 'warning.main'
 
-const STATUS_BADGE: Record<TimesheetStatus, { bg: string; color: string; label: string }> = {
-    Draft: { bg: '#EFF6FF', color: '#1D4ED8', label: 'Draft' },
-    Submitted: { bg: '#FEF3C7', color: '#92400E', label: 'Submitted' },
-    Approved: { bg: '#D1FAE5', color: '#065F46', label: 'Approved' },
-    Rejected: { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected' },
-    Resubmitted: { bg: '#F3E8FF', color: '#6D28D9', label: 'Resubmitted' },
+const STATUS_BADGE: Record<TimesheetStatus, { bg: SxColor; color: string; label: string }> = {
+    Draft: { bg: softBg('info'), color: 'info.dark', label: 'Draft' },
+    Submitted: { bg: softBg('warning'), color: 'warning.dark', label: 'Submitted' },
+    Approved: { bg: softBg('success'), color: 'success.dark', label: 'Approved' },
+    Rejected: { bg: softBg('error'), color: 'error.dark', label: 'Rejected' },
+    Resubmitted: { bg: softBg('primary'), color: 'primary.dark', label: 'Resubmitted' },
 }
 
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -417,8 +414,8 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
         <Box sx={{ maxWidth: 960 }}>
             {/* Week navigation bar */}
             <Box sx={{
-                bgcolor: '#fff',
-                border: `1px solid ${C_BORDER}`,
+                bgcolor: 'background.paper',
+                border: '1px solid', borderColor: 'divider',
                 borderRadius: '10px',
                 p: '14px 18px',
                 mb: 1.75,
@@ -433,10 +430,10 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
                         <ChevronLeftRoundedIcon sx={{ fontSize: 18 }} />
                     </NavBtn>
                     <Box>
-                        <Typography sx={{ fontSize: 15, fontWeight: 600, color: C_HEADING }}>
+                        <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary' }}>
                             {formatWeekRange(weekStart)}
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: C_MUTED, mt: '1px' }}>
+                        <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: '1px' }}>
                             Monday – Friday · Submit by Friday 6pm
                         </Typography>
                     </Box>
@@ -447,13 +444,13 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
 
                 <Stack direction="row" alignItems="center" spacing={1.75}>
                     <Stack direction="row" alignItems="center" spacing={1.25}>
-                        <Typography sx={{ fontSize: 12, color: C_MUTED }}>
-                            <Box component="strong" sx={{ color: C_HEADING, fontWeight: 700, fontSize: 14 }}>
+                        <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+                            <Box component="strong" sx={{ color: 'text.primary', fontWeight: 700, fontSize: 14 }}>
                                 {weekTotal.toFixed(1)}
                             </Box>
                             {' '}/ 40 hrs
                         </Typography>
-                        <Box sx={{ width: 100, height: 6, bgcolor: C_BORDER, borderRadius: 3, overflow: 'hidden' }}>
+                        <Box sx={{ width: 100, height: 6, bgcolor: 'divider', borderRadius: 3, overflow: 'hidden' }}>
                             <Box sx={{
                                 height: '100%',
                                 width: `${progressPct}%`,
@@ -535,8 +532,8 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
 
             {/* Footer */}
             <Box sx={{
-                bgcolor: '#fff',
-                border: `1px solid ${C_BORDER}`,
+                bgcolor: 'background.paper',
+                border: '1px solid', borderColor: 'divider',
                 borderRadius: '10px',
                 p: '16px 20px',
                 display: 'flex',
@@ -547,13 +544,13 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
             }}>
                 <Stack direction="row" spacing={3.25} flexWrap="wrap">
                     <FooterStat label="Total this week" value={`${weekTotal.toFixed(1)} hrs`} />
-                    <FooterStat label="Days logged" value={`${daysLogged} / 5`} valueColor={C_MUTED} />
+                    <FooterStat label="Days logged" value={`${daysLogged} / 5`} valueColor={'text.secondary'} />
                     <FooterStat
                         label="Remaining"
                         value={`${remaining.toFixed(1)} hrs`}
-                        valueColor={remaining > 0 ? AMBER : C_HEADING}
+                        valueColor={remaining > 0 ? AMBER : 'text.primary'}
                     />
-                    <FooterStat label="Target" value="40 hrs" valueColor={C_MUTED} />
+                    <FooterStat label="Target" value="40 hrs" valueColor={'text.secondary'} />
                 </Stack>
                 {isEditable && (
                     <Stack direction="row" spacing={1}>
@@ -565,10 +562,10 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
                             sx={{
                                 textTransform: 'none',
                                 fontSize: 13,
-                                borderColor: C_BORDER,
-                                color: C_MUTED,
+                                borderColor: 'divider',
+                                color: 'text.secondary',
                                 bgcolor: 'transparent',
-                                '&:hover': { bgcolor: C_BG, borderColor: C_BORDER },
+                                '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' },
                             }}
                         >
                             {pendingMode === 'draft' ? 'Saving…' : 'Save draft'}
@@ -582,7 +579,7 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
                                 textTransform: 'none',
                                 fontSize: 13,
                                 bgcolor: BLUE,
-                                '&:hover': { bgcolor: '#3A7AE4' },
+                                '&:hover': { bgcolor: 'primary.dark' },
                                 boxShadow: 'none',
                             }}
                         >
@@ -600,7 +597,7 @@ export default function NewTimesheetPage({ user: _user }: { user: UserInfo }) {
 
             <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 1.25, px: 0.5 }}>
                 <Typography sx={{ fontSize: 14, lineHeight: 1 }}>💡</Typography>
-                <Typography sx={{ fontSize: 12, color: C_MUTED }}>
+                <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
                     Click a day to expand it. Add tasks as you go — saving updates this week's timesheet without creating a new one.
                 </Typography>
             </Stack>
@@ -638,15 +635,15 @@ function NavBtn({
                 disabled={disabled}
                 sx={{
                     width: 30, height: 30,
-                    border: `1px solid ${C_BORDER}`,
+                    border: '1px solid', borderColor: 'divider',
                     borderRadius: '6px',
-                    bgcolor: '#fff',
+                    bgcolor: 'background.paper',
                     cursor: disabled ? 'not-allowed' : 'pointer',
-                    color: '#374151',
+                    color: 'text.primary',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     p: 0,
                     opacity: disabled ? 0.55 : 1,
-                    '&:hover': { bgcolor: disabled ? '#fff' : C_BG },
+                    '&:hover': { bgcolor: disabled ? '#fff' : 'action.hover' },
                 }}
             >
                 {children}
@@ -667,12 +664,12 @@ function FooterStat({
     return (
         <Box>
             <Typography sx={{
-                fontSize: 11, color: C_MUTED,
+                fontSize: 11, color: 'text.secondary',
                 textTransform: 'uppercase', letterSpacing: '0.05em', mb: '2px',
             }}>
                 {label}
             </Typography>
-            <Typography sx={{ fontSize: 20, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: 20, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>
                 {value}
             </Typography>
         </Box>
@@ -703,17 +700,18 @@ type DayCardProps = {
 function AutoFillBanner({ text, onAutoFill }: { text: string; onAutoFill: () => void }) {
     return (
         <Box sx={{
-            bgcolor: '#EFF6FF',
-            border: '1px solid #DBEAFE',
+            bgcolor: softBg('info'),
+            border: '1px solid',
+            borderColor: 'info.main',
             borderRadius: '6px',
             p: '8px 12px',
             mb: 1.25,
             display: 'flex', alignItems: 'center',
             gap: 1,
-            fontSize: 12, color: '#1D4ED8',
+            fontSize: 12, color: 'info.dark',
         }}>
             <Box sx={{
-                bgcolor: '#DBEAFE', color: '#1D4ED8',
+                bgcolor: softBg('info'), color: 'info.dark',
                 px: '7px', py: '2px',
                 borderRadius: 10,
                 fontSize: 10, fontWeight: 600,
@@ -729,12 +727,13 @@ function AutoFillBanner({ text, onAutoFill }: { text: string; onAutoFill: () => 
                     textTransform: 'none',
                     fontSize: 11,
                     fontWeight: 600,
-                    color: '#1D4ED8',
-                    bgcolor: '#fff',
-                    border: '1px solid #BFDBFE',
+                    color: 'info.dark',
+                    bgcolor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: 'info.main',
                     px: 1.25, py: 0.5,
                     minWidth: 'unset',
-                    '&:hover': { bgcolor: '#DBEAFE', borderColor: '#BFDBFE' },
+                    '&:hover': { bgcolor: softBg('info'), borderColor: 'info.main' },
                 }}
             >
                 Auto-fill
@@ -760,18 +759,18 @@ function DayCard({
             ? 'Weekend · optional'
             : taskCount === 0 ? 'Nothing logged yet'
                 : taskCount === 1 ? '1 task' : `${taskCount} tasks`
-    const metaColor = isEmptyWeekday ? '#92400E' : C_MUTED
+    const metaColor = isEmptyWeekday ? 'warning.dark' : 'text.secondary'
 
     return (
         <Box sx={{
-            bgcolor: isFuture ? '#FAFBFC' : isWeekend ? '#FAFBFC' : '#fff',
-            border: `1px solid ${isToday ? BLUE : C_BORDER}`,
+            bgcolor: isFuture || isWeekend ? 'action.hover' : 'background.paper',
+            border: '1px solid',
+            borderColor: isToday ? 'primary.main' : 'divider',
             borderLeftWidth: leftAccent ? 3 : 1,
-            borderLeftColor: leftAccent ?? (isToday ? BLUE : C_BORDER),
+            borderLeftColor: leftAccent ?? (isToday ? 'primary.main' : 'divider'),
             borderRadius: '10px',
             overflow: 'hidden',
             transition: 'border-color 0.15s',
-            boxShadow: isToday ? '0 0 0 3px rgba(79,142,247,0.08)' : 'none',
         }}>
             <Box
                 onClick={isFuture ? undefined : onToggle}
@@ -780,13 +779,13 @@ function DayCard({
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     cursor: isFuture ? 'not-allowed' : 'pointer',
                     userSelect: 'none',
-                    '&:hover': isFuture ? {} : { bgcolor: isWeekend ? C_BG : '#FAFBFC' },
+                    '&:hover': isFuture ? {} : { bgcolor: 'action.hover' },
                 }}
             >
                 <Stack direction="row" alignItems="center" spacing={1.75}>
                     <Box sx={{
                         width: 44, height: 44, borderRadius: '8px',
-                        bgcolor: isToday ? BLUE : (isWeekend || isFuture) ? '#EBEDF0' : C_BG,
+                        bgcolor: isToday ? 'primary.main' : 'action.hover',
                         opacity: (isWeekend || isFuture) && !isToday ? 0.7 : 1,
                         display: 'flex', flexDirection: 'column',
                         alignItems: 'center', justifyContent: 'center',
@@ -794,7 +793,7 @@ function DayCard({
                     }}>
                         <Typography sx={{
                             fontSize: 10, fontWeight: 600,
-                            color: isToday ? '#fff' : C_MUTED,
+                            color: isToday ? '#fff' : 'text.secondary',
                             textTransform: 'uppercase', letterSpacing: '0.05em',
                             lineHeight: 1,
                         }}>
@@ -802,7 +801,7 @@ function DayCard({
                         </Typography>
                         <Typography sx={{
                             fontSize: 16, fontWeight: 700,
-                            color: isToday ? '#fff' : C_HEADING,
+                            color: isToday ? '#fff' : 'text.primary',
                             lineHeight: 1.1, mt: '2px',
                         }}>
                             {dom}
@@ -812,13 +811,13 @@ function DayCard({
                         <Stack direction="row" alignItems="center" spacing={0.75}>
                             <Typography sx={{
                                 fontSize: 13, fontWeight: 600,
-                                color: (isWeekend || isFuture) ? '#9CA3AF' : C_HEADING,
+                                color: (isWeekend || isFuture) ? 'text.disabled' : 'text.primary',
                             }}>
                                 {dayName}
                             </Typography>
                             {isToday && (
                                 <Box sx={{
-                                    bgcolor: '#DBEAFE', color: '#1D4ED8',
+                                    bgcolor: softBg('info'), color: 'info.dark',
                                     fontSize: 10, fontWeight: 500,
                                     px: 0.75, py: '1px',
                                     borderRadius: 10,
@@ -836,16 +835,16 @@ function DayCard({
                     <Typography sx={{
                         fontSize: 15,
                         fontWeight: dayTotal === 0 ? 500 : 700,
-                        color: dayTotal === 0 ? '#9CA3AF' : C_HEADING,
+                        color: dayTotal === 0 ? 'text.disabled' : 'text.primary',
                     }}>
                         {dayTotal.toFixed(1)} hrs
                     </Typography>
                     {isFuture ? (
-                        <LockRoundedIcon sx={{ fontSize: 16, color: '#9CA3AF' }} />
+                        <LockRoundedIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
                     ) : (
                         <ExpandMoreRoundedIcon sx={{
                             fontSize: 18,
-                            color: '#9CA3AF',
+                            color: 'text.disabled',
                             transition: 'transform 0.2s',
                             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                         }} />
@@ -854,7 +853,7 @@ function DayCard({
             </Box>
 
             {isOpen && (
-                <Box sx={{ px: 2, pb: 1.75, borderTop: '1px solid #F3F4F6' }}>
+                <Box sx={{ px: 2, pb: 1.75, borderTop: '1px solid', borderTopColor: 'divider' }}>
                     {banner && <Box sx={{ pt: 1.25 }}>{banner}</Box>}
                     <Box sx={{
                         display: 'grid',
@@ -865,7 +864,7 @@ function DayCard({
                         {['Project', 'Hours', 'What you worked on', ''].map((h, i) => (
                             <Typography key={i} sx={{
                                 fontSize: 10, fontWeight: 600,
-                                color: '#9CA3AF',
+                                color: 'text.disabled',
                                 textTransform: 'uppercase', letterSpacing: '0.05em',
                             }}>
                                 {h}
@@ -890,11 +889,11 @@ function DayCard({
                                     sx={{
                                         fontSize: 12,
                                         '& .MuiSelect-select': { py: '7px', px: '10px' },
-                                        '& fieldset': { borderColor: C_BORDER, borderRadius: '6px' },
+                                        '& fieldset': { borderColor: 'divider', borderRadius: '6px' },
                                     }}
                                 >
                                     <MenuItem value="" disabled>
-                                        <Box component="em" sx={{ color: '#9CA3AF' }}>Select project…</Box>
+                                        <Box component="em" sx={{ color: 'text.disabled' }}>Select project…</Box>
                                     </MenuItem>
                                     {activeProjects.map((p) => (
                                         <MenuItem key={p.id} value={String(p.id)}>
@@ -915,7 +914,7 @@ function DayCard({
                                     disabled={disabled}
                                     sx={{
                                         '& .MuiInputBase-input': { fontSize: 12, py: '7px' },
-                                        '& fieldset': { borderColor: C_BORDER, borderRadius: '6px' },
+                                        '& fieldset': { borderColor: 'divider', borderRadius: '6px' },
                                     }}
                                 />
                                 <TextField
@@ -926,7 +925,7 @@ function DayCard({
                                     disabled={disabled}
                                     sx={{
                                         '& .MuiInputBase-input': { fontSize: 12, py: '7px' },
-                                        '& fieldset': { borderColor: C_BORDER, borderRadius: '6px' },
+                                        '& fieldset': { borderColor: 'divider', borderRadius: '6px' },
                                     }}
                                 />
                                 <Box
@@ -938,16 +937,16 @@ function DayCard({
                                         width: 28, height: 28,
                                         borderRadius: '5px',
                                         bgcolor: 'transparent',
-                                        border: `1px solid ${C_BORDER}`,
-                                        color: '#9CA3AF',
+                                        border: '1px solid', borderColor: 'divider',
+                                        color: 'text.disabled',
                                         cursor: disabled ? 'not-allowed' : 'pointer',
                                         fontSize: 11,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         p: 0,
                                         '&:hover': disabled ? {} : {
-                                            bgcolor: '#FEE2E2',
-                                            color: '#991B1B',
-                                            borderColor: '#FCA5A5',
+                                            bgcolor: softBg('error'),
+                                            color: 'error.dark',
+                                            borderColor: 'error.main',
                                         },
                                     }}
                                 >
@@ -969,12 +968,13 @@ function DayCard({
                                 textTransform: 'none',
                                 color: BLUE,
                                 bgcolor: 'transparent',
-                                border: '1px dashed #C7D7F7',
+                                border: '1px dashed',
+                                borderColor: 'primary.main',
                                 borderRadius: '6px',
                                 '&:hover': {
-                                    bgcolor: '#EEF4FF',
+                                    bgcolor: softBg('primary'),
                                     borderStyle: 'solid',
-                                    borderColor: '#C7D7F7',
+                                    borderColor: 'primary.main',
                                 },
                             }}
                         >

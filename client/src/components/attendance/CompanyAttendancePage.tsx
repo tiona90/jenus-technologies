@@ -13,32 +13,30 @@ import Typography from '@mui/material/Typography'
 import { getCompanyAttendance } from '../../lib/api'
 import { formatElapsed, formatTime } from '../../lib/hooks/useAttendance'
 import type { AttendanceIssue, CompanyAttendance, IssueSeverity, RecentActivity } from '../../lib/types'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const BLUE = '#4F8EF7'
-const GREEN = '#22C47A'
-const AMBER = '#F59E0B'
-const RED = '#FF4D4F'
+const BLUE = 'primary.main'
+const GREEN = 'success.main'
+const AMBER = 'warning.main'
+const RED = 'error.main'
 
 const TH = {
     py: '10px',
     px: '14px',
     fontSize: 11,
     fontWeight: 600,
-    color: C_MUTED,
+    color: 'text.secondary',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB',
-    borderBottom: `1px solid ${C_BORDER}`,
+    bgcolor: 'action.hover',
+    borderBottom: '1px solid', borderColor: 'divider',
 }
 
 const TD = {
     py: '11px',
     px: '14px',
     fontSize: 13,
-    color: '#374151',
+    color: 'text.primary',
     borderBottom: '1px solid #F3F4F6',
 }
 
@@ -57,20 +55,20 @@ function StatCard({
 }) {
     return (
         <Paper elevation={0} sx={{
-            bgcolor: '#fff',
-            border: `1px solid ${C_BORDER}`,
+            bgcolor: 'background.paper',
+            border: '1px solid', borderColor: 'divider',
             borderTop: `3px solid ${accent}`,
             borderRadius: '10px',
             p: '18px 20px',
         }}>
             <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>
                 <Typography sx={{ fontSize: 14 }}>{icon}</Typography>
-                <Typography sx={{ fontSize: 12, color: C_MUTED }}>{label}</Typography>
+                <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{label}</Typography>
             </Stack>
-            <Typography sx={{ fontSize: 26, fontWeight: 700, color: C_HEADING, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: 26, fontWeight: 700, color: 'text.primary', lineHeight: 1 }}>
                 {value}
             </Typography>
-            <Typography sx={{ fontSize: 11, color: C_MUTED, mt: 0.5 }}>{sub}</Typography>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5 }}>{sub}</Typography>
         </Paper>
     )
 }
@@ -90,29 +88,29 @@ function ActivityRow({ r }: { r: RecentActivity }) {
             gridTemplateColumns: '32px 1fr auto',
             gap: 1.5, alignItems: 'center',
             p: '10px 12px',
-            bgcolor: '#F9FAFB',
+            bgcolor: 'action.hover',
             borderRadius: '6px',
             fontSize: 12,
         }}>
             <Box sx={{
-                width: 28, height: 28, borderRadius: '6px', bgcolor: '#fff',
+                width: 28, height: 28, borderRadius: '6px', bgcolor: 'background.paper',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 13,
             }}>
                 {activityIcon(r.action)}
             </Box>
             <Box>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: C_HEADING }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>
                     {r.employeeName}{' '}
-                    <Box component="span" sx={{ color: '#9CA3AF', fontWeight: 400, fontSize: 11 }}>
+                    <Box component="span" sx={{ color: 'text.disabled', fontWeight: 400, fontSize: 11 }}>
                         · {r.departmentName}
                     </Box>
                 </Typography>
-                <Typography sx={{ fontSize: 11, color: C_MUTED }}>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
                     {r.action}{r.at ? ` at ${formatTime(r.at)}` : ''}
                 </Typography>
             </Box>
-            <Typography sx={{ fontSize: 11, color: C_MUTED, fontVariantNumeric: 'tabular-nums' }}>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
                 {r.minutesAgo == null
                     ? 'flagged'
                     : r.minutesAgo < 1
@@ -125,11 +123,11 @@ function ActivityRow({ r }: { r: RecentActivity }) {
     )
 }
 
-const ISSUE_STYLES: Record<IssueSeverity, { bg: string; border: string; title: string; detail: string }> = {
-    danger:  { bg: '#FEE2E2', border: RED,   title: '#991B1B', detail: '#7F1D1D' },
-    warning: { bg: '#FEF3C7', border: AMBER, title: '#92400E', detail: '#78350F' },
-    info:    { bg: '#EFF6FF', border: BLUE,  title: '#1D4ED8', detail: '#1E3A8A' },
-    success: { bg: '#D1FAE5', border: GREEN, title: '#065F46', detail: '#064E3B' },
+const ISSUE_STYLES: Record<IssueSeverity, { bg: SxColor; border: string; title: string; detail: string }> = {
+    danger:  { bg: softBg('error'), border: RED,   title: 'error.dark', detail: 'error.dark' },
+    warning: { bg: softBg('warning'), border: AMBER, title: 'warning.dark', detail: 'warning.dark' },
+    info:    { bg: softBg('info'), border: BLUE,  title: 'info.dark', detail: 'info.dark' },
+    success: { bg: softBg('success'), border: GREEN, title: 'success.dark', detail: 'success.dark' },
 }
 
 function IssueCard({ issue }: { issue: AttendanceIssue }) {
@@ -243,13 +241,13 @@ export default function CompanyAttendancePage() {
             </Box>
 
             {/* Department breakdown */}
-            <Paper elevation={0} sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
+            <Paper elevation={0} sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
                 <Box sx={{
                     p: '14px 18px',
-                    borderBottom: `1px solid ${C_BORDER}`,
+                    borderBottom: '1px solid', borderColor: 'divider',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>By Department</Typography>
+                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>By Department</Typography>
                     <Stack direction="row" alignItems="center" spacing={0.625}>
                         <Box sx={{
                             width: 6, height: 6, borderRadius: '50%', bgcolor: GREEN,
@@ -280,16 +278,16 @@ export default function CompanyAttendancePage() {
                             {data.departments.map((d) => {
                                 const pct = d.total > 0 ? (d.in / d.total) * 100 : 0
                                 return (
-                                    <TableRow key={d.name} sx={{ '&:hover td': { bgcolor: '#F9FAFB' } }}>
+                                    <TableRow key={d.name} sx={{ '&:hover td': { bgcolor: 'action.hover' } }}>
                                         <TableCell sx={TD}>
                                             <Box component="strong">{d.name}</Box>{' '}
-                                            <Box component="span" sx={{ color: '#9CA3AF', fontSize: 11 }}>({d.total})</Box>
+                                            <Box component="span" sx={{ color: 'text.disabled', fontSize: 11 }}>({d.total})</Box>
                                         </TableCell>
                                         <TableCell sx={{ ...TD, minWidth: 160 }}>
-                                            <Box sx={{ height: 6, bgcolor: '#E4E6EA', borderRadius: 3, overflow: 'hidden' }}>
+                                            <Box sx={{ height: 6, bgcolor: 'divider', borderRadius: 3, overflow: 'hidden' }}>
                                                 <Box sx={{ height: '100%', width: `${pct}%`, bgcolor: progressColor(pct), borderRadius: 3 }} />
                                             </Box>
-                                            <Typography sx={{ fontSize: 10, color: C_MUTED, mt: '3px' }}>
+                                            <Typography sx={{ fontSize: 10, color: 'text.secondary', mt: '3px' }}>
                                                 {Math.round(pct)}% in
                                             </Typography>
                                         </TableCell>
@@ -299,17 +297,17 @@ export default function CompanyAttendancePage() {
                                         <TableCell sx={TD}>
                                             {d.break > 0
                                                 ? <Box component="strong" sx={{ color: AMBER }}>{d.break}</Box>
-                                                : <Box component="span" sx={{ color: '#9CA3AF' }}>0</Box>}
+                                                : <Box component="span" sx={{ color: 'text.disabled' }}>0</Box>}
                                         </TableCell>
                                         <TableCell sx={TD}>
                                             {d.out > 0
                                                 ? <Box component="strong" sx={{ color: RED }}>{d.out}</Box>
-                                                : <Box component="span" sx={{ color: '#9CA3AF' }}>0</Box>}
+                                                : <Box component="span" sx={{ color: 'text.disabled' }}>0</Box>}
                                         </TableCell>
                                         <TableCell sx={TD}>
                                             {d.leave > 0
                                                 ? <Box component="strong" sx={{ color: BLUE }}>{d.leave}</Box>
-                                                : <Box component="span" sx={{ color: '#9CA3AF' }}>0</Box>}
+                                                : <Box component="span" sx={{ color: 'text.disabled' }}>0</Box>}
                                         </TableCell>
                                         <TableCell sx={TD}>
                                             <Box component="strong">{minutesToHours(d.totalMinutes)}</Box>
@@ -318,7 +316,7 @@ export default function CompanyAttendancePage() {
                                     </TableRow>
                                 )
                             })}
-                            <TableRow sx={{ bgcolor: '#F9FAFB' }}>
+                            <TableRow sx={{ bgcolor: 'action.hover' }}>
                                 <TableCell sx={{ ...TD, fontWeight: 600 }}>
                                     <Box component="strong">All departments</Box>
                                 </TableCell>
@@ -349,13 +347,13 @@ export default function CompanyAttendancePage() {
 
             {/* Recent activity + Issues */}
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.75 }}>
-                <Paper elevation={0} sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
+                <Paper elevation={0} sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
                     <Box sx={{
                         p: '14px 18px',
-                        borderBottom: `1px solid ${C_BORDER}`,
+                        borderBottom: '1px solid', borderColor: 'divider',
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     }}>
-                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>Recent Activity</Typography>
+                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>Recent Activity</Typography>
                         <Button
                             variant="outlined"
                             size="small"
@@ -367,7 +365,7 @@ export default function CompanyAttendancePage() {
                                 color: BLUE,
                                 borderColor: BLUE,
                                 px: 1.5, py: 0.5,
-                                '&:hover': { bgcolor: '#EEF4FF', borderColor: BLUE },
+                                '&:hover': { bgcolor: softBg('primary'), borderColor: BLUE },
                             }}
                         >
                             Export Log
@@ -376,7 +374,7 @@ export default function CompanyAttendancePage() {
                     <Box sx={{ p: 2.25 }}>
                         <Stack spacing={1}>
                             {data.recent.length === 0 ? (
-                                <Typography sx={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', py: 3 }}>
+                                <Typography sx={{ fontSize: 13, color: 'text.disabled', textAlign: 'center', py: 3 }}>
                                     No activity yet today.
                                 </Typography>
                             ) : (
@@ -386,16 +384,16 @@ export default function CompanyAttendancePage() {
                     </Box>
                 </Paper>
 
-                <Paper elevation={0} sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
-                    <Box sx={{ p: '14px 18px', borderBottom: `1px solid ${C_BORDER}` }}>
-                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>
+                <Paper elevation={0} sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
+                    <Box sx={{ p: '14px 18px', borderBottom: '1px solid', borderColor: 'divider' }}>
+                        <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                             ⚠️ Today's Issues
                         </Typography>
                     </Box>
                     <Box sx={{ p: 2.25 }}>
                         <Stack spacing={1.25}>
                             {data.issues.length === 0 ? (
-                                <Typography sx={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', py: 3 }}>
+                                <Typography sx={{ fontSize: 13, color: 'text.disabled', textAlign: 'center', py: 3 }}>
                                     No issues flagged.
                                 </Typography>
                             ) : (

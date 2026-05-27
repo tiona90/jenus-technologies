@@ -1,10 +1,19 @@
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import { ThemeProvider } from '@mui/material/styles'
+import { buildTheme } from '../../lib/theme'
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
 import ForgotPasswordForm from './ForgotPasswordForm'
 import ResetPasswordForm from './ResetPasswordForm'
+
+// Auth screens use their own designed-for-light visual identity (dark navy
+// brand panel on the left, white form panel on the right). Bypass the user's
+// app-wide theme preference so signed-out visitors always see this layout
+// readable — without a logged-in profile to remember a preference against,
+// dark mode here just makes hardcoded text invisible.
+const authTheme = buildTheme('light')
 
 const features = [
     { icon: '📅', title: 'Annual Leave Management', sub: 'Submit, approve and track leave requests' },
@@ -100,43 +109,45 @@ function AuthPage({ authView, authNotice, onClearNotice, onSwitchToLogin, onSwit
     const showToggle = authView === 'login' || authView === 'register'
 
     return (
-        <Box sx={{ minHeight: '100vh', display: 'flex' }}>
-            <LeftPanel />
+        <ThemeProvider theme={authTheme}>
+            <Box sx={{ minHeight: '100vh', display: 'flex' }}>
+                <LeftPanel />
 
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: '40px 20px', bgcolor: '#F4F5F7', overflowY: 'auto' }}>
-                <Box sx={{ width: '100%', maxWidth: 420 }}>
-                    {authNotice && (
-                        <Alert severity={authNotice.severity} onClose={onClearNotice} sx={{ mb: 2.5, borderRadius: '8px', fontSize: 13 }}>
-                            {authNotice.message}
-                        </Alert>
-                    )}
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', p: '40px 20px', bgcolor: '#F4F5F7', overflowY: 'auto' }}>
+                    <Box sx={{ width: '100%', maxWidth: 420 }}>
+                        {authNotice && (
+                            <Alert severity={authNotice.severity} onClose={onClearNotice} sx={{ mb: 2.5, borderRadius: '8px', fontSize: 13 }}>
+                                {authNotice.message}
+                            </Alert>
+                        )}
 
-                    {showToggle && (
-                        <Box sx={{ display: 'flex', bgcolor: '#E4E6EA', borderRadius: '8px', p: '4px', mb: 3.5 }}>
-                            <Box component="button" onClick={onSwitchToLogin} sx={toggleBtnSx(authView === 'login')}>
-                                Sign In
+                        {showToggle && (
+                            <Box sx={{ display: 'flex', bgcolor: '#E4E6EA', borderRadius: '8px', p: '4px', mb: 3.5 }}>
+                                <Box component="button" onClick={onSwitchToLogin} sx={toggleBtnSx(authView === 'login')}>
+                                    Sign In
+                                </Box>
+                                <Box component="button" onClick={onSwitchToRegister} sx={toggleBtnSx(authView === 'register')}>
+                                    Create Account
+                                </Box>
                             </Box>
-                            <Box component="button" onClick={onSwitchToRegister} sx={toggleBtnSx(authView === 'register')}>
-                                Create Account
-                            </Box>
-                        </Box>
-                    )}
+                        )}
 
-                    {authView === 'login' && (
-                        <LoginForm onForgotPassword={onForgotPassword} onSwitchToRegister={onSwitchToRegister} />
-                    )}
-                    {authView === 'register' && (
-                        <RegisterForm onSwitchToLogin={onSwitchToLogin} />
-                    )}
-                    {authView === 'forgot-password' && (
-                        <ForgotPasswordForm onBackToLogin={onBackToLogin} />
-                    )}
-                    {authView === 'reset-password' && (
-                        <ResetPasswordForm onBackToLogin={onBackToLogin} onRequestNewLink={onRequestNewLink} />
-                    )}
+                        {authView === 'login' && (
+                            <LoginForm onForgotPassword={onForgotPassword} onSwitchToRegister={onSwitchToRegister} />
+                        )}
+                        {authView === 'register' && (
+                            <RegisterForm onSwitchToLogin={onSwitchToLogin} />
+                        )}
+                        {authView === 'forgot-password' && (
+                            <ForgotPasswordForm onBackToLogin={onBackToLogin} />
+                        )}
+                        {authView === 'reset-password' && (
+                            <ResetPasswordForm onBackToLogin={onBackToLogin} onRequestNewLink={onRequestNewLink} />
+                        )}
+                    </Box>
                 </Box>
             </Box>
-        </Box>
+        </ThemeProvider>
     )
 }
 

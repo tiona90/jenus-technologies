@@ -17,6 +17,13 @@ namespace API.Controllers
         public DateTime PeriodEnd { get; set; }
     }
 
+    public class GenerateDraftTimesheetRequest
+    {
+        public DateTime PeriodStart { get; set; }
+        public DateTime PeriodEnd { get; set; }
+        public int ProjectId { get; set; }
+    }
+
     [ApiVersion("1.0")]
 
     public class TimesheetsController : BaseApiController
@@ -67,6 +74,26 @@ namespace API.Controllers
                 RequestingUserId = ResolveUserId(),
                 PeriodStart = request.PeriodStart,
                 PeriodEnd = request.PeriodEnd,
+            });
+
+            return HandleResult(result);
+        }
+
+        // POST: api/timesheets/generate-draft
+        // Populates a Draft timesheet for the period by reading the caller's
+        // AttendanceEvents and turning each day's worked-minus-break time into
+        // a TimesheetEntry against the supplied project. Idempotent: reruns
+        // for the same period replace the prior entries.
+        [HttpPost("generate-draft")]
+        [Authorize]
+        public async Task<ActionResult<TimesheetDto>> GenerateDraft(GenerateDraftTimesheetRequest request)
+        {
+            var result = await Mediator.Send(new GenerateDraft.Command
+            {
+                RequestingUserId = ResolveUserId(),
+                PeriodStart = request.PeriodStart,
+                PeriodEnd = request.PeriodEnd,
+                ProjectId = request.ProjectId,
             });
 
             return HandleResult(result);

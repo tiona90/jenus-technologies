@@ -53,14 +53,6 @@ function buildProfileSchema(requireDepartment: boolean) {
 }
 type ProfileFormValues = z.infer<ReturnType<typeof buildProfileSchema>>
 
-// Design tokens
-const BG = '#1A1A2E'
-const BG_ACTIVE = '#2D2D4A'
-const BORDER = '#2D2D4A'
-const TEXT_MUTED = '#7B7B9A'
-const TEXT_NAV = '#9B9BB8'
-const ACCENT = '#4F8EF7'
-
 type NavSection = { kind: 'section'; label: string }
 type NavItem = {
     kind: 'item'
@@ -240,19 +232,20 @@ const Sidebar = observer(function Sidebar() {
                     [`& .MuiDrawer-paper`]: {
                         width: 220,
                         boxSizing: 'border-box',
-                        bgcolor: BG,
-                        borderRight: 'none',
+                        bgcolor: 'background.paper',
+                        borderRight: 1,
+                        borderColor: 'divider',
                         display: 'flex',
                         flexDirection: 'column',
                     },
                 }}
             >
                 {/* Logo */}
-                <Box sx={{ px: 2.5, py: 2.5, borderBottom: `1px solid ${BORDER}` }}>
-                    <Typography sx={{ fontSize: 16, fontWeight: 600, color: '#fff', letterSpacing: '0.02em' }}>
+                <Box sx={{ px: 2.5, py: 2.5, borderBottom: 1, borderColor: 'divider' }}>
+                    <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'text.primary', letterSpacing: '0.02em' }}>
                         WorkTrack
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: TEXT_MUTED, mt: 0.25 }}>
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25 }}>
                         Leave &amp; Timesheet
                     </Typography>
                 </Box>
@@ -270,7 +263,7 @@ const Sidebar = observer(function Sidebar() {
                                         pb: 0.5,
                                         fontSize: 10,
                                         fontWeight: 600,
-                                        color: TEXT_MUTED,
+                                        color: 'text.disabled',
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.06em',
                                     }}
@@ -291,14 +284,15 @@ const Sidebar = observer(function Sidebar() {
                                     px: 1.75,
                                     py: 1.1,
                                     cursor: 'pointer',
-                                    color: entry.active ? '#fff' : TEXT_NAV,
-                                    bgcolor: entry.active ? BG_ACTIVE : 'transparent',
-                                    borderLeft: entry.active ? `3px solid ${ACCENT}` : '3px solid transparent',
+                                    color: entry.active ? 'text.primary' : 'text.secondary',
+                                    bgcolor: entry.active ? 'action.selected' : 'transparent',
+                                    borderLeft: '3px solid',
+                                    borderLeftColor: entry.active ? 'primary.main' : 'transparent',
                                     fontSize: 13,
                                     transition: 'all 0.15s',
                                     '&:hover': {
-                                        bgcolor: BG_ACTIVE,
-                                        color: '#fff',
+                                        bgcolor: 'action.hover',
+                                        color: 'text.primary',
                                     },
                                 }}
                             >
@@ -314,7 +308,7 @@ const Sidebar = observer(function Sidebar() {
                 </Box>
 
                 {/* Footer */}
-                <Box sx={{ px: 1.75, py: 1.75, borderTop: `1px solid ${BORDER}` }}>
+                <Box sx={{ px: 1.75, py: 1.75, borderTop: 1, borderColor: 'divider' }}>
                     <Tooltip title="Account options" placement="right">
                         <Stack
                             direction="row"
@@ -325,20 +319,20 @@ const Sidebar = observer(function Sidebar() {
                                 cursor: 'pointer',
                                 borderRadius: 1,
                                 p: 0.75,
-                                '&:hover': { bgcolor: BG_ACTIVE },
+                                '&:hover': { bgcolor: 'action.hover' },
                             }}
                         >
                             <Avatar
                                 src={authStore.user?.imageUrl || undefined}
-                                sx={{ width: 32, height: 32, fontSize: 12, fontWeight: 600, bgcolor: ACCENT, flexShrink: 0 }}
+                                sx={{ width: 32, height: 32, fontSize: 12, fontWeight: 600, bgcolor: 'primary.main', color: 'primary.contrastText', flexShrink: 0 }}
                             >
                                 {initials}
                             </Avatar>
                             <Box sx={{ minWidth: 0 }}>
-                                <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#fff', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {displayName}
                                 </Typography>
-                                <Typography sx={{ fontSize: 10, color: TEXT_MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <Typography sx={{ fontSize: 10, color: 'text.secondary', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {roleLabel}
                                 </Typography>
                             </Box>

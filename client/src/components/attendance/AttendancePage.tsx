@@ -22,32 +22,30 @@ import {
     useLiveElapsedMinutes,
 } from '../../lib/hooks/useAttendance'
 import type { AttendanceEvent, AttendanceEventType } from '../../lib/types'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const BLUE = '#4F8EF7'
-const GREEN = '#22C47A'
-const AMBER = '#F59E0B'
-const RED = '#FF4D4F'
+const BLUE = 'primary.main'
+const GREEN = 'success.main'
+const AMBER = 'warning.main'
+const RED = 'error.main'
 
 const TH = {
     py: '10px',
     px: '14px',
     fontSize: 11,
     fontWeight: 600,
-    color: C_MUTED,
+    color: 'text.secondary',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB',
-    borderBottom: `1px solid ${C_BORDER}`,
+    bgcolor: 'action.hover',
+    borderBottom: '1px solid', borderColor: 'divider',
 }
 
 const TD = {
     py: '11px',
     px: '14px',
     fontSize: 13,
-    color: '#374151',
+    color: 'text.primary',
     borderBottom: '1px solid #F3F4F6',
 }
 
@@ -66,12 +64,12 @@ const EVENT_ICON: Record<AttendanceEventType, string> = {
 }
 
 function StatusPill({ kind, children }: { kind: 'in' | 'out' | 'break' | 'late' | 'leave'; children: React.ReactNode }) {
-    const styles: Record<string, { bg: string; color: string; dot: string }> = {
-        in:    { bg: '#D1FAE5', color: '#065F46', dot: GREEN },
-        out:   { bg: '#F3F4F6', color: '#6B7280', dot: '#9CA3AF' },
-        break: { bg: '#FEF3C7', color: '#92400E', dot: AMBER },
-        late:  { bg: '#FEE2E2', color: '#991B1B', dot: RED },
-        leave: { bg: '#EFF6FF', color: '#1D4ED8', dot: BLUE },
+    const styles: Record<string, { bg: SxColor; color: string; dot: string }> = {
+        in:    { bg: softBg('success'), color: 'success.dark', dot: GREEN },
+        out:   { bg: 'divider', color: 'text.secondary', dot: 'text.disabled' },
+        break: { bg: softBg('warning'), color: 'warning.dark', dot: AMBER },
+        late:  { bg: softBg('error'), color: 'error.dark', dot: RED },
+        leave: { bg: softBg('info'), color: 'info.dark', dot: BLUE },
     }
     const s = styles[kind]
     return (
@@ -130,13 +128,15 @@ export default function AttendancePage() {
         <Stack spacing={2}>
             {/* Top row: clock card + 2 stats */}
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.75 }}>
-                <Box sx={{
+                <Box sx={(theme) => ({
                     gridColumn: 'span 2',
-                    background: 'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)',
+                    background: theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)'
+                        : 'linear-gradient(135deg, #4F8EF7 0%, #3A7AE4 100%)',
                     color: '#fff',
                     borderRadius: '10px',
                     p: '18px 20px',
-                }}>
+                })}>
                     <Typography sx={{ fontSize: 12, opacity: 0.85, mb: 0.75 }}>
                         {stateLabel}{!isOut && today?.checkInAt ? ` since ${formatTime(today.checkInAt)}` : ''}
                     </Typography>
@@ -228,7 +228,7 @@ export default function AttendancePage() {
                         {events.length === 0 ? (
                             <Box sx={{ textAlign: 'center', py: 4 }}>
                                 <Typography sx={{ fontSize: 28 }}>⏰</Typography>
-                                <Typography sx={{ fontSize: 13, color: '#9CA3AF' }}>No activity yet today</Typography>
+                                <Typography sx={{ fontSize: 13, color: 'text.disabled' }}>No activity yet today</Typography>
                             </Box>
                         ) : (
                             events.map((e, idx) => {
@@ -240,13 +240,13 @@ export default function AttendancePage() {
                                         gridTemplateColumns: '32px 1fr auto',
                                         gap: 1.5, alignItems: 'center',
                                         p: '10px 12px',
-                                        bgcolor: isActive ? '#ECFDF5' : '#F9FAFB',
+                                        bgcolor: isActive ? softBg('success') : 'action.hover',
                                         borderLeft: isActive ? `3px solid ${GREEN}` : 'none',
                                         borderRadius: '6px',
                                         fontSize: 12,
                                     }}>
                                         <Box sx={{
-                                            width: 28, height: 28, borderRadius: '6px', bgcolor: '#fff',
+                                            width: 28, height: 28, borderRadius: '6px', bgcolor: 'background.paper',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             fontSize: 13,
                                         }}>
@@ -254,12 +254,12 @@ export default function AttendancePage() {
                                         </Box>
                                         <Box>
                                             <Typography sx={{
-                                                fontSize: 12, fontWeight: 600, color: C_HEADING,
+                                                fontSize: 12, fontWeight: 600, color: 'text.primary',
                                                 fontVariantNumeric: 'tabular-nums',
                                             }}>
                                                 {formatTime(e.at)}
                                             </Typography>
-                                            <Typography sx={{ fontSize: 11, color: C_MUTED }}>
+                                            <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>
                                                 {EVENT_LABEL[e.type]}
                                             </Typography>
                                         </Box>
@@ -273,17 +273,17 @@ export default function AttendancePage() {
                         mt: 1.75, pt: 1.75,
                         borderTop: '1px solid #F3F4F6',
                         display: 'flex', justifyContent: 'space-between',
-                        fontSize: 12, color: C_MUTED,
+                        fontSize: 12, color: 'text.secondary',
                     }}>
                         <span>
                             Total break time:{' '}
-                            <Box component="strong" sx={{ color: C_HEADING }}>
+                            <Box component="strong" sx={{ color: 'text.primary' }}>
                                 {today?.totalBreakMinutes ?? 0} min
                             </Box>
                         </span>
                         <span>
                             Productive hours:{' '}
-                            <Box component="strong" sx={{ color: C_HEADING }}>
+                            <Box component="strong" sx={{ color: 'text.primary' }}>
                                 {elapsedDisplay}
                             </Box>
                         </span>
@@ -298,18 +298,18 @@ export default function AttendancePage() {
                             const isToday = day.date === today?.date
                             const pct = Math.min(100, (day.workedMinutes / (8 * 60)) * 100)
                             const barColor = day.workedMinutes === 0
-                                ? '#E4E6EA'
+                                ? 'divider'
                                 : isInProgress ? BLUE : GREEN
                             return (
                                 <Box key={day.date}>
                                     <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
                                         <Stack direction="row" alignItems="center" spacing={0.75}>
-                                            <Typography sx={{ fontSize: 12, color: day.workedMinutes === 0 && !isToday ? '#9CA3AF' : '#374151' }}>
+                                            <Typography sx={{ fontSize: 12, color: day.workedMinutes === 0 && !isToday ? 'text.disabled' : 'text.primary' }}>
                                                 {dayName}
                                             </Typography>
                                             {isToday && (
                                                 <Box sx={{
-                                                    bgcolor: '#DBEAFE', color: '#1D4ED8',
+                                                    bgcolor: '#DBEAFE', color: 'info.dark',
                                                     fontSize: 10, fontWeight: 500,
                                                     px: 0.75, py: '1px',
                                                     borderRadius: 10,
@@ -318,20 +318,20 @@ export default function AttendancePage() {
                                                 </Box>
                                             )}
                                         </Stack>
-                                        <Typography sx={{ fontSize: 12, color: day.workedMinutes === 0 && !isToday ? '#9CA3AF' : '#374151' }}>
+                                        <Typography sx={{ fontSize: 12, color: day.workedMinutes === 0 && !isToday ? 'text.disabled' : 'text.primary' }}>
                                             {day.workedMinutes === 0 && !isToday
                                                 ? '—'
                                                 : `${formatElapsed(day.workedMinutes)}${isInProgress ? ' · ongoing' : ''}`}
                                         </Typography>
                                     </Stack>
-                                    <Box sx={{ height: 6, bgcolor: '#E4E6EA', borderRadius: 3, overflow: 'hidden' }}>
+                                    <Box sx={{ height: 6, bgcolor: 'divider', borderRadius: 3, overflow: 'hidden' }}>
                                         <Box sx={{ height: '100%', width: `${pct}%`, bgcolor: barColor, borderRadius: 3 }} />
                                     </Box>
                                 </Box>
                             )
                         })}
                         {history.length === 0 && !isLoadingHistory && (
-                            <Typography sx={{ fontSize: 12, color: C_MUTED, textAlign: 'center', py: 2 }}>
+                            <Typography sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'center', py: 2 }}>
                                 No history yet — check in to start.
                             </Typography>
                         )}
@@ -370,13 +370,13 @@ export default function AttendancePage() {
                                 </TableRow>
                             ) : history.length === 0 ? (
                                 <TableRow>
-                                    <TableCell sx={{ ...TD, textAlign: 'center', color: '#9CA3AF' }} colSpan={6}>
+                                    <TableCell sx={{ ...TD, textAlign: 'center', color: 'text.disabled' }} colSpan={6}>
                                         No history yet.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 history.slice().reverse().map((d) => (
-                                    <TableRow key={d.date} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}>
+                                    <TableRow key={d.date} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: 'action.hover' } }}>
                                         <TableCell sx={TD}>
                                             <Box component="strong" sx={{ fontWeight: d.date === today?.date ? 700 : 500 }}>
                                                 {formatHistoryDate(d.date)}
@@ -420,7 +420,7 @@ function ClockButton({
     children: React.ReactNode
 }) {
     const sx = variant === 'primary'
-        ? { bgcolor: '#fff', color: '#1D4ED8', '&:hover': { bgcolor: '#EFF6FF' } }
+        ? { bgcolor: 'background.paper', color: 'info.dark', '&:hover': { bgcolor: softBg('info') } }
         : { bgcolor: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' } }
     return (
         <Button
@@ -444,15 +444,15 @@ function ClockButton({
 function StatCard({ accent, label, value, sub }: { accent: string; label: string; value: string; sub: string }) {
     return (
         <Paper elevation={0} sx={{
-            bgcolor: '#fff',
-            border: `1px solid ${C_BORDER}`,
+            bgcolor: 'background.paper',
+            border: '1px solid', borderColor: 'divider',
             borderTop: `3px solid ${accent}`,
             borderRadius: '10px',
             p: '18px 20px',
         }}>
-            <Typography sx={{ fontSize: 12, color: C_MUTED, mb: 1 }}>{label}</Typography>
-            <Typography sx={{ fontSize: 22, fontWeight: 700, color: C_HEADING, lineHeight: 1 }}>{value}</Typography>
-            <Typography sx={{ fontSize: 11, color: C_MUTED, mt: 0.5 }}>{sub}</Typography>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', mb: 1 }}>{label}</Typography>
+            <Typography sx={{ fontSize: 22, fontWeight: 700, color: 'text.primary', lineHeight: 1 }}>{value}</Typography>
+            <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.5 }}>{sub}</Typography>
         </Paper>
     )
 }
@@ -469,13 +469,13 @@ function Card({
     noPadding?: boolean
 }) {
     return (
-        <Paper elevation={0} sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}>
+        <Paper elevation={0} sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}>
             <Box sx={{
                 p: '14px 18px',
-                borderBottom: `1px solid ${C_BORDER}`,
+                borderBottom: '1px solid', borderColor: 'divider',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>{title}</Typography>
+                <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>{title}</Typography>
                 {action}
             </Box>
             <Box sx={{ p: noPadding ? 0 : '18px' }}>{children}</Box>

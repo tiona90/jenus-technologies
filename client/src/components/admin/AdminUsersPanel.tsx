@@ -27,14 +27,10 @@ import {
     updateEmployeeProfile,
 } from '../../lib/api'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 import type {
     AdminUser, Department, EmployeeProfile, LeaveStatusHistory, TimesheetStatusHistory, UserRole,
 } from '../../lib/types'
-
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
 
 const PROTECTED_ADMIN_EMAIL = 'admin@annualleave.com'
 const ALL_ROLES: UserRole[] = ['Admin', 'Manager', 'Employee']
@@ -70,7 +66,7 @@ function initials(name: string) {
 }
 
 function avatarBg(seed: string) {
-    const palette = ['#4F8EF7', '#22C47A', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#FF4D4F']
+    const palette = ['primary.main', 'success.main', 'warning.main', 'secondary.main', '#EC4899', '#06B6D4', '#84CC16', 'error.main']
     let hash = 0
     for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
     return palette[Math.abs(hash) % palette.length]
@@ -303,7 +299,7 @@ function AdminUsersPanel() {
             showCancelButton: true,
             confirmButtonText: 'Yes, delete',
             cancelButtonText: 'Cancel',
-            confirmButtonColor: '#EF4444',
+            confirmButtonColor: 'error.main',
             reverseButtons: true,
         })
         if (!result.isConfirmed) return
@@ -335,8 +331,8 @@ function AdminUsersPanel() {
             }}>
                 <Box sx={statCardSx}>
                     <Box sx={statLabelSx}>👥 Total Users</Box>
-                    <Box sx={{ fontSize: 22, fontWeight: 700, color: C_HEADING, lineHeight: 1 }}>{counts.all}</Box>
-                    <Box sx={{ display: 'flex', gap: '12px', mt: '8px', fontSize: 11, color: C_MUTED, flexWrap: 'wrap' }}>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: 'text.primary', lineHeight: 1 }}>{counts.all}</Box>
+                    <Box sx={{ display: 'flex', gap: '12px', mt: '8px', fontSize: 11, color: 'text.secondary', flexWrap: 'wrap' }}>
                         <RoleDot color="#FEE2E2" label={`${counts.admins} admin${counts.admins === 1 ? '' : 's'}`} />
                         <RoleDot color="#FEF3C7" label={`${counts.managers} manager${counts.managers === 1 ? '' : 's'}`} />
                         <RoleDot color="#DBEAFE" label={`${counts.employees} employee${counts.employees === 1 ? '' : 's'}`} />
@@ -344,20 +340,20 @@ function AdminUsersPanel() {
                 </Box>
                 <Box sx={statCardSx}>
                     <Box sx={statLabelSx}>🟢 Online Now</Box>
-                    <Box sx={{ fontSize: 22, fontWeight: 700, color: '#22C47A', lineHeight: 1 }}>{counts.online}</Box>
-                    <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>of {counts.all} users · {onlinePct}%</Box>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: 'success.main', lineHeight: 1 }}>{counts.online}</Box>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>of {counts.all} users · {onlinePct}%</Box>
                 </Box>
                 <Box sx={statCardSx}>
                     <Box sx={statLabelSx}>📋 With Profile</Box>
-                    <Box sx={{ fontSize: 22, fontWeight: 700, color: C_BLUE, lineHeight: 1 }}>{counts.withProfile}</Box>
-                    <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: 'primary.main', lineHeight: 1 }}>{counts.withProfile}</Box>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>
                         of {counts.all} users have an employee profile
                     </Box>
                 </Box>
                 <Box sx={statCardSx}>
                     <Box sx={statLabelSx}>📊 Manager Ratio</Box>
-                    <Box sx={{ fontSize: 22, fontWeight: 700, color: C_BLUE, lineHeight: 1 }}>{managerRatio}</Box>
-                    <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>
+                    <Box sx={{ fontSize: 22, fontWeight: 700, color: 'primary.main', lineHeight: 1 }}>{managerRatio}</Box>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>
                         {counts.managers} manager{counts.managers === 1 ? '' : 's'} for {counts.employees} employee{counts.employees === 1 ? '' : 's'}
                     </Box>
                 </Box>
@@ -365,7 +361,7 @@ function AdminUsersPanel() {
 
             {/* Toolbar */}
             <Box sx={{
-                bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+                bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
                 p: '10px 12px', display: 'flex', gap: '10px', flexWrap: 'wrap',
                 alignItems: 'center', mb: '14px',
             }}>
@@ -378,8 +374,10 @@ function AdminUsersPanel() {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                         sx={{
                             width: '100%', p: '7px 10px', fontSize: 13, fontFamily: 'inherit',
-                            border: `1px solid ${C_BORDER}`, borderRadius: '6px', outline: 'none',
-                            '&:focus': { borderColor: C_BLUE, boxShadow: '0 0 0 3px rgba(79,142,247,0.1)' },
+                            border: '1px solid', borderColor: 'divider', borderRadius: '6px', outline: 'none',
+                            bgcolor: 'background.paper', color: 'text.primary',
+                            '&::placeholder': { color: 'text.disabled' },
+                            '&:focus': { borderColor: 'primary.main' },
                         }}
                     />
                 </Box>
@@ -397,10 +395,10 @@ function AdminUsersPanel() {
                     component="button"
                     onClick={() => setCreateOpen(true)}
                     sx={{
-                        bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                        bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                         px: '14px', py: '7px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                         fontFamily: 'inherit', whiteSpace: 'nowrap',
-                        '&:hover': { bgcolor: '#3A7AE4' },
+                        '&:hover': { bgcolor: 'primary.dark' },
                     }}
                 >
                     + Add user
@@ -411,7 +409,7 @@ function AdminUsersPanel() {
             {selected.size > 0 && (
                 <Box sx={{
                     position: 'sticky', top: 0, zIndex: 5,
-                    bgcolor: C_HEADING, color: '#fff', borderRadius: '10px',
+                    bgcolor: 'background.paper', color: '#fff', borderRadius: '10px',
                     p: '10px 14px', display: 'flex', alignItems: 'center', gap: '14px',
                     mb: '14px', flexWrap: 'wrap',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
@@ -437,10 +435,10 @@ function AdminUsersPanel() {
                             onClick={() => void bulkDelete()}
                             disabled={deleteMutation.isPending}
                             sx={{
-                                bgcolor: '#FF4D4F', color: '#fff', border: 'none',
+                                bgcolor: 'error.main', color: '#fff', border: 'none',
                                 px: '14px', py: '6px', borderRadius: '6px', fontSize: 12, fontWeight: 600,
                                 cursor: 'pointer', fontFamily: 'inherit',
-                                '&:hover:not(:disabled)': { bgcolor: '#E03C3E' },
+                                '&:hover:not(:disabled)': { bgcolor: 'error.dark' },
                                 '&:disabled': { opacity: 0.5 },
                             }}
                         >🚫 Delete</Box>
@@ -449,7 +447,7 @@ function AdminUsersPanel() {
             )}
 
             {/* Status tabs */}
-            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: `1px solid ${C_BORDER}`, px: '2px', flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: '1px solid', borderColor: 'divider', px: '2px', flexWrap: 'wrap' }}>
                 {([
                     { value: 'all',       label: 'All',       count: counts.all },
                     { value: 'admins',    label: 'Admins',    count: counts.admins },
@@ -465,19 +463,19 @@ function AdminUsersPanel() {
                             onClick={() => setStatusTab(tab.value)}
                             sx={{
                                 p: '9px 16px', fontSize: 13,
-                                color: active ? C_BLUE : C_MUTED,
+                                color: active ? 'primary.main' : 'text.secondary',
                                 cursor: 'pointer',
-                                borderBottom: active ? `2px solid ${C_BLUE}` : '2px solid transparent',
+                                borderBottom: active ? `2px solid ${'primary.main'}` : '2px solid transparent',
                                 mb: '-1px', display: 'flex', alignItems: 'center', gap: '6px',
                                 background: 'none', border: 'none', fontFamily: 'inherit',
                                 fontWeight: active ? 600 : 500,
-                                '&:hover': { color: active ? C_BLUE : C_HEADING },
+                                '&:hover': { color: active ? 'primary.main' : 'text.primary' },
                             }}
                         >
                             {tab.label}
                             <Box component="span" sx={{
-                                bgcolor: active ? '#EEF4FF' : '#F4F5F7',
-                                color: active ? C_BLUE : C_MUTED,
+                                bgcolor: active ? softBg('primary') : 'action.hover',
+                                color: active ? 'primary.main' : 'text.secondary',
                                 fontSize: 10, fontWeight: 600,
                                 px: '7px', borderRadius: '10px',
                             }}>{tab.count}</Box>
@@ -489,8 +487,8 @@ function AdminUsersPanel() {
             {/* User rows */}
             {filtered.length === 0 ? (
                 <Box sx={{
-                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                 }}>
                     No users match the current filters.
                 </Box>
@@ -515,7 +513,7 @@ function AdminUsersPanel() {
                                 showCancelButton: true,
                                 confirmButtonText: 'Yes, delete',
                                 cancelButtonText: 'Cancel',
-                                confirmButtonColor: '#EF4444',
+                                confirmButtonColor: 'error.main',
                                 reverseButtons: true,
                             })
                             if (result.isConfirmed) deleteMutation.mutate(d.user.id)
@@ -619,15 +617,15 @@ function UserRow({
     }, [derived.profile])
 
     const roleStyle = roleStyles[role]
-    const accentColor = role === 'Admin' ? '#8B5CF6'
-        : role === 'Manager' ? '#F59E0B' : C_BLUE
+    const accentColor = role === 'Admin' ? 'secondary.main'
+        : role === 'Manager' ? 'warning.main' : 'primary.main'
 
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`,
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider',
             borderLeft: `3px solid ${accentColor}`,
             borderRadius: '10px', mb: '8px',
-            ...(isSelected && { boxShadow: `inset 0 0 0 2px ${C_BLUE}`, bgcolor: '#F0F7FF' }),
+            ...(isSelected && { boxShadow: (theme) => `inset 0 0 0 2px ${theme.palette.primary.main}`, bgcolor: softBg('primary') }),
         }}>
             <Box
                 onClick={onToggleExpand}
@@ -639,7 +637,7 @@ function UserRow({
                     },
                     gap: '12px', alignItems: 'center',
                     p: '14px 16px', cursor: 'pointer',
-                    '&:hover': { bgcolor: isSelected ? '#F0F7FF' : '#F9FAFB' },
+                    '&:hover': { bgcolor: isSelected ? softBg('primary') : 'action.hover' },
                 }}
             >
                 <Box
@@ -652,7 +650,7 @@ function UserRow({
                     sx={{
                         cursor: derived.isProtected ? 'not-allowed' : 'pointer',
                         width: 16, height: 16,
-                        accentColor: C_BLUE,
+                        accentColor: 'primary.main',
                         opacity: derived.isProtected ? 0.3 : 1,
                     }}
                 />
@@ -670,18 +668,18 @@ function UserRow({
                             position: 'absolute', bottom: 0, right: 0,
                             width: 10, height: 10, borderRadius: '50%',
                             border: '2px solid #fff',
-                            bgcolor: presence === 'online' ? '#22C47A'
-                                : presence === 'away' ? '#F59E0B' : '#9CA3AF',
+                            bgcolor: presence === 'online' ? 'success.main'
+                                : presence === 'away' ? 'warning.main' : 'text.disabled',
                         }} />
                     </Box>
                     <Box sx={{ minWidth: 0 }}>
-                        <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {u.displayName || u.email}
                             {derived.isProtected && (
-                                <Box component="span" sx={{ ml: '6px', fontSize: 10, color: '#9CA3AF', fontStyle: 'italic' }}>· protected</Box>
+                                <Box component="span" sx={{ ml: '6px', fontSize: 10, color: 'text.disabled', fontStyle: 'italic' }}>· protected</Box>
                             )}
                         </Box>
-                        <Box sx={{ fontSize: 11, color: C_MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <Box sx={{ fontSize: 11, color: 'text.secondary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {u.email}
                         </Box>
                     </Box>
@@ -703,11 +701,11 @@ function UserRow({
                 <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                     {derived.departmentName ? (
                         <Box component="span" sx={{
-                            display: 'inline-block', bgcolor: '#EFF6FF', color: '#1D4ED8',
+                            display: 'inline-block', bgcolor: softBg('info'), color: 'info.dark',
                             borderRadius: '4px', px: '8px', py: '2px',
                             fontSize: 11, fontWeight: 500,
                         }}>{derived.departmentName}</Box>
-                    ) : <Box sx={{ fontSize: 11, color: '#9CA3AF' }}>—</Box>}
+                    ) : <Box sx={{ fontSize: 11, color: 'text.disabled' }}>—</Box>}
                 </Box>
 
                 {/* Status */}
@@ -715,10 +713,10 @@ function UserRow({
                     <Box component="span" sx={{
                         display: 'inline-flex', alignItems: 'center', gap: '5px',
                         fontSize: 11, fontWeight: 500,
-                        color: presence === 'online' ? '#065F46'
-                            : presence === 'away' ? '#92400E' : C_MUTED,
-                        bgcolor: presence === 'online' ? '#D1FAE5'
-                            : presence === 'away' ? '#FEF3C7' : '#F4F5F7',
+                        color: presence === 'online' ? 'success.dark'
+                            : presence === 'away' ? 'warning.dark' : 'text.secondary',
+                        bgcolor: presence === 'online' ? softBg('success')
+                            : presence === 'away' ? softBg('warning') : 'action.hover',
                         px: '8px', py: '3px', borderRadius: '12px',
                     }}>
                         {presence === 'online' ? 'Online' : presence === 'away' ? 'Away' : 'Offline'}
@@ -729,31 +727,31 @@ function UserRow({
                 <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                     {derived.leaveTotal > 0 ? (
                         <>
-                            <Box sx={{ fontSize: 11, color: C_MUTED }}>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary' }}>
                                 <Box component="strong" sx={{
-                                    color: derived.leavePct >= 80 ? '#FF4D4F' : derived.leavePct >= 60 ? '#F59E0B' : C_HEADING,
+                                    color: derived.leavePct >= 80 ? 'error.main' : derived.leavePct >= 60 ? 'warning.main' : 'text.primary',
                                     fontSize: 13, fontWeight: 700,
                                 }}>{derived.leaveBalance}</Box> / {derived.leaveTotal} days
                             </Box>
-                            <Box sx={{ height: 4, bgcolor: '#F4F5F7', borderRadius: '2px', overflow: 'hidden', mt: '4px' }}>
+                            <Box sx={{ height: 4, bgcolor: 'action.hover', borderRadius: '2px', overflow: 'hidden', mt: '4px' }}>
                                 <Box sx={{
                                     height: '100%',
-                                    bgcolor: derived.leavePct >= 80 ? '#FF4D4F' : derived.leavePct >= 60 ? '#F59E0B' : '#22C47A',
+                                    bgcolor: derived.leavePct >= 80 ? 'error.main' : derived.leavePct >= 60 ? 'warning.main' : 'success.main',
                                     width: `${100 - derived.leavePct}%`,
                                 }} />
                             </Box>
                         </>
                     ) : (
-                        <Box sx={{ fontSize: 11, color: '#9CA3AF' }}>—</Box>
+                        <Box sx={{ fontSize: 11, color: 'text.disabled' }}>—</Box>
                     )}
                 </Box>
 
                 {/* Last active */}
                 <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                    <Box sx={{ fontSize: 12, fontWeight: 600, color: presence === 'online' ? '#22C47A' : '#374151' }}>
+                    <Box sx={{ fontSize: 12, fontWeight: 600, color: presence === 'online' ? 'success.main' : 'text.primary' }}>
                         {derived.lastSeenLabel}
                     </Box>
-                    <Box sx={{ fontSize: 10, color: C_MUTED, mt: '2px' }}>
+                    <Box sx={{ fontSize: 10, color: 'text.secondary', mt: '2px' }}>
                         {presence === 'online' ? 'right now' : 'last active'}
                     </Box>
                 </Box>
@@ -775,7 +773,7 @@ function UserRow({
             {isExpanded && (
                 <Box sx={{
                     px: '16px', py: '14px', borderTop: '1px solid #F3F4F6',
-                    bgcolor: '#FAFBFC',
+                    bgcolor: 'action.hover',
                     display: 'grid',
                     gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
                     gap: '14px',
@@ -795,7 +793,7 @@ function UserRow({
 
                     <ExpandBlock title="Recent activity">
                         {activity.length === 0 ? (
-                            <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>No recent activity</Box>
+                            <Box sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>No recent activity</Box>
                         ) : (
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {activity.map((a, i) => (
@@ -807,10 +805,10 @@ function UserRow({
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             fontSize: 11,
                                         }}>{a.iconEl}</Box>
-                                        <Box sx={{ fontSize: 11, color: '#374151', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <Box sx={{ fontSize: 11, color: 'text.primary', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {a.text}
                                         </Box>
-                                        <Box sx={{ fontSize: 10, color: '#9CA3AF', whiteSpace: 'nowrap' }}>{a.age}</Box>
+                                        <Box sx={{ fontSize: 10, color: 'text.disabled', whiteSpace: 'nowrap' }}>{a.age}</Box>
                                     </Box>
                                 ))}
                             </Box>
@@ -822,7 +820,7 @@ function UserRow({
                             <DirectReports user={derived.user} role={role} />
                         ) : (
                             <>
-                                <ExpandRow label="Email verified" value={<Box component="span" sx={{ color: '#22C47A' }}>✓ Yes</Box>} />
+                                <ExpandRow label="Email verified" value={<Box component="span" sx={{ color: 'success.main' }}>✓ Yes</Box>} />
                                 <ExpandRow label="Roles" value={u.roles.join(', ')} />
                                 <ExpandRow label="User ID" value={<Box component="code" sx={{ fontSize: 10 }}>{u.id.slice(0, 8)}…</Box>} />
                             </>
@@ -842,7 +840,7 @@ function DirectReports({ user, role }: { user: AdminUser; role: 'Admin' | 'Manag
 
     const myProfile = profiles.find((p) => p.userId === user.id)
     if (!myProfile && role !== 'Admin') {
-        return <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>No profile linked</Box>
+        return <Box sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>No profile linked</Box>
     }
 
     const reports = role === 'Admin'
@@ -853,7 +851,7 @@ function DirectReports({ user, role }: { user: AdminUser; role: 'Admin' | 'Manag
             .filter((u): u is AdminUser => !!u)
 
     if (reports.length === 0) {
-        return <Box sx={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>No direct reports</Box>
+        return <Box sx={{ fontSize: 11, color: 'text.disabled', fontStyle: 'italic' }}>No direct reports</Box>
     }
 
     const visible = reports.slice(0, 4)
@@ -861,7 +859,7 @@ function DirectReports({ user, role }: { user: AdminUser; role: 'Admin' | 'Manag
 
     return (
         <>
-            <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, mb: '8px' }}>
+            <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', mb: '8px' }}>
                 {reports.length} {role === 'Admin' ? 'people in scope' : `report${reports.length === 1 ? '' : 's'}`}
             </Box>
             <Box sx={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -877,7 +875,7 @@ function DirectReports({ user, role }: { user: AdminUser; role: 'Admin' | 'Manag
                 {remaining > 0 && (
                     <Box sx={{
                         width: 28, height: 28, borderRadius: '50%',
-                        bgcolor: '#E4E6EA', color: C_MUTED,
+                        bgcolor: 'divider', color: 'text.secondary',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 10, fontWeight: 600, border: '2px solid #fff', marginLeft: '-2px',
                     }}>+{remaining}</Box>
@@ -892,11 +890,11 @@ function DirectReports({ user, role }: { user: AdminUser; role: 'Admin' | 'Manag
 /* ════════════════════════════════════════════════════════════════════════ */
 
 const statCardSx = {
-    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px',
+    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', p: '14px 16px',
 } as const
 
 const statLabelSx = {
-    fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em',
+    fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em',
     mb: '6px', display: 'flex', alignItems: 'center', gap: '6px',
 } as const
 
@@ -921,9 +919,9 @@ function SelectFilter({ value, onChange, options }: {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
             sx={{
                 fontSize: 12, fontFamily: 'inherit', p: '7px 10px',
-                border: `1px solid ${C_BORDER}`, borderRadius: '6px',
-                color: '#374151', bgcolor: '#fff', outline: 'none', cursor: 'pointer',
-                '&:focus': { borderColor: C_BLUE },
+                border: '1px solid', borderColor: 'divider', borderRadius: '6px',
+                color: 'text.primary', bgcolor: 'background.paper', outline: 'none', cursor: 'pointer',
+                '&:focus': { borderColor: 'primary.main' },
             }}
         >
             {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -933,8 +931,8 @@ function SelectFilter({ value, onChange, options }: {
 
 function ExpandBlock({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '8px', p: '12px 14px' }}>
-            <Box sx={{ fontSize: 11, fontWeight: 600, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '8px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: '12px 14px' }}>
+            <Box sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '8px' }}>
                 {title}
             </Box>
             {children}
@@ -945,8 +943,8 @@ function ExpandBlock({ title, children }: { title: string; children: React.React
 function ExpandRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: '8px', py: '4px', fontSize: 11 }}>
-            <Box sx={{ color: C_MUTED }}>{label}</Box>
-            <Box sx={{ color: C_HEADING, fontWeight: 500, textAlign: 'right' }}>{value}</Box>
+            <Box sx={{ color: 'text.secondary' }}>{label}</Box>
+            <Box sx={{ color: 'text.primary', fontWeight: 500, textAlign: 'right' }}>{value}</Box>
         </Box>
     )
 }
@@ -966,14 +964,14 @@ function IconBtn({ title, onClick, disabled, danger, children }: {
             disabled={disabled}
             sx={{
                 width: 30, height: 30, borderRadius: '6px',
-                bgcolor: 'transparent', border: `1px solid ${C_BORDER}`,
-                color: danger ? '#991B1B' : C_MUTED,
+                bgcolor: 'transparent', border: '1px solid', borderColor: 'divider',
+                color: danger ? 'error.dark' : 'text.secondary',
                 cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 13,
                 '&:hover:not(:disabled)': {
-                    bgcolor: danger ? '#FEE2E2' : '#F4F5F7',
-                    borderColor: danger ? '#FECACA' : C_BORDER,
+                    bgcolor: danger ? softBg('error') : 'action.hover',
+                    borderColor: danger ? 'error.main' : 'divider',
                 },
                 '&:disabled': { opacity: 0.4, cursor: 'not-allowed' },
             }}
@@ -983,17 +981,17 @@ function IconBtn({ title, onClick, disabled, danger, children }: {
     )
 }
 
-const roleStyles: Record<'Admin' | 'Manager' | 'Employee', { bg: string; fg: string }> = {
-    Admin:    { bg: '#F3E8FF', fg: '#6D28D9' },
-    Manager:  { bg: '#FEF3C7', fg: '#92400E' },
-    Employee: { bg: '#DBEAFE', fg: '#1D4ED8' },
+const roleStyles: Record<'Admin' | 'Manager' | 'Employee', { bg: SxColor; fg: string }> = {
+    Admin:    { bg: softBg('secondary'), fg: 'secondary.dark' },
+    Manager:  { bg: softBg('warning'), fg: 'warning.dark' },
+    Employee: { bg: softBg('info'), fg: 'info.dark' },
 }
 
-const activityIconBg: Record<ActivityItem['color'], string> = {
-    green: '#D1FAE5', amber: '#FEF3C7', blue: '#DBEAFE', red: '#FEE2E2', gray: '#F4F5F7',
+const activityIconBg: Record<ActivityItem['color'], SxColor> = {
+    green: softBg('success'), amber: softBg('warning'), blue: softBg('info'), red: softBg('error'), gray: 'action.hover',
 }
 const activityIconFg: Record<ActivityItem['color'], string> = {
-    green: '#065F46', amber: '#92400E', blue: '#1D4ED8', red: '#991B1B', gray: '#6B7280',
+    green: 'success.dark', amber: 'warning.dark', blue: 'info.dark', red: 'error.dark', gray: 'text.secondary',
 }
 
 /* ════════════════════════════════════════════════════════════════════════ */

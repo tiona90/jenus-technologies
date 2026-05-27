@@ -17,15 +17,12 @@ import { useStore } from '../../lib/mobx'
 import type { AnnualLeave, AnnualLeaveStatus, LeaveStatusHistory, UserInfo } from '../../lib/types'
 import AnnualLeaveForm from './AnnualLeaveForm'
 import { SweetAlert } from '../ui'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
 type StatusFilter = 'All' | 'Pending' | 'Approved' | 'Rejected' | 'Cancelled'
 
 const STATUS_TABS: StatusFilter[] = ['All', 'Pending', 'Approved', 'Rejected', 'Cancelled']
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
 
 const LEAVE_ICONS: Record<string, string> = {
     annual: '🌴', vacation: '🌴',
@@ -36,14 +33,14 @@ const LEAVE_ICONS: Record<string, string> = {
     maternity: '👶', paternity: '👶', parental: '👶',
 }
 
-const TYPE_PALETTE: Record<string, { bg: string; fill: string }> = {
-    annual:      { bg: '#DBEAFE', fill: '#4F8EF7' },
-    sick:        { bg: '#FEE2E2', fill: '#FF4D4F' },
-    personal:    { bg: '#E0E7FF', fill: '#8B5CF6' },
-    bereavement: { bg: '#E5E7EB', fill: '#6B7280' },
-    unpaid:      { bg: '#F3F4F6', fill: '#9CA3AF' },
-    maternity:   { bg: '#FCE7F3', fill: '#EC4899' },
-    other:       { bg: '#F3F4F6', fill: '#9CA3AF' },
+const TYPE_PALETTE: Record<string, { bg: SxColor; fill: string }> = {
+    annual:      { bg: softBg('info'), fill: 'primary.main' },
+    sick:        { bg: softBg('error'), fill: 'error.main' },
+    personal:    { bg: softBg('primary'), fill: 'primary.main' },
+    bereavement: { bg: 'action.hover', fill: 'text.secondary' },
+    unpaid:      { bg: 'divider', fill: 'text.disabled' },
+    maternity:   { bg: softBg('secondary'), fill: 'secondary.main' },
+    other:       { bg: 'divider', fill: 'text.disabled' },
 }
 
 const MONTH_INITIALS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
@@ -284,7 +281,7 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
                 gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
                 gap: '12px', mb: '14px',
             }}>
-                <MiniStat label="🌴 Days remaining" value={String(remainingAnnual)} valueColor={C_BLUE}
+                <MiniStat label="🌴 Days remaining" value={String(remainingAnnual)} valueColor={'primary.main'}
                           sub={`of ${entitlement} annual leave`} />
                 <MiniStat label="⏳ Pending" value={String(tabCounts.Pending)} valueColor="#F59E0B"
                           sub={`request${tabCounts.Pending === 1 ? '' : 's'} awaiting approval`} />
@@ -304,14 +301,14 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
                     ? <UpcomingCard leave={nextLeave} leaveTypeName={nextLeave.leaveTypeId != null ? leaveTypeById.get(nextLeave.leaveTypeId)?.name : undefined} today={today} />
                     : <EmptyUpcoming onApply={() => uiStore.navigateToApplyLeave()} />}
 
-                <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '18px 20px' }}>
+                <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '18px 20px' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '14px' }}>
-                        <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>My Leave Balance</Box>
-                        <Box sx={{ fontSize: 11, color: C_MUTED }}>{currentYear}</Box>
+                        <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>My Leave Balance</Box>
+                        <Box sx={{ fontSize: 11, color: 'text.secondary' }}>{currentYear}</Box>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {balanceByType.length === 0
-                            ? <Box sx={{ fontSize: 12, color: C_MUTED }}>No active leave types.</Box>
+                            ? <Box sx={{ fontSize: 12, color: 'text.secondary' }}>No active leave types.</Box>
                             : balanceByType.map((b) => (
                                 <BalanceRow key={b.id} name={b.name} used={b.used} total={b.total} affectsBalance={b.affectsBalance} />
                             ))}
@@ -320,14 +317,14 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
             </Box>
 
             {/* Year usage timeline */}
-            <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '18px 20px', mb: '14px' }}>
+            <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '18px 20px', mb: '14px' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '14px', flexWrap: 'wrap', gap: '8px' }}>
-                    <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>
+                    <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
                         {currentYear} leave activity ·{' '}
-                        <Box component="strong" sx={{ color: C_BLUE, fontSize: 15 }}>{totalYearDays} days</Box>
+                        <Box component="strong" sx={{ color: 'primary.main', fontSize: 15 }}>{totalYearDays} days</Box>
                         {' '}used so far
                     </Box>
-                    <Box sx={{ display: 'flex', gap: '12px', fontSize: 11, color: C_MUTED }}>
+                    <Box sx={{ display: 'flex', gap: '12px', fontSize: 11, color: 'text.secondary' }}>
                         <LegendSwatch color={TYPE_PALETTE.annual.fill} label="Annual" />
                         <LegendSwatch color={TYPE_PALETTE.sick.fill} label="Sick" />
                         <LegendSwatch color={TYPE_PALETTE.personal.fill} label="Personal" />
@@ -335,7 +332,7 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
                     </Box>
                 </Box>
                 <Box sx={{ display: 'grid', gridTemplateColumns: '30px repeat(12, 1fr)', gap: '4px', alignItems: 'center' }}>
-                    <Box sx={{ fontSize: 10, color: C_MUTED, fontWeight: 500, textAlign: 'right', pr: '4px' }}>Days</Box>
+                    <Box sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 500, textAlign: 'right', pr: '4px' }}>Days</Box>
                     {yearUsage.map((b, i) => {
                         const isCurrent = i === today.getMonth()
                         const isFuture = i > today.getMonth()
@@ -346,13 +343,13 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
                                 title={`${MONTH_INITIALS[i]}: ${b.total > 0 ? `${b.total} day${b.total === 1 ? '' : 's'}` : 'no leave'}`}
                                 sx={{
                                     height: 28,
-                                    bgcolor: palette ? palette.fill : '#F4F5F7',
+                                    bgcolor: palette ? palette.fill : 'action.hover',
                                     color: palette ? '#fff' : 'transparent',
                                     borderRadius: '4px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: 10, fontWeight: 600,
                                     opacity: isFuture ? 0.55 : 1,
-                                    boxShadow: isCurrent ? `inset 0 0 0 2px ${C_HEADING}` : 'none',
+                                    boxShadow: isCurrent ? `inset 0 0 0 2px ${'text.primary'}` : 'none',
                                 }}
                             >
                                 {b.total > 0 ? b.total : ''}
@@ -364,7 +361,7 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
                     <Box />
                     {MONTH_INITIALS.map((m, i) => (
                         <Box key={i} sx={{
-                            fontSize: 10, color: i === today.getMonth() ? C_HEADING : '#9CA3AF',
+                            fontSize: 10, color: i === today.getMonth() ? 'text.primary' : 'text.disabled',
                             textAlign: 'center', fontWeight: i === today.getMonth() ? 700 : 500,
                         }}>{m}</Box>
                     ))}
@@ -373,16 +370,16 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
 
             {/* Tabs + Apply */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: '18px', mx: '4px', mb: '10px' }}>
-                <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>All requests</Box>
+                <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>All requests</Box>
                 {!isAdminUser && (
                     <Box
                         component="button"
                         onClick={() => uiStore.navigateToApplyLeave()}
                         sx={{
-                            bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                            bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                             px: '14px', py: '6px', fontSize: 13, fontWeight: 500, cursor: 'pointer',
                             fontFamily: 'inherit', transition: 'background 0.15s',
-                            '&:hover': { bgcolor: '#3A7AE4' },
+                            '&:hover': { bgcolor: 'primary.dark' },
                         }}
                     >
                         + Apply for leave
@@ -390,7 +387,7 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
                 )}
             </Box>
 
-            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: `1px solid ${C_BORDER}`, px: '2px' }}>
+            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: '1px solid', borderColor: 'divider', px: '2px' }}>
                 {STATUS_TABS.map((tab) => {
                     const active = statusFilter === tab
                     const count = tabCounts[tab]
@@ -400,18 +397,18 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
                             component="button"
                             onClick={() => setStatusFilter(tab)}
                             sx={{
-                                p: '9px 16px', fontSize: 13, color: active ? C_BLUE : C_MUTED,
-                                cursor: 'pointer', borderBottom: active ? `2px solid ${C_BLUE}` : '2px solid transparent',
+                                p: '9px 16px', fontSize: 13, color: active ? 'primary.main' : 'text.secondary',
+                                cursor: 'pointer', borderBottom: active ? `2px solid ${'primary.main'}` : '2px solid transparent',
                                 mb: '-1px', display: 'flex', alignItems: 'center', gap: '6px',
                                 background: 'none', border: 'none', fontFamily: 'inherit',
                                 fontWeight: active ? 600 : 500,
-                                '&:hover': { color: active ? C_BLUE : C_HEADING },
+                                '&:hover': { color: active ? 'primary.main' : 'text.primary' },
                             }}
                         >
                             {tab}
                             <Box component="span" sx={{
-                                bgcolor: active ? '#EEF4FF' : '#F4F5F7',
-                                color: active ? C_BLUE : C_MUTED,
+                                bgcolor: active ? softBg('primary') : 'action.hover',
+                                color: active ? 'primary.main' : 'text.secondary',
                                 fontSize: 10, fontWeight: 600,
                                 px: '7px', borderRadius: '10px',
                             }}>{count}</Box>
@@ -422,8 +419,8 @@ const MyLeavePage = observer(function MyLeavePage({ user }: { user: UserInfo }) 
 
             {totalVisible === 0 ? (
                 <Box sx={{
-                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                 }}>
                     {statusFilter === 'All'
                         ? 'You have no leave requests yet.'
@@ -500,13 +497,13 @@ function MiniStat({ label, value, sub, valueColor }: {
 }) {
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px',
+            bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', p: '14px 16px',
         }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -568,19 +565,19 @@ function MetaItem({ label, value }: { label: string; value: string }) {
 function EmptyUpcoming({ onApply }: { onApply: () => void }) {
     return (
         <Box sx={{
-            bgcolor: '#F9FAFB', color: C_MUTED, border: `1px dashed ${C_BORDER}`,
+            bgcolor: 'action.hover', color: 'text.secondary', border: '1px dashed', borderColor: 'divider',
             borderRadius: '12px', p: '24px', textAlign: 'center',
         }}>
             <Box sx={{ fontSize: 28, mb: '8px' }}>🏖️</Box>
-            <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING, mb: '4px' }}>No upcoming leave</Box>
+            <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary', mb: '4px' }}>No upcoming leave</Box>
             <Box sx={{ fontSize: 12, mb: '12px' }}>You haven't booked any time off yet. Take a break — you deserve it!</Box>
             <Box
                 component="button"
                 onClick={onApply}
                 sx={{
-                    bgcolor: C_BLUE, color: '#fff', border: 'none', borderRadius: '6px',
+                    bgcolor: 'primary.main', color: '#fff', border: 'none', borderRadius: '6px',
                     px: '14px', py: '6px', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                    '&:hover': { bgcolor: '#3A7AE4' },
+                    '&:hover': { bgcolor: 'primary.dark' },
                 }}
             >
                 + Apply for leave
@@ -594,24 +591,24 @@ function BalanceRow({ name, used, total, affectsBalance }: {
 }) {
     const remaining = Math.max(0, total - used)
     const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0
-    const fillColor = !affectsBalance ? '#9CA3AF' : pct >= 90 ? '#FF4D4F' : pct >= 70 ? '#F59E0B' : '#22C47A'
+    const fillColor = !affectsBalance ? 'text.disabled' : pct >= 90 ? 'error.main' : pct >= 70 ? 'warning.main' : 'success.main'
     return (
         <Box sx={{ display: 'grid', gridTemplateColumns: '28px 1fr auto', gap: '10px', alignItems: 'center' }}>
             <Box sx={{ fontSize: 18 }}>{iconForLeaveType(name)}</Box>
             <Box>
-                <Box sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING }}>{name}</Box>
-                <Box sx={{ height: 5, bgcolor: '#F4F5F7', borderRadius: '3px', mt: '5px', overflow: 'hidden' }}>
+                <Box sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>{name}</Box>
+                <Box sx={{ height: 5, bgcolor: 'action.hover', borderRadius: '3px', mt: '5px', overflow: 'hidden' }}>
                     <Box sx={{ height: '100%', borderRadius: '3px', bgcolor: fillColor, width: `${pct}%` }} />
                 </Box>
             </Box>
-            <Box sx={{ fontSize: 13, color: C_MUTED, fontVariantNumeric: 'tabular-nums', textAlign: 'right', minWidth: 50 }}>
+            <Box sx={{ fontSize: 13, color: 'text.secondary', fontVariantNumeric: 'tabular-nums', textAlign: 'right', minWidth: 50 }}>
                 {affectsBalance && total > 0 ? (
                     <>
-                        <Box component="strong" sx={{ fontSize: 14, color: C_HEADING, fontWeight: 700 }}>{remaining}</Box>
+                        <Box component="strong" sx={{ fontSize: 14, color: 'text.primary', fontWeight: 700 }}>{remaining}</Box>
                         /{total}
                     </>
                 ) : (
-                    <Box component="strong" sx={{ fontSize: 14, color: C_HEADING, fontWeight: 700 }}>{used}</Box>
+                    <Box component="strong" sx={{ fontSize: 14, color: 'text.primary', fontWeight: 700 }}>{used}</Box>
                 )}
             </Box>
         </Box>
@@ -623,7 +620,7 @@ function LegendSwatch({ color, label, bordered }: { color: string; label: string
         <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <Box sx={{
                 width: 10, height: 10, borderRadius: '2px', bgcolor: color,
-                border: bordered ? `1px solid ${C_BORDER}` : 'none',
+                border: bordered ? `1px solid ${'divider'}` : 'none',
                 display: 'inline-block',
             }} />
             {label}
@@ -637,7 +634,7 @@ function SectionHeader({ title }: { title: string }) {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             mt: '18px', mx: '4px', mb: '10px',
         }}>
-            <Box sx={{ fontSize: 12, fontWeight: 600, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <Box sx={{ fontSize: 12, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {title}
             </Box>
         </Box>
@@ -666,23 +663,18 @@ function LeaveCard({
 
     return (
         <Box sx={{
-            bgcolor: status === 'Approved' && daysUntil >= 0
-                ? 'linear-gradient(to right, #EEF4FF, #fff)'
-                : '#fff',
-            background: status === 'Approved' && daysUntil >= 0
-                ? 'linear-gradient(to right, #EEF4FF, #fff)'
-                : '#fff',
-            border: `1px solid ${C_BORDER}`,
-            borderLeft: `3px solid ${
-                status === 'Pending' ? '#F59E0B'
-                : status === 'Approved' ? '#22C47A'
-                : status === 'Rejected' ? '#FF4D4F'
-                : '#9CA3AF'
-            }`,
+            bgcolor: 'background.paper',
+            border: '1px solid', borderColor: 'divider',
+            borderLeft: '3px solid',
+            borderLeftColor:
+                status === 'Pending' ? 'warning.main'
+                : status === 'Approved' ? 'success.main'
+                : status === 'Rejected' ? 'error.main'
+                : 'text.disabled',
             borderRadius: '10px', p: '16px 18px', mb: '10px',
             opacity: status === 'Cancelled' ? 0.65 : 1,
             transition: 'all 0.15s',
-            '&:hover': { borderColor: '#D1D5DB' },
+            '&:hover': { borderColor: 'text.disabled' },
         }}>
             <Box sx={{
                 display: 'grid',
@@ -700,11 +692,11 @@ function LeaveCard({
 
                 <Box sx={{ minWidth: 0 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', mb: '4px' }}>
-                        <Box sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>{leaveTypeName ?? 'Leave'}</Box>
+                        <Box sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>{leaveTypeName ?? 'Leave'}</Box>
                         <StatusBadge status={status} />
                         {showDaysPill && (
                             <Box component="span" sx={{
-                                display: 'inline-block', bgcolor: '#EEF4FF', color: '#1D4ED8',
+                                display: 'inline-block', bgcolor: softBg('primary'), color: 'info.dark',
                                 px: '8px', py: '2px', borderRadius: '10px', fontSize: 11, fontWeight: 500,
                             }}>
                                 {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
@@ -712,14 +704,14 @@ function LeaveCard({
                         )}
                     </Box>
 
-                    <Box sx={{ fontSize: 13, color: '#374151', mb: '6px' }}>
-                        <Box component="strong" sx={{ color: C_HEADING, fontWeight: 600 }}>
+                    <Box sx={{ fontSize: 13, color: 'text.primary', mb: '6px' }}>
+                        <Box component="strong" sx={{ color: 'text.primary', fontWeight: 600 }}>
                             {sameDay
                                 ? formatDate(leave.startDate)
                                 : <>{formatDate(leave.startDate)} – {formatDate(leave.endDate)}</>}
                         </Box>
                         <Box component="span" sx={{
-                            display: 'inline-block', bgcolor: '#F4F5F7', color: '#374151',
+                            display: 'inline-block', bgcolor: 'action.hover', color: 'text.primary',
                             px: '8px', py: '2px', borderRadius: '10px', fontSize: 11, fontWeight: 500, ml: '6px',
                         }}>
                             {leave.totalDays} {leave.totalDays === 1 ? 'day' : 'days'}
@@ -727,7 +719,7 @@ function LeaveCard({
                     </Box>
 
                     {leave.reason && (
-                        <Box sx={{ fontSize: 12, color: C_MUTED, mt: '6px', fontStyle: 'italic', lineHeight: 1.5 }}>
+                        <Box sx={{ fontSize: 12, color: 'text.secondary', mt: '6px', fontStyle: 'italic', lineHeight: 1.5 }}>
                             "{leave.reason}"
                         </Box>
                     )}
@@ -741,17 +733,17 @@ function LeaveCard({
                                 rel="noopener noreferrer"
                                 sx={{
                                     display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                    p: '4px 10px 4px 6px', bgcolor: '#F9FAFB',
-                                    border: `1px solid ${C_BORDER}`, borderRadius: '14px',
-                                    fontSize: 11, color: '#374151', textDecoration: 'none',
+                                    p: '4px 10px 4px 6px', bgcolor: 'action.hover',
+                                    border: '1px solid', borderColor: 'divider', borderRadius: '14px',
+                                    fontSize: 11, color: 'text.primary', textDecoration: 'none',
                                     transition: 'all 0.15s',
-                                    '&:hover': { bgcolor: '#EEF4FF', borderColor: C_BLUE, color: '#1D4ED8' },
+                                    '&:hover': { bgcolor: softBg('primary'), borderColor: 'primary.main', color: 'info.dark' },
                                 }}
                             >
                                 <Box component="span" sx={{
                                     width: 18, height: 18, borderRadius: '50%',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 10, bgcolor: '#FEE2E2', color: '#991B1B',
+                                    fontSize: 10, bgcolor: softBg('error'), color: 'error.dark',
                                 }}>📄</Box>
                                 Attachment
                             </Box>
@@ -775,11 +767,11 @@ function LeaveCard({
 }
 
 function StatusBadge({ status }: { status: AnnualLeaveStatus }) {
-    const config: Record<AnnualLeaveStatus, { bg: string; color: string; label: string }> = {
-        Pending:   { bg: '#FEF3C7', color: '#92400E', label: 'Pending review' },
-        Approved:  { bg: '#D1FAE5', color: '#065F46', label: 'Approved' },
-        Rejected:  { bg: '#FEE2E2', color: '#991B1B', label: 'Rejected' },
-        Cancelled: { bg: '#F3F4F6', color: '#6B7280', label: 'Cancelled' },
+    const config: Record<AnnualLeaveStatus, { bg: SxColor; color: string; label: string }> = {
+        Pending:   { bg: softBg('warning'), color: 'warning.dark', label: 'Pending review' },
+        Approved:  { bg: softBg('success'), color: 'success.dark', label: 'Approved' },
+        Rejected:  { bg: softBg('error'), color: 'error.dark', label: 'Rejected' },
+        Cancelled: { bg: 'divider', color: 'text.secondary', label: 'Cancelled' },
     }
     const c = config[status]
     return (
@@ -794,7 +786,7 @@ function StatusBadge({ status }: { status: AnnualLeaveStatus }) {
 function FeedbackBox({ status, feedback }: { status: AnnualLeaveStatus; feedback?: LeaveStatusHistory }) {
     if (status === 'Pending') {
         return (
-            <Box sx={feedbackSx('#FEF3C7', '#92400E', '#F59E0B')}>
+            <Box sx={feedbackSx(softBg('warning'), 'warning.dark', 'warning.main')}>
                 <Box component="span">⏳</Box>
                 <Box>Submitted — waiting for manager to review</Box>
             </Box>
@@ -803,7 +795,7 @@ function FeedbackBox({ status, feedback }: { status: AnnualLeaveStatus; feedback
     if (!feedback?.comment) return null
     if (status === 'Approved') {
         return (
-            <Box sx={feedbackSx('#D1FAE5', '#065F46', '#22C47A')}>
+            <Box sx={feedbackSx(softBg('success'), 'success.dark', 'success.main')}>
                 <Box component="span">💬</Box>
                 <Box>
                     <Box component="strong">{feedback.changedByUserName}:</Box> "{feedback.comment}"
@@ -813,7 +805,7 @@ function FeedbackBox({ status, feedback }: { status: AnnualLeaveStatus; feedback
     }
     if (status === 'Rejected') {
         return (
-            <Box sx={feedbackSx('#FEE2E2', '#991B1B', '#FF4D4F')}>
+            <Box sx={feedbackSx(softBg('error'), 'error.dark', 'error.main')}>
                 <Box component="span">💬</Box>
                 <Box>
                     <Box component="strong">{feedback.changedByUserName}:</Box> "{feedback.comment}"
@@ -823,7 +815,7 @@ function FeedbackBox({ status, feedback }: { status: AnnualLeaveStatus; feedback
     }
     if (status === 'Cancelled') {
         return (
-            <Box sx={feedbackSx('#F4F5F7', '#6B7280', '#9CA3AF')}>
+            <Box sx={feedbackSx('action.hover', 'text.secondary', 'text.disabled')}>
                 <Box component="span">↪</Box>
                 <Box>{feedback.comment}</Box>
             </Box>
@@ -832,11 +824,11 @@ function FeedbackBox({ status, feedback }: { status: AnnualLeaveStatus; feedback
     return null
 }
 
-function feedbackSx(bg: string, color: string, accent: string) {
+function feedbackSx(bg: SxColor, color: string, accent: string) {
     return {
         mt: '10px', p: '10px 12px', borderRadius: '6px', fontSize: 12,
         display: 'flex', alignItems: 'flex-start', gap: '8px',
-        bgcolor: bg, color, borderLeft: `3px solid ${accent}`,
+        bgcolor: bg, color, borderLeft: '3px solid', borderLeftColor: accent,
     } as const
 }
 
@@ -846,15 +838,15 @@ function ActionButton({ onClick, variant, children }: {
     children: React.ReactNode
 }) {
     const styles = variant === 'danger'
-        ? { color: '#991B1B', hover: '#FEE2E2' }
-        : { color: C_MUTED, hover: '#F4F5F7' }
+        ? { color: 'error.dark', hover: softBg('error') }
+        : { color: 'text.secondary', hover: 'action.hover' }
     return (
         <Box
             component="button"
             onClick={onClick}
             sx={{
                 fontSize: 12, fontWeight: 500, color: styles.color,
-                background: 'transparent', border: `1px solid ${C_BORDER}`,
+                background: 'transparent', border: '1px solid', borderColor: 'divider',
                 borderRadius: '6px', px: '12px', py: '5px',
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s',
                 '&:hover': { bgcolor: styles.hover },

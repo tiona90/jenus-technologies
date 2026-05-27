@@ -9,14 +9,11 @@ import {
     getLeaveTypes, updateLeaveStatus,
 } from '../../lib/api'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 import type {
     AnnualLeave, EmployeeProfile, LeaveStatusHistory, LeaveType, UserInfo,
 } from '../../lib/types'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
-const C_BLUE = '#4F8EF7'
 
 const LEAVE_ICONS: Record<string, string> = {
     annual: '🌴', vacation: '🌴',
@@ -70,7 +67,7 @@ function initials(name: string) {
 }
 
 function avatarBg(name: string) {
-    const palette = ['#4F8EF7', '#22C47A', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#FF4D4F']
+    const palette = ['primary.main', 'success.main', 'warning.main', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', 'error.main']
     let hash = 0
     for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0
     return palette[Math.abs(hash) % palette.length]
@@ -361,7 +358,7 @@ const AllLeaveAdminPage = observer(function AllLeaveAdminPage({ user: _user }: {
             }}>
                 <StatCard label="⏳ Awaiting Review" value={String(counts.pending)} valueColor="#F59E0B" sub="leave requests pending" />
                 <StatCard label="⚠️ Need Attention" value={String(counts.urgent + counts.conflict)} valueColor="#FF4D4F" sub={`${counts.urgent} urgent · ${counts.conflict} conflicts`} />
-                <StatCard label="📅 Days Off This Month" value={String(daysOffThisMonth)} valueColor={C_BLUE} sub="across all departments" />
+                <StatCard label="📅 Days Off This Month" value={String(daysOffThisMonth)} valueColor={'primary.main'} sub="across all departments" />
                 <StatCard label="🏖️ Currently On Leave" value={String(onLeaveToday)} valueColor="#22C47A" sub="employees out today" />
             </Box>
 
@@ -391,7 +388,7 @@ const AllLeaveAdminPage = observer(function AllLeaveAdminPage({ user: _user }: {
             )}
 
             {/* Status tabs */}
-            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: `1px solid ${C_BORDER}`, px: '2px', flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', gap: '2px', mb: '14px', borderBottom: '1px solid', borderColor: 'divider', px: '2px', flexWrap: 'wrap' }}>
                 {STATUS_TABS.map((tab) => {
                     const active = statusTab === tab.value
                     const c =
@@ -410,19 +407,19 @@ const AllLeaveAdminPage = observer(function AllLeaveAdminPage({ user: _user }: {
                             onClick={() => setStatusTab(tab.value)}
                             sx={{
                                 p: '9px 16px', fontSize: 13,
-                                color: active ? C_BLUE : dangerTone ? '#991B1B' : warnTone ? '#92400E' : C_MUTED,
+                                color: active ? 'primary.main' : dangerTone ? 'error.dark' : warnTone ? 'warning.dark' : 'text.secondary',
                                 cursor: 'pointer',
-                                borderBottom: active ? `2px solid ${C_BLUE}` : '2px solid transparent',
+                                borderBottom: active ? `2px solid ${'primary.main'}` : '2px solid transparent',
                                 mb: '-1px', display: 'flex', alignItems: 'center', gap: '6px',
                                 background: 'none', border: 'none', fontFamily: 'inherit',
                                 fontWeight: active ? 600 : 500,
-                                '&:hover': { color: active ? C_BLUE : C_HEADING },
+                                '&:hover': { color: active ? 'primary.main' : 'text.primary' },
                             }}
                         >
                             {tab.label}
                             <Box component="span" sx={{
-                                bgcolor: active ? '#EEF4FF' : dangerTone ? '#FEE2E2' : warnTone ? '#FEF3C7' : '#F4F5F7',
-                                color: active ? C_BLUE : dangerTone ? '#991B1B' : warnTone ? '#92400E' : C_MUTED,
+                                bgcolor: active ? softBg('primary') : dangerTone ? softBg('error') : warnTone ? softBg('warning') : 'action.hover',
+                                color: active ? 'primary.main' : dangerTone ? 'error.dark' : warnTone ? 'warning.dark' : 'text.secondary',
                                 fontSize: 10, fontWeight: 600,
                                 px: '7px', borderRadius: '10px',
                             }}>{c}</Box>
@@ -433,7 +430,7 @@ const AllLeaveAdminPage = observer(function AllLeaveAdminPage({ user: _user }: {
 
             {/* Filter toolbar */}
             <Box sx={{
-                bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
+                bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
                 p: '10px 12px', display: 'flex', gap: '10px', flexWrap: 'wrap',
                 alignItems: 'center', mb: '14px',
             }}>
@@ -446,8 +443,10 @@ const AllLeaveAdminPage = observer(function AllLeaveAdminPage({ user: _user }: {
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
                         sx={{
                             width: '100%', p: '7px 10px', fontSize: 13, fontFamily: 'inherit',
-                            border: `1px solid ${C_BORDER}`, borderRadius: '6px', outline: 'none',
-                            '&:focus': { borderColor: C_BLUE, boxShadow: '0 0 0 3px rgba(79,142,247,0.1)' },
+                            border: '1px solid', borderColor: 'divider', borderRadius: '6px', outline: 'none',
+                            bgcolor: 'background.paper', color: 'text.primary',
+                            '&::placeholder': { color: 'text.disabled' },
+                            '&:focus': { borderColor: 'primary.main' },
                         }}
                     />
                 </Box>
@@ -523,8 +522,8 @@ const AllLeaveAdminPage = observer(function AllLeaveAdminPage({ user: _user }: {
 
             {filtered.length === 0 && (
                 <Box sx={{
-                    bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px',
-                    py: 6, textAlign: 'center', color: C_MUTED, fontSize: 13,
+                    bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px',
+                    py: 6, textAlign: 'center', color: 'text.secondary', fontSize: 13,
                 }}>
                     No leave requests match the current filters.
                 </Box>
@@ -543,12 +542,12 @@ function StatCard({ label, value, sub, valueColor }: {
     label: string; value: string; sub: string; valueColor?: string
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', p: '14px 16px' }}>
-            <Box sx={{ fontSize: 11, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', p: '14px 16px' }}>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {label}
             </Box>
-            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? C_HEADING, lineHeight: 1 }}>{value}</Box>
-            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '4px' }}>{sub}</Box>
+            <Box sx={{ fontSize: 22, fontWeight: 700, color: valueColor ?? 'text.primary', lineHeight: 1 }}>{value}</Box>
+            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '4px' }}>{sub}</Box>
         </Box>
     )
 }
@@ -581,15 +580,15 @@ function Heatmap({ month, year, heatmap, holidays, today, onNav, alert }: {
         const count = data?.count ?? 0
         const isToday = iso === todayIso
 
-        let bg = '#F9FAFB'
-        let color = C_HEADING
-        if (weekend) { bg = '#F4F5F7'; color = '#C7C7CC' }
-        if (holiday) { bg = '#FEF3C7'; color = '#92400E' }
-        if (count === 1) { bg = '#DBEAFE'; color = '#1D4ED8' }
-        else if (count === 2) { bg = '#BFDBFE'; color = '#1D4ED8' }
-        else if (count === 3) { bg = '#93C5FD'; color = '#1D4ED8' }
-        else if (count >= 4) { bg = C_BLUE; color = '#fff' }
-        if (conflictCount > 0) { bg = '#FEF3C7'; color = '#92400E' }
+        let bg: SxColor = 'action.hover'
+        let color: SxColor = 'text.primary'
+        if (weekend) { bg = 'action.hover'; color = 'text.disabled' }
+        if (holiday) { bg = softBg('warning'); color = 'warning.dark' }
+        if (count === 1) { bg = softBg('info'); color = 'info.dark' }
+        else if (count === 2) { bg = softBg('info'); color = 'info.dark' }
+        else if (count === 3) { bg = softBg('info'); color = 'info.dark' }
+        else if (count >= 4) { bg = 'primary.main'; color = '#fff' }
+        if (conflictCount > 0) { bg = softBg('warning'); color = 'warning.dark' }
 
         cells.push(
             <Box
@@ -600,7 +599,7 @@ function Heatmap({ month, year, heatmap, holidays, today, onNav, alert }: {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     fontSize: 11, position: 'relative',
                     border: holiday ? '1px solid #F59E0B' : 'none',
-                    boxShadow: isToday ? `inset 0 0 0 2px ${C_HEADING}` : conflictCount > 0 ? 'inset 0 0 0 1px #F59E0B' : 'none',
+                    boxShadow: isToday ? `inset 0 0 0 2px ${'text.primary'}` : conflictCount > 0 ? 'inset 0 0 0 1px #F59E0B' : 'none',
                     cursor: count > 0 ? 'help' : 'default',
                 }}
             >
@@ -614,19 +613,19 @@ function Heatmap({ month, year, heatmap, holidays, today, onNav, alert }: {
     }
 
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '14px 18px', mb: '14px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '14px 18px', mb: '14px' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', mb: '12px' }}>
                 <Box>
-                    <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>{MONTH_NAMES[month]} {year} · Leave Calendar</Box>
-                    <Box sx={{ fontSize: 11, color: C_MUTED, mt: '2px' }}>Click a request below to see details</Box>
+                    <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>{MONTH_NAMES[month]} {year} · Leave Calendar</Box>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '2px' }}>Click a request below to see details</Box>
                 </Box>
                 <Box sx={{ display: 'flex', gap: '14px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Box sx={{ display: 'flex', gap: '10px', fontSize: 10, color: C_MUTED, flexWrap: 'wrap' }}>
+                    <Box sx={{ display: 'flex', gap: '10px', fontSize: 10, color: 'text.secondary', flexWrap: 'wrap' }}>
                         <Legend color="#F9FAFB" label="None" bordered />
                         <Legend color="#DBEAFE" label="1" />
                         <Legend color="#BFDBFE" label="2" />
                         <Legend color="#93C5FD" label="3" />
-                        <Legend color={C_BLUE} label="4+" />
+                        <Legend color={'primary.main'} label="4+" />
                         <Legend color="#FEF3C7" label="⚠ Conflict" bordered borderColor="#F59E0B" />
                         <Legend color="#FEF3C7" label="🎉 Holiday" bordered borderColor="#F59E0B" />
                     </Box>
@@ -638,7 +637,7 @@ function Heatmap({ month, year, heatmap, holidays, today, onNav, alert }: {
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', mb: '4px' }}>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-                    <Box key={d} sx={{ textAlign: 'center', fontSize: 10, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase' }}>{d}</Box>
+                    <Box key={d} sx={{ textAlign: 'center', fontSize: 10, color: 'text.disabled', fontWeight: 600, textTransform: 'uppercase' }}>{d}</Box>
                 ))}
             </Box>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
@@ -646,10 +645,10 @@ function Heatmap({ month, year, heatmap, holidays, today, onNav, alert }: {
             </Box>
             {alert && (
                 <Box sx={{
-                    mt: '12px', p: '10px 14px', bgcolor: '#FFFBEB',
+                    mt: '12px', p: '10px 14px', bgcolor: softBg('warning'),
                     border: '1px solid #FDE68A', borderRadius: '8px',
                     display: 'flex', alignItems: 'flex-start', gap: '8px',
-                    fontSize: 12, color: '#92400E',
+                    fontSize: 12, color: 'warning.dark',
                 }}>
                     <Box component="span">⚠️</Box>
                     <Box>
@@ -670,7 +669,7 @@ function Legend({ color, label, bordered, borderColor }: {
         <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <Box sx={{
                 width: 12, height: 12, borderRadius: '2px', bgcolor: color,
-                border: bordered ? `1px solid ${borderColor ?? C_BORDER}` : 'none',
+                border: bordered ? `1px solid ${borderColor ?? 'divider'}` : 'none',
                 display: 'inline-block',
             }} />
             {label}
@@ -684,9 +683,9 @@ function CalNavBtn({ onClick, children }: { onClick: () => void; children: React
             component="button"
             onClick={onClick}
             sx={{
-                width: 28, height: 28, border: `1px solid ${C_BORDER}`, bgcolor: '#fff',
-                borderRadius: '5px', cursor: 'pointer', fontSize: 14, color: C_MUTED, fontFamily: 'inherit',
-                '&:hover': { bgcolor: '#F4F5F7', color: C_HEADING },
+                width: 28, height: 28, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper',
+                borderRadius: '5px', cursor: 'pointer', fontSize: 14, color: 'text.secondary', fontFamily: 'inherit',
+                '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
             }}
         >
             {children}
@@ -701,17 +700,17 @@ function DeptBreakdown({ stats, totalUsed, totalAllowance, onFilter }: {
     onFilter: (dept: string) => void
 }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '12px', p: '14px 18px', mb: '14px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '12px', p: '14px 18px', mb: '14px' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: '12px', flexWrap: 'wrap', gap: '4px' }}>
-                <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING }}>Leave by Department</Box>
-                <Box sx={{ fontSize: 11, color: C_MUTED }}>YTD · {totalUsed} of {totalAllowance} days used</Box>
+                <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>Leave by Department</Box>
+                <Box sx={{ fontSize: 11, color: 'text.secondary' }}>YTD · {totalUsed} of {totalAllowance} days used</Box>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {stats.length === 0 ? (
-                    <Box sx={{ fontSize: 12, color: C_MUTED, py: '6px' }}>No departments configured.</Box>
+                    <Box sx={{ fontSize: 12, color: 'text.secondary', py: '6px' }}>No departments configured.</Box>
                 ) : stats.map((d) => {
                     const pct = d.entitled > 0 ? (d.used / d.entitled) * 100 : 0
-                    const fillColor = pct >= 75 ? '#FF4D4F' : pct >= 50 ? '#F59E0B' : '#22C47A'
+                    const fillColor = pct >= 75 ? 'error.main' : pct >= 50 ? 'warning.main' : 'success.main'
                     return (
                         <Box key={d.name} sx={{
                             display: 'grid',
@@ -719,10 +718,10 @@ function DeptBreakdown({ stats, totalUsed, totalAllowance, onFilter }: {
                             gap: '10px', alignItems: 'center',
                         }}>
                             <Box>
-                                <Box sx={{ fontSize: 12, fontWeight: 600, color: C_HEADING }}>{d.name}</Box>
-                                <Box sx={{ fontSize: 11, color: '#9CA3AF' }}>{d.total} {d.total === 1 ? 'person' : 'people'}</Box>
+                                <Box sx={{ fontSize: 12, fontWeight: 600, color: 'text.primary' }}>{d.name}</Box>
+                                <Box sx={{ fontSize: 11, color: 'text.disabled' }}>{d.total} {d.total === 1 ? 'person' : 'people'}</Box>
                             </Box>
-                            <Box sx={{ position: 'relative', height: 22, bgcolor: '#F4F5F7', borderRadius: '4px', overflow: 'hidden' }}>
+                            <Box sx={{ position: 'relative', height: 22, bgcolor: 'action.hover', borderRadius: '4px', overflow: 'hidden' }}>
                                 <Box sx={{
                                     height: '100%', bgcolor: fillColor, width: `${Math.min(100, pct)}%`,
                                     display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
@@ -731,16 +730,16 @@ function DeptBreakdown({ stats, totalUsed, totalAllowance, onFilter }: {
                                     {pct >= 14 && `${d.used}d · ${Math.round(pct)}%`}
                                 </Box>
                             </Box>
-                            <Box sx={{ fontSize: 12, color: C_MUTED }}>
+                            <Box sx={{ fontSize: 12, color: 'text.secondary' }}>
                                 {d.pending > 0
-                                    ? <><Box component="strong" sx={{ color: '#F59E0B' }}>{d.pending}</Box> pending</>
-                                    : <Box component="span" sx={{ color: '#22C47A' }}>✓ None pending</Box>}
+                                    ? <><Box component="strong" sx={{ color: 'warning.main' }}>{d.pending}</Box> pending</>
+                                    : <Box component="span" sx={{ color: 'success.main' }}>✓ None pending</Box>}
                             </Box>
                             <Box
                                 component="button"
                                 onClick={() => onFilter(d.name)}
                                 sx={{
-                                    fontSize: 11, color: C_BLUE, bgcolor: 'transparent',
+                                    fontSize: 11, color: 'primary.main', bgcolor: 'transparent',
                                     border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                                     '&:hover': { textDecoration: 'underline' },
                                 }}
@@ -761,10 +760,11 @@ function BulkBar({ count, onClear, onApprove, onReject, disabled }: {
     return (
         <Box sx={{
             position: 'sticky', top: 0, zIndex: 5,
-            bgcolor: C_HEADING, color: '#fff', borderRadius: '10px',
+            bgcolor: 'background.paper', color: 'text.primary',
+            border: '1px solid', borderColor: 'divider',
+            borderRadius: '10px',
             p: '10px 14px', display: 'flex', alignItems: 'center', gap: '14px',
             mb: '14px', flexWrap: 'wrap',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         }}>
             <Box sx={{ fontSize: 13 }}>
                 <Box component="strong">{count}</Box> leave request{count === 1 ? '' : 's'} selected
@@ -775,10 +775,10 @@ function BulkBar({ count, onClear, onApprove, onReject, disabled }: {
                     onClick={onClear}
                     disabled={disabled}
                     sx={{
-                        bgcolor: 'transparent', color: '#fff', border: '1px solid #fff',
+                        bgcolor: 'transparent', color: 'text.primary', border: '1px solid', borderColor: 'divider',
                         px: '12px', py: '5px', borderRadius: '6px', fontSize: 12, fontWeight: 500,
                         cursor: 'pointer', fontFamily: 'inherit',
-                        '&:hover:not(:disabled)': { bgcolor: 'rgba(255,255,255,0.1)' },
+                        '&:hover:not(:disabled)': { bgcolor: 'action.hover' },
                         '&:disabled': { opacity: 0.5 },
                     }}
                 >Clear</Box>
@@ -787,10 +787,10 @@ function BulkBar({ count, onClear, onApprove, onReject, disabled }: {
                     onClick={onApprove}
                     disabled={disabled}
                     sx={{
-                        bgcolor: '#22C47A', color: '#fff', border: 'none',
+                        bgcolor: 'success.main', color: '#fff', border: 'none',
                         px: '14px', py: '6px', borderRadius: '6px', fontSize: 12, fontWeight: 600,
                         cursor: 'pointer', fontFamily: 'inherit',
-                        '&:hover:not(:disabled)': { bgcolor: '#18A867' },
+                        '&:hover:not(:disabled)': { bgcolor: 'success.dark' },
                         '&:disabled': { opacity: 0.5 },
                     }}
                 >✓ Approve Selected</Box>
@@ -799,10 +799,10 @@ function BulkBar({ count, onClear, onApprove, onReject, disabled }: {
                     onClick={onReject}
                     disabled={disabled}
                     sx={{
-                        bgcolor: '#FF4D4F', color: '#fff', border: 'none',
+                        bgcolor: 'error.main', color: '#fff', border: 'none',
                         px: '14px', py: '6px', borderRadius: '6px', fontSize: 12, fontWeight: 600,
                         cursor: 'pointer', fontFamily: 'inherit',
-                        '&:hover:not(:disabled)': { bgcolor: '#E03C3E' },
+                        '&:hover:not(:disabled)': { bgcolor: 'error.dark' },
                         '&:disabled': { opacity: 0.5 },
                     }}
                 >✕ Reject Selected</Box>
@@ -823,9 +823,9 @@ function SelectFilter({ value, onChange, options }: {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
             sx={{
                 fontSize: 12, fontFamily: 'inherit', p: '7px 10px',
-                border: `1px solid ${C_BORDER}`, borderRadius: '6px',
-                color: '#374151', bgcolor: '#fff', outline: 'none', cursor: 'pointer',
-                '&:focus': { borderColor: C_BLUE },
+                border: '1px solid', borderColor: 'divider', borderRadius: '6px',
+                color: 'text.primary', bgcolor: 'background.paper', outline: 'none', cursor: 'pointer',
+                '&:focus': { borderColor: 'primary.main' },
             }}
         >
             {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -841,14 +841,14 @@ function SectionHeader({ title, subtitle, meta }: { title: string; subtitle?: st
         }}>
             <Box>
                 <Box sx={{
-                    fontSize: 12, fontWeight: 600, color: C_HEADING,
+                    fontSize: 12, fontWeight: 600, color: 'text.primary',
                     textTransform: 'uppercase', letterSpacing: '0.05em',
                 }}>
                     {title}
-                    {subtitle && <Box component="span" sx={{ color: C_MUTED, fontWeight: 500, ml: '8px' }}>· {subtitle}</Box>}
+                    {subtitle && <Box component="span" sx={{ color: 'text.secondary', fontWeight: 500, ml: '8px' }}>· {subtitle}</Box>}
                 </Box>
             </Box>
-            {meta && <Box sx={{ fontSize: 11, color: C_MUTED }}>{meta}</Box>}
+            {meta && <Box sx={{ fontSize: 11, color: 'text.secondary' }}>{meta}</Box>}
         </Box>
     )
 }
@@ -879,10 +879,10 @@ function LeaveRow({
     const typeKey = leaveTypeKey(typeName)
     const isPending = leave.status === 'Pending'
     const hasConflict = !!conflicts && conflicts.length > 0
-    const accent = isUrgent ? '#FF4D4F' : hasConflict ? '#F59E0B'
-        : isPending ? '#F59E0B'
-        : leave.status === 'Approved' ? '#22C47A'
-        : leave.status === 'Rejected' ? '#FF4D4F' : '#9CA3AF'
+    const accent = isUrgent ? 'error.main' : hasConflict ? 'warning.main'
+        : isPending ? 'warning.main'
+        : leave.status === 'Approved' ? 'success.main'
+        : leave.status === 'Rejected' ? 'error.main' : 'text.disabled'
 
     // Balance computation
     const usedThisYear = useMemo(() => {
@@ -898,17 +898,19 @@ function LeaveRow({
     const entitlement = profile?.annualLeaveEntitlement ?? 0
     const balAfter = entitlement - usedThisYear - (leave.status === 'Pending' ? leave.totalDays : 0)
     const balPct = entitlement > 0 ? Math.min(100, (usedThisYear / entitlement) * 100) : 0
-    const fillColor = balPct >= 95 ? '#FF4D4F' : balPct >= 80 ? '#F59E0B' : '#22C47A'
+    const fillColor = balPct >= 95 ? 'error.main' : balPct >= 80 ? 'warning.main' : 'success.main'
 
     const daysUntil = daysFromToday(leave.startDate)
     const noticeText = daysUntil < 0 ? 'Past' : daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days notice`
 
     return (
         <Box sx={{
-            bgcolor: '#fff', border: `1px solid ${C_BORDER}`,
-            borderLeft: `3px solid ${accent}`,
+            bgcolor: isSelected ? softBg('primary') : 'background.paper',
+            border: '1px solid',
+            borderColor: isSelected ? 'primary.main' : 'divider',
+            borderLeft: '3px solid',
+            borderLeftColor: accent,
             borderRadius: '10px', mb: '8px',
-            ...(isSelected && { boxShadow: `inset 0 0 0 2px ${C_BLUE}`, bgcolor: '#F0F7FF' }),
         }}>
             <Box
                 onClick={onToggleExpand}
@@ -920,7 +922,7 @@ function LeaveRow({
                     },
                     gap: '12px', alignItems: 'center',
                     p: '14px 16px', cursor: 'pointer',
-                    '&:hover': { bgcolor: isSelected ? '#F0F7FF' : '#F9FAFB' },
+                    '&:hover': { bgcolor: isSelected ? softBg('primary') : 'action.hover' },
                 }}
             >
                 {hideCheckbox ? <Box /> : (
@@ -934,7 +936,7 @@ function LeaveRow({
                         sx={{
                             cursor: isPending ? 'pointer' : 'not-allowed',
                             width: 16, height: 16,
-                            accentColor: C_BLUE,
+                            accentColor: 'primary.main',
                             opacity: isPending ? 1 : 0.3,
                         }}
                     />
@@ -949,10 +951,10 @@ function LeaveRow({
                         fontSize: 12, fontWeight: 600, flexShrink: 0,
                     }}>{initials(leave.employeeName)}</Box>
                     <Box sx={{ minWidth: 0 }}>
-                        <Box sx={{ fontSize: 13, fontWeight: 600, color: C_HEADING, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <Box sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {leave.employeeName}
                         </Box>
-                        <Box sx={{ display: 'inline-block', mt: '2px', bgcolor: '#EFF6FF', color: '#1D4ED8', borderRadius: '4px', px: '6px', py: '1px', fontSize: 10, fontWeight: 500 }}>
+                        <Box sx={{ display: 'inline-block', mt: '2px', bgcolor: softBg('info'), color: 'info.dark', borderRadius: '4px', px: '6px', py: '1px', fontSize: 10, fontWeight: 500 }}>
                             {leave.departmentName || '—'}
                         </Box>
                     </Box>
@@ -972,20 +974,20 @@ function LeaveRow({
 
                 {/* Dates */}
                 <Box sx={{ display: { xs: 'none', md: 'block' }, minWidth: 0 }}>
-                    <Box sx={{ fontSize: 12, color: C_HEADING, fontWeight: 600 }}>
+                    <Box sx={{ fontSize: 12, color: 'text.primary', fontWeight: 600 }}>
                         {leave.startDate.slice(0, 10) === leave.endDate.slice(0, 10)
                             ? fmtShort(leave.startDate)
                             : `${fmtShort(leave.startDate)} – ${fmtShort(leave.endDate)}`}
                         <Box component="span" sx={{
-                            display: 'inline-block', ml: '6px', bgcolor: '#F4F5F7',
-                            color: '#374151', px: '6px', py: '1px', borderRadius: '8px',
+                            display: 'inline-block', ml: '6px', bgcolor: 'action.hover',
+                            color: 'text.primary', px: '6px', py: '1px', borderRadius: '8px',
                             fontSize: 10, fontWeight: 500,
                         }}>{leave.totalDays} {leave.totalDays === 1 ? 'day' : 'days'}</Box>
                     </Box>
-                    <Box sx={{ fontSize: 10, color: C_MUTED, mt: '3px' }}>
+                    <Box sx={{ fontSize: 10, color: 'text.secondary', mt: '3px' }}>
                         {noticeText}
-                        {isUrgent && <Box component="span" sx={{ color: '#991B1B', ml: '6px' }}>· ⚠ urgent</Box>}
-                        {hasConflict && <Box component="span" sx={{ color: '#92400E', ml: '6px' }}>· ⚠ {conflicts!.length} overlap{conflicts!.length === 1 ? '' : 's'}</Box>}
+                        {isUrgent && <Box component="span" sx={{ color: 'error.dark', ml: '6px' }}>· ⚠ urgent</Box>}
+                        {hasConflict && <Box component="span" sx={{ color: 'warning.dark', ml: '6px' }}>· ⚠ {conflicts!.length} overlap{conflicts!.length === 1 ? '' : 's'}</Box>}
                         {leave.evidenceUrl && <Box component="span" sx={{ ml: '6px' }}>· 📎</Box>}
                     </Box>
                 </Box>
@@ -994,25 +996,25 @@ function LeaveRow({
                 <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                     {entitlement > 0 ? (
                         <>
-                            <Box sx={{ fontSize: 11, color: C_MUTED }}>{usedThisYear}/{entitlement} used</Box>
-                            <Box sx={{ height: 4, bgcolor: '#F4F5F7', borderRadius: '2px', overflow: 'hidden', mt: '4px' }}>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary' }}>{usedThisYear}/{entitlement} used</Box>
+                            <Box sx={{ height: 4, bgcolor: 'action.hover', borderRadius: '2px', overflow: 'hidden', mt: '4px' }}>
                                 <Box sx={{ height: '100%', bgcolor: fillColor, width: `${balPct}%` }} />
                             </Box>
-                            <Box sx={{ fontSize: 10, color: C_MUTED, mt: '4px' }}>
+                            <Box sx={{ fontSize: 10, color: 'text.secondary', mt: '4px' }}>
                                 <Box component="span" sx={{
                                     fontWeight: 600,
-                                    color: balAfter < 0 ? '#FF4D4F' : balAfter <= 3 ? '#F59E0B' : C_HEADING,
+                                    color: balAfter < 0 ? 'error.main' : balAfter <= 3 ? 'warning.main' : 'text.primary',
                                 }}>{balAfter}</Box> left after
                             </Box>
                         </>
                     ) : (
-                        <Box sx={{ fontSize: 11, color: '#9CA3AF' }}>—</Box>
+                        <Box sx={{ fontSize: 11, color: 'text.disabled' }}>—</Box>
                     )}
                 </Box>
 
                 {/* Submitted */}
-                <Box sx={{ display: { xs: 'none', md: 'block' }, fontSize: 11, color: C_MUTED }}>
-                    <Box sx={{ fontWeight: 600, color: '#374151' }}>{fmtShort(leave.createdAt)}</Box>
+                <Box sx={{ display: { xs: 'none', md: 'block' }, fontSize: 11, color: 'text.secondary' }}>
+                    <Box sx={{ fontWeight: 600, color: 'text.primary' }}>{fmtShort(leave.createdAt)}</Box>
                     {!isPending && lastHistory && (
                         <Box sx={{ mt: '2px' }}>
                             {leave.status === 'Approved' ? '✓' : '✕'} by {lastHistory.changedByUserName}
@@ -1040,17 +1042,17 @@ function LeaveRow({
 
             {isExpanded && (
                 <Box sx={{
-                    px: '16px', py: '14px', borderTop: '1px solid #F3F4F6',
-                    bgcolor: '#FAFBFC',
+                    px: '16px', py: '14px', borderTop: '1px solid', borderTopColor: 'divider',
+                    bgcolor: 'action.hover',
                     display: 'grid',
                     gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
                     gap: '14px',
                 }}>
                     <ExpandBlock title="Reason given">
                         {leave.reason ? (
-                            <Box sx={{ fontSize: 12, fontStyle: 'italic', color: '#374151', lineHeight: 1.5 }}>"{leave.reason}"</Box>
+                            <Box sx={{ fontSize: 12, fontStyle: 'italic', color: 'text.primary', lineHeight: 1.5 }}>"{leave.reason}"</Box>
                         ) : (
-                            <Box component="em" sx={{ fontSize: 12, color: '#9CA3AF' }}>No reason provided</Box>
+                            <Box component="em" sx={{ fontSize: 12, color: 'text.disabled' }}>No reason provided</Box>
                         )}
                         {leave.evidenceUrl && (
                             <Box sx={{ mt: '8px' }}>
@@ -1062,13 +1064,13 @@ function LeaveRow({
                                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                     sx={{
                                         display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                        p: '4px 10px 4px 6px', bgcolor: '#fff',
-                                        border: `1px solid ${C_BORDER}`, borderRadius: '14px',
-                                        fontSize: 11, color: '#374151', textDecoration: 'none',
-                                        '&:hover': { bgcolor: '#EEF4FF', borderColor: C_BLUE, color: C_BLUE },
+                                        p: '4px 10px 4px 6px', bgcolor: 'background.paper',
+                                        border: '1px solid', borderColor: 'divider', borderRadius: '14px',
+                                        fontSize: 11, color: 'text.primary', textDecoration: 'none',
+                                        '&:hover': { bgcolor: softBg('primary'), borderColor: 'primary.main', color: 'primary.main' },
                                     }}
                                 >
-                                    <Box component="span" sx={{ width: 18, height: 18, borderRadius: '50%', bgcolor: '#FEE2E2', color: '#991B1B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>📄</Box>
+                                    <Box component="span" sx={{ width: 18, height: 18, borderRadius: '50%', bgcolor: softBg('error'), color: 'error.dark', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>📄</Box>
                                     View attachment
                                 </Box>
                             </Box>
@@ -1086,22 +1088,22 @@ function LeaveRow({
                                         fontSize: 10, fontWeight: 600, flexShrink: 0,
                                     }}>{initials(c.employeeName)}</Box>
                                     <Box sx={{ minWidth: 0 }}>
-                                        <Box sx={{ fontSize: 12, fontWeight: 500, color: C_HEADING }}>{c.employeeName}</Box>
-                                        <Box sx={{ fontSize: 10, color: C_MUTED }}>{fmtShort(c.startDate)} – {fmtShort(c.endDate)}</Box>
+                                        <Box sx={{ fontSize: 12, fontWeight: 500, color: 'text.primary' }}>{c.employeeName}</Box>
+                                        <Box sx={{ fontSize: 10, color: 'text.secondary' }}>{fmtShort(c.startDate)} – {fmtShort(c.endDate)}</Box>
                                     </Box>
                                 </Box>
                             ))}
-                            <Box sx={{ mt: '8px', pt: '8px', borderTop: '1px dashed #E4E6EA', fontSize: 11, color: '#92400E' }}>
+                            <Box sx={{ mt: '8px', pt: '8px', borderTop: '1px dashed', borderTopColor: 'divider', fontSize: 11, color: 'warning.dark' }}>
                                 Check coverage in {leave.departmentName ?? 'this department'} carefully.
                             </Box>
                         </ExpandBlock>
                     ) : (
                         <ExpandBlock title="✓ Coverage">
-                            <Box sx={{ fontSize: 12, color: '#065F46', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Box component="span" sx={{ color: '#22C47A' }}>●</Box>
+                            <Box sx={{ fontSize: 12, color: 'success.dark', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Box component="span" sx={{ color: 'success.main' }}>●</Box>
                                 No conflicts in {leave.departmentName ?? 'this department'}
                             </Box>
-                            <Box sx={{ fontSize: 11, color: C_MUTED, mt: '6px' }}>
+                            <Box sx={{ fontSize: 11, color: 'text.secondary', mt: '6px' }}>
                                 No overlapping approved or pending leave on these dates.
                             </Box>
                         </ExpandBlock>
@@ -1123,8 +1125,8 @@ function LeaveRow({
             {!isExpanded && leave.status === 'Rejected' && lastHistory?.comment && (
                 <Box sx={{
                     mx: '16px', mb: '14px', p: '8px 12px',
-                    bgcolor: '#FEE2E2', borderLeft: '3px solid #FF4D4F',
-                    borderRadius: '6px', fontSize: 12, color: '#991B1B',
+                    bgcolor: softBg('error'), borderLeft: '3px solid', borderLeftColor: 'error.main',
+                    borderRadius: '6px', fontSize: 12, color: 'error.dark',
                 }}>
                     <Box component="strong">{lastHistory.changedByUserName}:</Box> "{lastHistory.comment}"
                 </Box>
@@ -1135,8 +1137,8 @@ function LeaveRow({
 
 function ExpandBlock({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <Box sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '8px', p: '12px 14px' }}>
-            <Box sx={{ fontSize: 11, fontWeight: 600, color: C_MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', mb: '8px' }}>
+        <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: '12px 14px' }}>
+            <Box sx={{ fontSize: 11, fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: '8px' }}>
                 {title}
             </Box>
             {children}
@@ -1147,8 +1149,8 @@ function ExpandBlock({ title, children }: { title: string; children: React.React
 function TimelineEntry({ when, what }: { when: string; what: string }) {
     return (
         <Box sx={{ display: 'flex', gap: '10px', fontSize: 11, mb: '6px', '&:last-child': { mb: 0 } }}>
-            <Box sx={{ color: C_MUTED, minWidth: 110, flexShrink: 0 }}>{when}</Box>
-            <Box sx={{ color: '#374151' }}>{what}</Box>
+            <Box sx={{ color: 'text.secondary', minWidth: 110, flexShrink: 0 }}>{when}</Box>
+            <Box sx={{ color: 'text.primary' }}>{what}</Box>
         </Box>
     )
 }
@@ -1160,9 +1162,9 @@ function ActionBtn({ variant, onClick, disabled, children }: {
     children: React.ReactNode
 }) {
     const styles =
-        variant === 'success' ? { bg: '#22C47A', color: '#fff', hover: '#18A867', border: 'none' } :
-        variant === 'danger'  ? { bg: '#FF4D4F', color: '#fff', hover: '#E03C3E', border: 'none' } :
-                                 { bg: 'transparent', color: C_MUTED, hover: '#F4F5F7', border: `1px solid ${C_BORDER}` }
+        variant === 'success' ? { bg: 'success.main', color: '#fff', hover: 'success.dark', border: 'none' } :
+        variant === 'danger'  ? { bg: 'error.main', color: '#fff', hover: 'error.dark', border: 'none' } :
+                                 { bg: 'transparent', color: 'text.secondary', hover: 'action.hover', border: '1px solid', borderColor: 'divider' }
     return (
         <Box
             component="button"
@@ -1182,12 +1184,12 @@ function ActionBtn({ variant, onClick, disabled, children }: {
     )
 }
 
-const typeColors: Record<TypeKey, { bg: string; fg: string }> = {
-    annual:      { bg: '#DBEAFE', fg: '#1D4ED8' },
-    sick:        { bg: '#FEE2E2', fg: '#991B1B' },
-    personal:    { bg: '#E0E7FF', fg: '#5B21B6' },
-    bereavement: { bg: '#E5E7EB', fg: '#374151' },
-    unpaid:      { bg: '#F3F4F6', fg: '#6B7280' },
-    maternity:   { bg: '#FCE7F3', fg: '#9D174D' },
-    other:       { bg: '#F3F4F6', fg: '#6B7280' },
+const typeColors: Record<TypeKey, { bg: SxColor; fg: string }> = {
+    annual:      { bg: softBg('info'),    fg: 'info.dark' },
+    sick:        { bg: softBg('error'),   fg: 'error.dark' },
+    personal:    { bg: softBg('primary'), fg: 'primary.dark' },
+    bereavement: { bg: 'action.hover',    fg: 'text.primary' },
+    unpaid:      { bg: 'divider',         fg: 'text.secondary' },
+    maternity:   { bg: softBg('secondary'), fg: 'secondary.dark' },
+    other:       { bg: 'divider',         fg: 'text.secondary' },
 }

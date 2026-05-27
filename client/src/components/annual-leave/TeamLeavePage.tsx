@@ -23,20 +23,18 @@ import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
 import { getAnnualLeaves, getLeaveTypes, updateLeaveStatus } from '../../lib/api'
 import type { AnnualLeave, AnnualLeaveStatus, UserInfo } from '../../lib/types'
+import { softBg, type SxColor } from '../../lib/theme-tokens'
 
-const C_BORDER = '#E4E6EA'
-const C_HEADING = '#1A1A2E'
-const C_MUTED = '#6B7280'
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-    Pending:   { bg: '#FEF3C7', color: '#92400E' },
-    Approved:  { bg: '#D1FAE5', color: '#065F46' },
-    Rejected:  { bg: '#FEE2E2', color: '#991B1B' },
-    Cancelled: { bg: '#F3F4F6', color: '#6B7280' },
+const STATUS_COLORS: Record<string, { bg: SxColor; color: string }> = {
+    Pending:   { bg: softBg('warning'), color: 'warning.dark' },
+    Approved:  { bg: softBg('success'), color: 'success.dark' },
+    Rejected:  { bg: softBg('error'), color: 'error.dark' },
+    Cancelled: { bg: 'divider', color: 'text.secondary' },
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const s = STATUS_COLORS[status] ?? { bg: '#F3F4F6', color: '#6B7280' }
+    const s = STATUS_COLORS[status] ?? { bg: 'divider', color: 'text.secondary' }
     return (
         <Box
             component="span"
@@ -64,8 +62,8 @@ function DeptBadge({ dept }: { dept: string }) {
             component="span"
             sx={{
                 display: 'inline-block',
-                bgcolor: '#EFF6FF',
-                color: '#1D4ED8',
+                bgcolor: softBg('info'),
+                color: 'info.dark',
                 borderRadius: '4px',
                 px: 1,
                 py: 0.25,
@@ -85,8 +83,8 @@ function formatDate(d: string) {
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <Stack direction="row" spacing={1} alignItems="flex-start">
-            <Typography sx={{ fontSize: 12, color: C_MUTED, fontWeight: 500, minWidth: 110, pt: 0.15 }}>{label}</Typography>
-            <Box sx={{ fontSize: 13, color: '#374151', flex: 1 }}>{value}</Box>
+            <Typography sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 500, minWidth: 110, pt: 0.15 }}>{label}</Typography>
+            <Box sx={{ fontSize: 13, color: 'text.primary', flex: 1 }}>{value}</Box>
         </Stack>
     )
 }
@@ -116,18 +114,18 @@ const TH = {
     px: '14px',
     fontSize: 11,
     fontWeight: 600,
-    color: C_MUTED,
+    color: 'text.secondary',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-    bgcolor: '#F9FAFB',
-    borderBottom: `1px solid ${C_BORDER}`,
+    bgcolor: 'action.hover',
+    borderBottom: '1px solid', borderColor: 'divider',
 }
 
 const TD = {
     py: '11px',
     px: '14px',
     fontSize: 13,
-    color: '#374151',
+    color: 'text.primary',
     borderBottom: `1px solid #F3F4F6`,
 }
 
@@ -215,18 +213,18 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
     return (
         <Stack spacing={2.5}>
             {/* Status tabs */}
-            <Box sx={{ borderBottom: `2px solid ${C_BORDER}`, mb: -1 }}>
+            <Box sx={{ borderBottom: '2px solid', borderColor: 'divider', mb: -1 }}>
                 <Tabs
                     value={statusTab}
                     onChange={(_e, v: StatusTab) => setStatusTab(v)}
-                    TabIndicatorProps={{ style: { backgroundColor: '#4F8EF7', height: 2 } }}
+                    TabIndicatorProps={{ style: { backgroundColor: 'primary.main', height: 2 } }}
                     sx={{
                         minHeight: 44,
                         '& .MuiTab-root': {
                             textTransform: 'none',
                             fontWeight: 500,
                             fontSize: 13,
-                            color: C_MUTED,
+                            color: 'text.secondary',
                             minHeight: 44,
                             py: 0,
                             px: 2.25,
@@ -241,21 +239,21 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
             {/* Table card */}
             <Paper
                 elevation={0}
-                sx={{ bgcolor: '#fff', border: `1px solid ${C_BORDER}`, borderRadius: '10px', overflow: 'hidden' }}
+                sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: '10px', overflow: 'hidden' }}
             >
                 {/* Card header */}
                 <Box
                     sx={{
                         px: '18px',
                         py: '14px',
-                        borderBottom: `1px solid ${C_BORDER}`,
+                        borderBottom: '1px solid', borderColor: 'divider',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         gap: 2,
                     }}
                 >
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: C_HEADING }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 600, color: 'text.primary' }}>
                         {isAdmin ? 'All Leave Requests' : 'Team Leave Requests'}
                     </Typography>
 
@@ -285,7 +283,7 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                     </Box>
                 ) : filtered.length === 0 ? (
                     <Box sx={{ textAlign: 'center', py: 6 }}>
-                        <Typography sx={{ fontSize: 13, color: '#9CA3AF' }}>No leave requests found.</Typography>
+                        <Typography sx={{ fontSize: 13, color: 'text.disabled' }}>No leave requests found.</Typography>
                     </Box>
                 ) : (
                     <Box sx={{ overflowX: 'auto' }}>
@@ -311,7 +309,7 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                                         : 'Annual Leave'
 
                                     return (
-                                        <TableRow key={leave.id} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: '#F9FAFB' } }}>
+                                        <TableRow key={leave.id} sx={{ '&:last-child td': { borderBottom: 'none' }, '&:hover td': { bgcolor: 'action.hover' } }}>
                                             <TableCell sx={TD}><strong>{leave.employeeName}</strong></TableCell>
                                             {isAdmin && (
                                                 <TableCell sx={TD}>
@@ -341,8 +339,8 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                                                                 py: '5px',
                                                                 px: 1.5,
                                                                 minWidth: 'unset',
-                                                                bgcolor: '#22C47A',
-                                                                '&:hover': { bgcolor: '#18A867' },
+                                                                bgcolor: 'success.main',
+                                                                '&:hover': { bgcolor: 'success.dark' },
                                                                 textTransform: 'none',
                                                                 boxShadow: 'none',
                                                             }}
@@ -362,8 +360,8 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                                                                 py: '5px',
                                                                 px: 1.5,
                                                                 minWidth: 'unset',
-                                                                bgcolor: '#FF4D4F',
-                                                                '&:hover': { bgcolor: '#E03C3E' },
+                                                                bgcolor: 'error.main',
+                                                                '&:hover': { bgcolor: 'error.dark' },
                                                                 textTransform: 'none',
                                                                 boxShadow: 'none',
                                                             }}
@@ -381,10 +379,10 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                                                             py: '5px',
                                                             px: 1.5,
                                                             minWidth: 'unset',
-                                                            color: '#6B7280',
-                                                            borderColor: C_BORDER,
+                                                            color: 'text.secondary',
+                                                            borderColor: 'divider',
                                                             textTransform: 'none',
-                                                            '&:hover': { bgcolor: '#F4F5F7', borderColor: C_BORDER },
+                                                            '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' },
                                                         }}
                                                     >
                                                         View
@@ -401,7 +399,7 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
             </Paper>
             {/* Leave detail dialog */}
             <Dialog open={viewLeave !== null} onClose={() => setViewLeave(null)} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ fontSize: 15, fontWeight: 600, color: C_HEADING, pb: 1 }}>
+                <DialogTitle sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary', pb: 1 }}>
                     Leave Request Details
                 </DialogTitle>
                 <DialogContent sx={{ px: 3, py: 2 }}>
@@ -430,9 +428,9 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                                             onClick={() => downloadEvidence(viewLeave.evidenceUrl!)}
                                             sx={{
                                                 fontSize: 12, textTransform: 'none',
-                                                borderColor: '#4F8EF7', color: '#4F8EF7',
+                                                borderColor: 'primary.main', color: 'primary.main',
                                                 py: '3px', px: 1.25,
-                                                '&:hover': { bgcolor: '#EFF6FF', borderColor: '#4F8EF7' },
+                                                '&:hover': { bgcolor: softBg('info'), borderColor: 'primary.main' },
                                             }}
                                         >
                                             Download File
@@ -451,7 +449,7 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                     <Button
                         size="small"
                         onClick={() => setViewLeave(null)}
-                        sx={{ textTransform: 'none', color: C_MUTED }}
+                        sx={{ textTransform: 'none', color: 'text.secondary' }}
                     >
                         Close
                     </Button>
@@ -465,7 +463,7 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                                 approveMutation.mutate(viewLeave.id)
                                 setViewLeave(null)
                             }}
-                            sx={{ textTransform: 'none', bgcolor: '#22C47A', '&:hover': { bgcolor: '#18A867' }, boxShadow: 'none' }}
+                            sx={{ textTransform: 'none', bgcolor: 'success.main', '&:hover': { bgcolor: 'success.dark' }, boxShadow: 'none' }}
                         >
                             Approve
                         </Button>
@@ -480,7 +478,7 @@ const TeamLeavePage = observer(function TeamLeavePage({ user }: { user: UserInfo
                                 rejectMutation.mutate(viewLeave.id)
                                 setViewLeave(null)
                             }}
-                            sx={{ textTransform: 'none', bgcolor: '#FF4D4F', '&:hover': { bgcolor: '#E03C3E' }, boxShadow: 'none' }}
+                            sx={{ textTransform: 'none', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, boxShadow: 'none' }}
                         >
                             Reject
                         </Button>

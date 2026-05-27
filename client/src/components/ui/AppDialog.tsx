@@ -6,8 +6,6 @@ import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 
-const C_BORDER = '#E4E6EA'
-
 export function AppDialog({
     open,
     onClose,
@@ -28,7 +26,8 @@ export function AppDialog({
             PaperProps={{
                 sx: {
                     borderRadius: '12px',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+                    // bgcolor falls back to theme.palette.background.paper automatically
+                    // — MUI Dialog Paper does this by default, no override needed here.
                 },
             }}
         >
@@ -45,8 +44,9 @@ export function AppDialogTitle({ children }: { children: ReactNode }) {
                 py: 2,
                 fontSize: 15,
                 fontWeight: 600,
-                color: '#1A1A2E',
-                borderBottom: `1px solid ${C_BORDER}`,
+                color: 'text.primary',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
             }}
         >
             {children}
@@ -68,7 +68,8 @@ export function AppDialogActions({ children }: { children: ReactNode }) {
             sx={{
                 px: 3,
                 py: 2,
-                borderTop: `1px solid ${C_BORDER}`,
+                borderTop: '1px solid',
+                borderColor: 'divider',
                 gap: 1,
             }}
         >
@@ -80,23 +81,23 @@ export function AppDialogActions({ children }: { children: ReactNode }) {
 /** Consistent sx for the outlined Cancel button */
 export const cancelBtnSx = {
     textTransform: 'none',
-    color: '#6B7280',
-    borderColor: '#D1D5DB',
-    '&:hover': { bgcolor: '#F4F5F7', borderColor: '#D1D5DB' },
+    color: 'text.secondary',
+    borderColor: 'divider',
+    '&:hover': { bgcolor: 'action.hover', borderColor: 'divider' },
 } as const
 
 /** Consistent sx for the primary Save/Confirm button */
 export const saveBtnSx = {
     textTransform: 'none',
-    bgcolor: '#4F8EF7',
-    '&:hover': { bgcolor: '#3A7AE4' },
+    bgcolor: 'primary.main',
+    '&:hover': { bgcolor: 'primary.dark' },
     boxShadow: 'none',
 } as const
 
 /** Consistent sx for a destructive Confirm/Delete button */
 export const dangerBtnSx = {
     textTransform: 'none',
-    bgcolor: '#FF4D4F',
-    '&:hover': { bgcolor: '#E03C3E' },
+    bgcolor: 'error.main',
+    '&:hover': { bgcolor: 'error.dark' },
     boxShadow: 'none',
 } as const
