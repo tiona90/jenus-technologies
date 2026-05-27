@@ -62,6 +62,21 @@ export interface TeamAttendance {
     week: TeamWeekRow[]
 }
 
+export interface MemberCheckInDay {
+    date: string
+    checkInMinutesFromMidnight: number | null
+}
+
+export interface TeamMemberHistory {
+    employeeId: string
+    employeeName: string
+    days: MemberCheckInDay[]
+}
+
+export interface TeamHistory {
+    members: TeamMemberHistory[]
+}
+
 export interface DepartmentAttendance {
     name: string
     total: number

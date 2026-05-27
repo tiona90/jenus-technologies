@@ -36,6 +36,8 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
+import { ThemeProvider } from '@mui/material/styles'
+import { buildTheme } from '../../lib/theme'
 import { AppDialog, AppDialogTitle, AppDialogContent, AppDialogActions, cancelBtnSx, saveBtnSx } from '../ui'
 import { getDepartments, updateProfile, uploadProfileImage } from '../../lib/api'
 import { getApiErrorMessage } from '../../lib/api/error-utils'
@@ -67,6 +69,10 @@ const Sidebar = observer(function Sidebar() {
     const { uiStore, authStore } = useStore()
     const queryClient = useQueryClient()
     const location = useLocation()
+
+    // The sidebar can render dark while the body stays light (System mode).
+    // Memoize so the nested theme only rebuilds when the chrome mode flips.
+    const chromeTheme = useMemo(() => buildTheme(uiStore.chromeMode), [uiStore.chromeMode])
 
     const isAdminUser = authStore.user?.roles?.includes('Admin') ?? false
     const isManagerUser = authStore.user?.roles?.includes('Manager') ?? false
@@ -224,6 +230,7 @@ const Sidebar = observer(function Sidebar() {
 
     return (
         <>
+            <ThemeProvider theme={chromeTheme}>
             <Drawer
                 variant="permanent"
                 sx={{
@@ -365,6 +372,7 @@ const Sidebar = observer(function Sidebar() {
                     </Menu>
                 </Box>
             </Drawer>
+            </ThemeProvider>
 
             {/* Edit profile dialog */}
             <AppDialog open={isEditOpen} onClose={() => setIsEditOpen(false)} maxWidth="xs">

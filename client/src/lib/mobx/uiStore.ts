@@ -3,13 +3,18 @@ import { makeAutoObservable } from 'mobx'
 export type MyLeaveSection = 'apply' | 'requests' | 'balance' | 'other' | 'history'
 export type AdminSection = 'dashboard' | 'settings' | 'leave' | 'leave-types' | 'users' | 'departments' | 'projects'
 export type ThemeMode = 'light' | 'dark'
+// 'system' is the popular admin-dashboard hybrid: light body content with a
+// dark sidebar + topbar (the "chrome"). 'light' / 'dark' make both surfaces
+// match. The store derives concrete bodyMode/chromeMode from this preference.
+export type ThemePreference = 'light' | 'system' | 'dark'
 
 const THEME_MODE_KEY = 'worktrack:themeMode'
 
-function readStoredThemeMode(): ThemeMode {
+function readStoredThemePreference(): ThemePreference {
     try {
         const stored = window.localStorage.getItem(THEME_MODE_KEY)
-        return stored === 'dark' ? 'dark' : 'light'
+        if (stored === 'dark' || stored === 'light' || stored === 'system') return stored
+        return 'light'
     } catch {
         return 'light'
     }
@@ -30,27 +35,40 @@ type Navigate = (path: string) => void
 class UiStore {
     isCreateDrawerOpen = false
     pendingWeekStart: string | null = null
-    themeMode: ThemeMode = readStoredThemeMode()
+    themePreference: ThemePreference = readStoredThemePreference()
 
     private _navigate: Navigate | null = null
 
     constructor() { makeAutoObservable(this, { setNavigate: false }) }
 
-    toggleThemeMode() {
-        this.themeMode = this.themeMode === 'light' ? 'dark' : 'light'
+    // Body content palette: dark only when the user explicitly picks Dark.
+    // Both Light and System render body content with the light palette.
+    get themeMode(): ThemeMode {
+        return this.themePreference === 'dark' ? 'dark' : 'light'
+    }
+
+    // Chrome (sidebar + topbar) palette: dark for System and Dark, light only
+    // when the user explicitly picks Light.
+    get chromeMode(): ThemeMode {
+        return this.themePreference === 'light' ? 'light' : 'dark'
+    }
+
+    cycleThemePreference() {
+        const next: ThemePreference =
+            this.themePreference === 'light' ? 'system'
+            : this.themePreference === 'system' ? 'dark'
+            : 'light'
+        this.setThemePreference(next)
+    }
+
+    setThemePreference(preference: ThemePreference) {
+        if (this.themePreference === preference) return
+        this.themePreference = preference
         try {
-            window.localStorage.setItem(THEME_MODE_KEY, this.themeMode)
+            window.localStorage.setItem(THEME_MODE_KEY, preference)
         } catch {
             // localStorage may be unavailable (private mode, quota) — fall back to in-memory only.
         }
-    }
-
-    setThemeMode(mode: ThemeMode) {
-        if (this.themeMode === mode) return
-        this.themeMode = mode
-        try {
-            window.localStorage.setItem(THEME_MODE_KEY, mode)
-        } catch { /* see toggleThemeMode */ }
     }
 
     setNavigate(fn: Navigate) { this._navigate = fn }

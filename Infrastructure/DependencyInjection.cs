@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddOptions();
         services.Configure<AppUrlOptions>(configuration.GetSection(AppUrlOptions.SectionName));
         services.Configure<CloudinaryOptions>(configuration.GetSection(CloudinaryOptions.SectionName));
+        services.Configure<SlackOptions>(configuration.GetSection(SlackOptions.SectionName));
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IFileUploadService, CloudinaryFileUploadService>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
@@ -23,6 +24,15 @@ public static class DependencyInjection
             options.ApiToken = configuration["Resend:ApiToken"] ?? string.Empty;
         });
         services.AddTransient<IResend, ResendClient>();
+
+        // Typed HttpClient for Slack incoming-webhook POSTs. Short timeout — we
+        // never want a slow Slack to delay a user-facing response. The service
+        // swallows exceptions, so no resilience handler is wired up; if Slack
+        // is down the message is lost rather than retried.
+        services.AddHttpClient<IChatNotificationService, SlackNotificationService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
 
         return services;
     }

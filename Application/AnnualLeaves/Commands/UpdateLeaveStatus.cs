@@ -20,7 +20,11 @@ public class UpdateLeaveStatus
         public bool IsManager { get; set; }
     }
 
-    public class Handler(AppDbContext context, IEmailService emailService) : IRequestHandler<Command>
+    public class Handler(
+        AppDbContext context,
+        IEmailService emailService,
+        IChatNotificationService chatNotificationService)
+        : IRequestHandler<Command>
     {
         public async Task Handle(Command request, CancellationToken cancellationToken)
         {
@@ -169,6 +173,15 @@ Please log in to the Annual Leave system to review the latest update.
                 htmlBody,
                 textBody,
                 cancellationToken);
+
+            // Slack notification — only when the leave flips to Approved.
+            // The notification service swallows transport errors itself, so
+            // we can await it without wrapping in try/catch here.
+            if (newStatus == AnnualLeaveStatus.Approved)
+            {
+                var slackMessage = $"🎉 {employeeContact.Name}'s leave for {dateRange} has been approved!";
+                await chatNotificationService.SendMessageAsync(slackMessage, cancellationToken);
+            }
         }
     }
 }

@@ -429,6 +429,74 @@ public class AttendanceController : BaseApiController
         return Ok(new TeamAttendanceDto(members, weekRows));
     }
 
+    // Per-day earliest check-in time per team member over the last N days,
+    // for the "Team Health" line chart on the manager dashboard. Returns
+    // minutes-from-midnight (UTC) per day so the chart can plot a numeric
+    // y-axis without timezone reconstruction. A null value means the member
+    // didn't check in that day (off, leave, or weekend).
+    [HttpGet("team/history")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<TeamHistoryDto>> GetTeamHistory([FromQuery] int days = 30)
+    {
+        if (days <= 0 || days > 90) days = 30;
+
+        var userId = GetUserId();
+        var isAdmin = User.IsInRole("Admin");
+
+        var profilesQuery = _context.EmployeeProfiles
+            .Include(p => p.User)
+            .AsQueryable();
+
+        if (!isAdmin)
+        {
+            var me = await GetEmployeeProfileAsync(userId);
+            if (me == null) return BadRequest("No employee profile found.");
+            profilesQuery = profilesQuery.Where(p => p.ManagerId == me.Id);
+        }
+
+        var profiles = await profilesQuery
+            .OrderBy(p => p.User != null ? p.User.DisplayName : "")
+            .ToListAsync();
+        var employeeIds = profiles.Select(p => p.Id).ToList();
+
+        var now = DateTime.UtcNow;
+        var rangeStart = UtcDayStart(now).AddDays(-(days - 1));
+        var rangeEnd = UtcDayStart(now).AddDays(1);
+
+        // Only need CheckIn events — earliest per day per employee.
+        var checkIns = await _context.AttendanceEvents
+            .Where(e => employeeIds.Contains(e.EmployeeId)
+                && e.Type == AttendanceEventType.CheckIn
+                && e.At >= rangeStart && e.At < rangeEnd)
+            .Select(e => new { e.EmployeeId, e.At })
+            .ToListAsync();
+
+        var earliestPerDay = checkIns
+            .GroupBy(e => new { e.EmployeeId, Day = UtcDayStart(e.At) })
+            .ToDictionary(g => g.Key, g => g.Min(x => x.At));
+
+        var members = profiles.Select(p =>
+        {
+            var dayList = new List<MemberCheckInDayDto>(capacity: days);
+            for (int i = days - 1; i >= 0; i--)
+            {
+                var day = UtcDayStart(now).AddDays(-i);
+                earliestPerDay.TryGetValue(new { EmployeeId = p.Id, Day = day }, out var at);
+                int? minutes = at == default
+                    ? null
+                    : at.Hour * 60 + at.Minute;
+                dayList.Add(new MemberCheckInDayDto(day.ToString("yyyy-MM-dd"), minutes));
+            }
+
+            return new TeamMemberHistoryDto(
+                p.Id,
+                p.User?.DisplayName ?? p.User?.UserName ?? "Unknown",
+                dayList);
+        }).ToList();
+
+        return Ok(new TeamHistoryDto(members));
+    }
+
     [HttpGet("company")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CompanyAttendanceDto>> GetCompany()

@@ -161,6 +161,20 @@ const AppInner = observer(function AppInner() {
 
     const [apiErrorOpen, setApiErrorOpen] = useState(false)
     const [apiErrorMessage, setApiErrorMessage] = useState('')
+    const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine)
+
+    useEffect(() => {
+        // The PWA service worker can serve cached UI shells offline; this banner
+        // tells the user that *new* data won't load until they're back online.
+        const onOnline = () => setIsOffline(false)
+        const onOffline = () => setIsOffline(true)
+        window.addEventListener('online', onOnline)
+        window.addEventListener('offline', onOffline)
+        return () => {
+            window.removeEventListener('online', onOnline)
+            window.removeEventListener('offline', onOffline)
+        }
+    }, [])
 
     useEffect(() => {
         uiStore.setNavigate(navigate)
@@ -280,6 +294,18 @@ const AppInner = observer(function AppInner() {
             >
                 <Alert onClose={() => setApiErrorOpen(false)} severity="error" variant="filled" sx={{ width: '100%' }}>
                     {apiErrorMessage}
+                </Alert>
+            </Snackbar>
+
+            {/* Persistent offline banner — no autoHideDuration so it stays visible
+              * until the connection comes back. Anchored top-center to keep it out
+              * of the way of the API-error toast at the bottom-right. */}
+            <Snackbar
+                open={isOffline}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert severity="warning" variant="filled" sx={{ width: '100%' }}>
+                    You're offline — changes won't sync until your connection returns.
                 </Alert>
             </Snackbar>
         </>

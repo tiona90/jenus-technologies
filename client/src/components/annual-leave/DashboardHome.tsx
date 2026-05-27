@@ -5,16 +5,18 @@ import { observer } from 'mobx-react-lite'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import { alpha, type Theme } from '@mui/material/styles'
+import { BarChart } from '@mui/x-charts/BarChart'
+import { LineChart } from '@mui/x-charts/LineChart'
 import {
     approveTimesheet, getAdminUsers, getAnnualLeaves, getAppSettings,
     getCompanyAttendance, getDepartments, getEmployeeProfiles, getLeaveTypes,
-    getMyTimesheets, getTeamAttendance, getTimesheets, rejectTimesheet, updateLeaveStatus,
+    getMyTimesheets, getTeamAttendance, getTeamAttendanceHistory, getTimesheets, rejectTimesheet, updateLeaveStatus,
 } from '../../lib/api'
 import { useStore } from '../../lib/mobx'
 import { AdminUsersPanel, AppSettingsPanel, DepartmentsPanel, LeaveTypesPanel, ProjectsPanel } from '..'
 import type {
     AnnualLeave, AnnualLeaveStatus, AttendanceIssue, DepartmentAttendance,
-    LeaveType, RecentActivity, TeamAttendance, TeamMemberAttendance, Timesheet, TimesheetStatus, UserInfo,
+    LeaveType, RecentActivity, TeamAttendance, TeamHistory, TeamMemberAttendance, Timesheet, TimesheetStatus, UserInfo,
 } from '../../lib/types'
 
 const WEEKLY_TARGET = 40
@@ -354,6 +356,7 @@ function ManagerDashboard({ user }: { user: UserInfo }) {
     const { data: leaveTypes = [] } = useQuery({ queryKey: ['leaveTypes'], queryFn: getLeaveTypes })
     const { data: profiles = [] } = useQuery({ queryKey: ['employeeProfiles'], queryFn: getEmployeeProfiles })
     const { data: team } = useQuery({ queryKey: ['attendance', 'team'], queryFn: getTeamAttendance })
+    const { data: teamHistory } = useQuery({ queryKey: ['attendance', 'team', 'history', 30], queryFn: () => getTeamAttendanceHistory(30) })
 
     const leaveTypeById = useMemo(() => new Map(leaveTypes.map((lt) => [lt.id, lt])), [leaveTypes])
 
@@ -540,6 +543,8 @@ function ManagerDashboard({ user }: { user: UserInfo }) {
                     missing={teamSubmissions.missing}
                 />
             </Box>
+
+            <TeamHealthCard leaves={leaves} teamHistory={teamHistory ?? null} />
 
             <ActionCard title="Quick actions" icon="⚡">
                 <QuickActions tiles={[
@@ -1362,6 +1367,114 @@ function TeamSubmissionsCard({ submitted, total, missing }: {
                     </Box>
                 </>
             )}
+        </ActionCard>
+    )
+}
+
+function TeamHealthCard({ leaves, teamHistory }: {
+    leaves: AnnualLeave[]
+    teamHistory: TeamHistory | null
+}) {
+    // Bar chart: total approved leave days per department over the last 6 months.
+    const leaveByDept = useMemo(() => {
+        const cutoff = new Date()
+        cutoff.setMonth(cutoff.getMonth() - 6)
+        cutoff.setHours(0, 0, 0, 0)
+        const map = new Map<string, number>()
+        for (const l of leaves) {
+            if (l.status !== 'Approved') continue
+            if (new Date(l.startDate) < cutoff) continue
+            const dept = l.departmentName || 'Unassigned'
+            map.set(dept, (map.get(dept) ?? 0) + l.totalDays)
+        }
+        return [...map.entries()]
+            .map(([name, days]) => ({ name, days }))
+            .sort((a, b) => b.days - a.days)
+    }, [leaves])
+
+    // Line chart: per-member check-in hour over last 30 days. Each member
+    // gets a series; null check-in days (weekend / leave / absent) render as
+    // gaps so a "drift later" pattern is easy to spot visually.
+    const lineSeries = useMemo(() => {
+        if (!teamHistory?.members?.length) return { dates: [], series: [] }
+        const dates = teamHistory.members[0]?.days.map((d) => d.date) ?? []
+        const series = teamHistory.members.map((m) => ({
+            label: m.employeeName,
+            data: m.days.map((d) => d.checkInMinutesFromMidnight),
+            showMark: false,
+            connectNulls: false,
+        }))
+        return { dates, series }
+    }, [teamHistory])
+
+    const noLeaveData = leaveByDept.length === 0
+    const noCheckInData = lineSeries.series.length === 0
+        || lineSeries.series.every((s) => s.data.every((v) => v == null))
+
+    // y-axis tick labels for the line chart: minutes-from-midnight → "HH:mm".
+    const formatMinutes = (mins: number | null) => {
+        if (mins == null) return ''
+        const h = Math.floor(mins / 60)
+        const m = Math.floor(mins % 60)
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    }
+
+    const shortDate = (iso: string) => {
+        const d = new Date(iso)
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+    }
+
+    return (
+        <ActionCard title="Team Health" icon="📊">
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: '14px' }}>
+                <Box>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '4px' }}>
+                        Leave taken by department · last 6 months
+                    </Box>
+                    {noLeaveData ? (
+                        <Box sx={{ fontSize: 12, color: 'text.disabled', textAlign: 'center', py: '40px' }}>
+                            No approved leave in the last 6 months.
+                        </Box>
+                    ) : (
+                        <BarChart
+                            height={240}
+                            xAxis={[{ scaleType: 'band', data: leaveByDept.map((d) => d.name) }]}
+                            yAxis={[{ label: 'Days' }]}
+                            series={[{ data: leaveByDept.map((d) => d.days), label: 'Days taken', color: 'var(--mui-palette-primary-main)' }]}
+                            margin={{ top: 12, bottom: 40, left: 48, right: 12 }}
+                            slotProps={{ legend: { sx: { display: 'none' } } }}
+                        />
+                    )}
+                </Box>
+
+                <Box>
+                    <Box sx={{ fontSize: 11, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, mb: '4px' }}>
+                        Check-in time per member · last 30 days
+                    </Box>
+                    {noCheckInData ? (
+                        <Box sx={{ fontSize: 12, color: 'text.disabled', textAlign: 'center', py: '40px' }}>
+                            Not enough attendance data yet.
+                        </Box>
+                    ) : (
+                        <LineChart
+                            height={240}
+                            xAxis={[{
+                                scaleType: 'point',
+                                data: lineSeries.dates,
+                                valueFormatter: shortDate,
+                            }]}
+                            yAxis={[{
+                                min: 6 * 60,
+                                max: 12 * 60,
+                                valueFormatter: (v: number) => formatMinutes(v),
+                                label: 'Check-in',
+                            }]}
+                            series={lineSeries.series}
+                            margin={{ top: 12, bottom: 40, left: 56, right: 12 }}
+                        />
+                    )}
+                </Box>
+            </Box>
         </ActionCard>
     )
 }
