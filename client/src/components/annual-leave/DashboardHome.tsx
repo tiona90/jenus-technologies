@@ -1,9 +1,17 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import Stack from '@mui/material/Stack'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
 import { alpha, useTheme, type Theme } from '@mui/material/styles'
 import { BarChart } from '@mui/x-charts/BarChart'
 import { LineChart } from '@mui/x-charts/LineChart'
@@ -395,18 +403,60 @@ function ManagerDashboard({ user }: { user: UserInfo }) {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['annualLeaves'] }),
     })
     const rejectLeaveMut = useMutation({
-        mutationFn: (id: string) => updateLeaveStatus(id, 'Rejected'),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['annualLeaves'] }),
+        mutationFn: ({ id, comment }: { id: string; comment: string }) => updateLeaveStatus(id, 'Rejected', comment),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['annualLeaves'] })
+            void queryClient.invalidateQueries({ queryKey: ['leaveStatusHistories'] })
+        },
     })
     const approveTsMut = useMutation({
         mutationFn: (id: string) => approveTimesheet(id),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['timesheets'] }),
     })
     const rejectTsMut = useMutation({
-        mutationFn: (id: string) => rejectTimesheet(id),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['timesheets'] }),
+        mutationFn: ({ id, comment }: { id: string; comment: string }) => rejectTimesheet(id, comment),
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['timesheets'] })
+            void queryClient.invalidateQueries({ queryKey: ['timesheetStatusHistories'] })
+        },
     })
     const isMutating = approveLeaveMut.isPending || rejectLeaveMut.isPending || approveTsMut.isPending || rejectTsMut.isPending
+
+    const [rejectTarget, setRejectTarget] = useState<{ kind: 'leave' | 'timesheet'; id: string; label: string } | null>(null)
+    const [rejectReason, setRejectReason] = useState('')
+    const [rejectError, setRejectError] = useState('')
+
+    function openReject(item: QueueItem) {
+        setRejectTarget({ kind: item.kind, id: item.id, label: item.title })
+        setRejectReason('')
+        setRejectError('')
+    }
+
+    function closeReject() {
+        if (rejectLeaveMut.isPending || rejectTsMut.isPending) return
+        setRejectTarget(null)
+        setRejectReason('')
+        setRejectError('')
+    }
+
+    async function confirmReject() {
+        if (!rejectTarget) return
+        const trimmed = rejectReason.trim()
+        if (trimmed.length === 0) {
+            setRejectError('Please provide a reason for rejecting.')
+            return
+        }
+        try {
+            if (rejectTarget.kind === 'leave') {
+                await rejectLeaveMut.mutateAsync({ id: rejectTarget.id, comment: trimmed })
+            } else {
+                await rejectTsMut.mutateAsync({ id: rejectTarget.id, comment: trimmed })
+            }
+            setRejectTarget(null)
+            setRejectReason('')
+            setRejectError('')
+        } catch { /* mutation error is surfaced elsewhere */ }
+    }
 
     // Build queue: merge leaves + timesheets, sort by age
     const queue = useMemo(() => {
@@ -529,7 +579,7 @@ function ManagerDashboard({ user }: { user: UserInfo }) {
                 queue={queue.slice(0, 5)}
                 totalQueue={queue.length}
                 onApprove={(item) => item.kind === 'leave' ? approveLeaveMut.mutate(item.id) : approveTsMut.mutate(item.id)}
-                onReject={(item) => item.kind === 'leave' ? rejectLeaveMut.mutate(item.id) : rejectTsMut.mutate(item.id)}
+                onReject={(item) => openReject(item)}
                 disabled={isMutating}
                 onViewAllLeave={() => uiStore.navigateToTeamLeave()}
                 onViewAllTs={() => uiStore.navigateToTeamTimesheets()}
@@ -554,6 +604,58 @@ function ManagerDashboard({ user }: { user: UserInfo }) {
                     { icon: '🌴', label: 'Apply leave', sub: 'For yourself', onClick: () => uiStore.navigateToApplyLeave() },
                 ]} />
             </ActionCard>
+
+            <Dialog open={rejectTarget !== null} onClose={closeReject} maxWidth="xs" fullWidth>
+                <DialogTitle sx={{ fontSize: 15, fontWeight: 600, color: 'text.primary', pb: 1 }}>
+                    Reject {rejectTarget?.kind === 'leave' ? 'leave request' : 'timesheet'}
+                </DialogTitle>
+                <DialogContent sx={{ px: 3, py: 2 }}>
+                    {rejectTarget && (
+                        <Stack spacing={1.5}>
+                            <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>
+                                Please provide a reason. The employee will see this message.
+                            </Typography>
+                            <Box sx={{ fontSize: 12, color: 'text.secondary' }}>{rejectTarget.label}</Box>
+                            <TextField
+                                autoFocus
+                                multiline
+                                minRows={3}
+                                maxRows={6}
+                                fullWidth
+                                placeholder="Reason for rejection (required)"
+                                value={rejectReason}
+                                onChange={(e) => {
+                                    setRejectReason(e.target.value)
+                                    if (rejectError) setRejectError('')
+                                }}
+                                error={!!rejectError}
+                                helperText={rejectError || `${rejectReason.trim().length}/500`}
+                                inputProps={{ maxLength: 500 }}
+                                sx={{ '& .MuiInputBase-input': { fontSize: 13 } }}
+                            />
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 1.75, gap: 1 }}>
+                    <Button
+                        size="small"
+                        onClick={closeReject}
+                        disabled={rejectLeaveMut.isPending || rejectTsMut.isPending}
+                        sx={{ textTransform: 'none', color: 'text.secondary' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        size="small"
+                        variant="contained"
+                        disabled={rejectLeaveMut.isPending || rejectTsMut.isPending || rejectReason.trim().length === 0}
+                        onClick={() => void confirmReject()}
+                        sx={{ textTransform: 'none', bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, boxShadow: 'none' }}
+                    >
+                        {(rejectLeaveMut.isPending || rejectTsMut.isPending) ? 'Rejecting…' : 'Confirm Reject'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     )
 }

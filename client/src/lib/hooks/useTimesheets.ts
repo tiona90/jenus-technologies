@@ -114,8 +114,8 @@ export function useApproveTimesheet() {
 export function useRejectTimesheet() {
     const invalidate = useInvalidateTimesheets()
     return useMutation({
-        mutationFn: (id: string) => rejectTimesheet(id),
-        onSuccess: (_data, id) => invalidate(id),
+        mutationFn: ({ id, comment }: { id: string; comment: string }) => rejectTimesheet(id, comment),
+        onSuccess: (_data, vars) => invalidate(vars.id),
     })
 }
 
