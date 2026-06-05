@@ -307,6 +307,8 @@ public class AccountController(
             user.Email,
             user.DisplayName,
             user.ImageUrl,
+            user.PhoneNumber,
+            user.DateOfBirth,
             DepartmentId = employeeProfile?.DepartmentId,
             DepartmentName = employeeProfile?.Department?.Name,
             Roles = roles
@@ -357,6 +359,8 @@ public class AccountController(
         }
 
         user.DisplayName = displayName;
+        user.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
+        user.DateOfBirth = request.DateOfBirth;
         employeeProfile.DepartmentId = department.Id;
 
         var result = await userManager.UpdateAsync(user);
@@ -386,6 +390,8 @@ public class AccountController(
                 : "Profile updated successfully.",
             displayName = user.DisplayName,
             email = user.Email,
+            phoneNumber = user.PhoneNumber,
+            dateOfBirth = user.DateOfBirth,
             departmentId = department.Id,
             departmentName = department.Name,
             emailChangePending,

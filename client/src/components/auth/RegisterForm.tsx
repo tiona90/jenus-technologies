@@ -27,6 +27,8 @@ const registerSchema = z.object({
     firstName: z.string().trim().min(1, 'First name is required.'),
     lastName: z.string().trim().min(1, 'Last name is required.'),
     email: z.string().trim().min(1, 'Email is required.').email('Enter a valid email address.'),
+    phoneNumber: z.string().trim().max(30, 'Phone number is too long.').optional(),
+    dateOfBirth: z.string().optional(),
     departmentId: z.number().int().positive('Please choose your department.'),
     password: z.string().min(6, 'Use at least 6 characters.'),
     confirmPassword: z.string().min(1, 'Please confirm your password.'),
@@ -132,6 +134,8 @@ function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             firstName: '',
             lastName: '',
             email: '',
+            phoneNumber: '',
+            dateOfBirth: '',
             departmentId: 0,
             password: '',
             confirmPassword: '',
@@ -154,6 +158,8 @@ function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             password: values.password,
             displayName,
             departmentId: values.departmentId,
+            phoneNumber: values.phoneNumber?.trim() || null,
+            dateOfBirth: values.dateOfBirth || null,
         })
 
         if (response && response.verificationEmailSent === false) return
@@ -254,6 +260,31 @@ function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                     InputProps={{
                         startAdornment: <InputAdornment position="start"><Typography sx={{ fontSize: 15, lineHeight: 1 }}>✉️</Typography></InputAdornment>,
                     }}
+                    sx={inputSx}
+                />
+
+                <TextField
+                    label="Phone number"
+                    type="tel"
+                    {...register('phoneNumber')}
+                    error={!!errors.phoneNumber}
+                    helperText={errors.phoneNumber?.message ?? 'Optional'}
+                    placeholder="+357 99 123456"
+                    fullWidth
+                    disabled={mutation.isPending}
+                    autoComplete="tel"
+                    sx={inputSx}
+                />
+
+                <TextField
+                    label="Date of birth"
+                    type="date"
+                    {...register('dateOfBirth')}
+                    error={!!errors.dateOfBirth}
+                    helperText={errors.dateOfBirth?.message ?? 'Optional — used for birthday reminders'}
+                    fullWidth
+                    disabled={mutation.isPending}
+                    InputLabelProps={{ shrink: true }}
                     sx={inputSx}
                 />
 

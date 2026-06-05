@@ -112,7 +112,7 @@ class AuthStore {
         }
     }
 
-    setUserProfile(profile: { displayName: string; email: string; departmentId?: number | null; departmentName?: string | null }) {
+    setUserProfile(profile: { displayName: string; email: string; phoneNumber?: string | null; dateOfBirth?: string | null; departmentId?: number | null; departmentName?: string | null }) {
         if (!this.user) {
             return
         }
@@ -122,6 +122,8 @@ class AuthStore {
             displayName: profile.displayName,
             email: profile.email,
             userName: profile.email,
+            phoneNumber: profile.phoneNumber ?? null,
+            dateOfBirth: profile.dateOfBirth ?? null,
             departmentId: profile.departmentId ?? this.user.departmentId ?? null,
             departmentName: profile.departmentName ?? this.user.departmentName ?? null,
         }

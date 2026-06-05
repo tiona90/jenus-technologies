@@ -14,4 +14,11 @@ public class UpdateProfileDto
 
     [Range(1, int.MaxValue, ErrorMessage = "Department is required.")]
     public int DepartmentId { get; set; }
+
+    [Phone]
+    [StringLength(30)]
+    public string? PhoneNumber { get; set; }
+
+    // Date only (no time). Null clears it.
+    public DateOnly? DateOfBirth { get; set; }
 }

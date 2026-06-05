@@ -11,4 +11,10 @@ public class AdminUpdateUserDto
     [Required]
     [StringLength(100, MinimumLength = 2)]
     public string DisplayName { get; set; } = string.Empty;
+
+    [Phone]
+    [StringLength(30)]
+    public string? PhoneNumber { get; set; }
+
+    public DateOnly? DateOfBirth { get; set; }
 }

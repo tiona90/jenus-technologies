@@ -2,7 +2,9 @@
 using API.Extensions;
 using API.Models;
 using API.Hubs;
+using API.BackgroundServices;
 using Application.Core;
+using Application.Reminders;
 using Application.AnnualLeaves.Queries;
 using Application.Holidays;
 using Application.LeaveTypes.Commands;
@@ -182,6 +184,12 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddMediatR(x =>
 x.RegisterServicesFromAssemblyContaining<GetAnnualLeaveList.Handler>());
+
+// Reminder scheduling: the dispatcher builds/sends each reminder's content; the
+// hosted service ticks every minute and fires due reminders (server local time,
+// in-memory dedup). See ReminderBackgroundService for the scheduling rules.
+builder.Services.AddScoped<ReminderDispatcher>();
+builder.Services.AddHostedService<ReminderBackgroundService>();
 
 // Nager (public-holidays API) is a public, occasionally-flaky third party. The
 // standard resilience handler bundles: per-attempt timeout, retry with

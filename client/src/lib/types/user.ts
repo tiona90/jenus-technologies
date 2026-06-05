@@ -6,6 +6,8 @@ export interface UserInfo {
     email: string
     displayName: string
     imageUrl: string
+    phoneNumber?: string | null
+    dateOfBirth?: string | null // ISO date "yyyy-MM-dd"
     departmentId?: number | null
     departmentName?: string | null
     roles: UserRole[]

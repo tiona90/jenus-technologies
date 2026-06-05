@@ -243,8 +243,10 @@ function AdminUsersPanel() {
             jobTitle: string
             annualLeaveEntitlement: number
             managerId: string | null
+            phoneNumber: string | null
+            dateOfBirth: string | null
         }) => {
-            await updateAdminUser(payload.userId, { email: payload.email, displayName: payload.displayName })
+            await updateAdminUser(payload.userId, { email: payload.email, displayName: payload.displayName, phoneNumber: payload.phoneNumber, dateOfBirth: payload.dateOfBirth })
             await setAdminUserRoles(payload.userId, { roles: payload.roles })
             if (payload.profile) {
                 await updateEmployeeProfile({
@@ -800,6 +802,8 @@ function UserRow({
                 }}>
                     <ExpandBlock title="Account details">
                         <ExpandRow label="Joined" value={fmtJoined(derived.profile?.createdAt)} />
+                        <ExpandRow label="Phone" value={u.phoneNumber || '—'} />
+                        <ExpandRow label="Date of birth" value={u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} />
                         <ExpandRow label="Department" value={derived.departmentName ?? '—'} />
                         <ExpandRow label="Job title" value={derived.profile?.jobTitle || '—'} />
                         {role === 'Employee' && (
@@ -1058,6 +1062,8 @@ function EditUserDialog(props: {
         jobTitle: string
         annualLeaveEntitlement: number
         managerId: string | null
+        phoneNumber: string | null
+        dateOfBirth: string | null
     }) => void
 }) {
     const open = !!props.data
@@ -1070,6 +1076,8 @@ function EditUserDialog(props: {
     const [jobTitle, setJobTitle] = useState('')
     const [annualLeaveEntitlement, setAnnualLeaveEntitlement] = useState(0)
     const [managerId, setManagerId] = useState<string>('')
+    const [phoneNumber, setPhoneNumber] = useState('')
+    const [dateOfBirth, setDateOfBirth] = useState('')
 
     useEffect(() => {
         if (props.data) {
@@ -1081,6 +1089,8 @@ function EditUserDialog(props: {
                 setJobTitle(props.data!.profile?.jobTitle ?? '')
                 setAnnualLeaveEntitlement(props.data!.profile?.annualLeaveEntitlement ?? 0)
                 setManagerId(props.data!.profile?.managerId ?? '')
+                setPhoneNumber(props.data!.user.phoneNumber ?? '')
+                setDateOfBirth(props.data!.user.dateOfBirth ?? '')
             })
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1112,6 +1122,8 @@ function EditUserDialog(props: {
                 <Stack spacing={2}>
                     <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth required />
                     <TextField label="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} fullWidth />
+                    <TextField label="Phone number" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} fullWidth />
+                    <TextField label="Date of birth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} fullWidth slotProps={{ inputLabel: { shrink: true } }} helperText="Used for birthday reminders." />
 
                     <Divider />
                     <Typography variant="subtitle2" color="text.secondary">Roles</Typography>
@@ -1183,7 +1195,7 @@ function EditUserDialog(props: {
                     variant="contained"
                     disabled={props.isPending || !user || roles.length === 0}
                     onClick={() =>
-                        user && props.onSubmit({ userId: user.id, email, displayName, roles, profile, departmentId, jobTitle, annualLeaveEntitlement, managerId: managerId || null })
+                        user && props.onSubmit({ userId: user.id, email, displayName, roles, profile, departmentId, jobTitle, annualLeaveEntitlement, managerId: managerId || null, phoneNumber: phoneNumber.trim() || null, dateOfBirth: dateOfBirth || null })
                     }
                     sx={saveBtnSx}
                 >
@@ -1199,7 +1211,7 @@ function CreateUserDialog(props: {
     onClose: () => void
     isPending: boolean
     error: unknown
-    onSubmit: (payload: { email: string; displayName: string; password: string; roles: UserRole[]; departmentId: number }) => void
+    onSubmit: (payload: { email: string; displayName: string; password: string; roles: UserRole[]; departmentId: number; phoneNumber: string | null; dateOfBirth: string | null }) => void
     departments: Department[]
 }) {
     const [email, setEmail] = useState('')
@@ -1207,6 +1219,8 @@ function CreateUserDialog(props: {
     const [password, setPassword] = useState('')
     const [roles, setRoles] = useState<UserRole[]>(['Employee'])
     const [departmentId, setDepartmentId] = useState<number>(0)
+    const [phoneNumber, setPhoneNumber] = useState('')
+    const [dateOfBirth, setDateOfBirth] = useState('')
 
     const toggleRole = (role: UserRole) => {
         setRoles((current) =>
@@ -1220,6 +1234,8 @@ function CreateUserDialog(props: {
         setPassword('')
         setRoles(['Employee'])
         setDepartmentId(0)
+        setPhoneNumber('')
+        setDateOfBirth('')
         props.onClose()
     }
 
@@ -1231,6 +1247,8 @@ function CreateUserDialog(props: {
                     <TextField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth required />
                     <TextField label="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} fullWidth />
                     <TextField label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} fullWidth required />
+                    <TextField label="Phone number" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} fullWidth />
+                    <TextField label="Date of birth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} fullWidth slotProps={{ inputLabel: { shrink: true } }} helperText="Used for birthday reminders." />
                     <TextField
                         select
                         label="Department"
@@ -1263,7 +1281,7 @@ function CreateUserDialog(props: {
                 <Button
                     variant="contained"
                     disabled={props.isPending || !email || !password || departmentId === 0}
-                    onClick={() => props.onSubmit({ email, displayName, password, roles, departmentId })}
+                    onClick={() => props.onSubmit({ email, displayName, password, roles, departmentId, phoneNumber: phoneNumber.trim() || null, dateOfBirth: dateOfBirth || null })}
                     sx={saveBtnSx}
                 >
                     Create

@@ -83,6 +83,8 @@ public class AdminUsersController(
             UserName = request.Email,
             Email = request.Email,
             DisplayName = request.DisplayName,
+            PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim(),
+            DateOfBirth = request.DateOfBirth,
             EmailConfirmed = true
         };
 
@@ -147,6 +149,8 @@ public class AdminUsersController(
         user.Email = request.Email;
         user.UserName = request.Email;
         user.DisplayName = request.DisplayName;
+        user.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
+        user.DateOfBirth = request.DateOfBirth;
 
         var updateResult = await userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
@@ -412,6 +416,8 @@ public class AdminUsersController(
             Email = user.Email ?? string.Empty,
             DisplayName = user.DisplayName,
             ImageUrl = user.ImageUrl ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
+            DateOfBirth = user.DateOfBirth,
             EmailConfirmed = user.EmailConfirmed,
             Roles = roles.OrderBy(r => r).ToList()
         };

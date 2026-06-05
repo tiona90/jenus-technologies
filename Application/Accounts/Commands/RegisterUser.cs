@@ -45,6 +45,8 @@ public class RegisterUser
                 UserName = data.Email,
                 Email = data.Email,
                 DisplayName = data.DisplayName,
+                PhoneNumber = string.IsNullOrWhiteSpace(data.PhoneNumber) ? null : data.PhoneNumber.Trim(),
+                DateOfBirth = data.DateOfBirth,
                 EmailConfirmed = false
             };
 

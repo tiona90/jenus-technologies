@@ -66,6 +66,8 @@ export async function updateProfile(request: UpdateProfileRequest) {
     const response = await apiClient.put<ApiMessageResponse & {
         displayName: string
         email: string
+        phoneNumber: string | null
+        dateOfBirth: string | null
         departmentId: number
         departmentName: string
     }>('/account/profile', request)

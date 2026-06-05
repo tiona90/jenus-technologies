@@ -6,6 +6,8 @@ export interface AdminUser {
     email: string
     displayName: string
     imageUrl: string
+    phoneNumber?: string | null
+    dateOfBirth?: string | null // ISO date "yyyy-MM-dd"
     emailConfirmed: boolean
     roles: UserRole[]
 }
@@ -16,11 +18,15 @@ export interface AdminCreateUserRequest {
     password: string
     roles: UserRole[]
     departmentId: number
+    phoneNumber?: string | null
+    dateOfBirth?: string | null
 }
 
 export interface AdminUpdateUserRequest {
     email: string
     displayName: string
+    phoneNumber?: string | null
+    dateOfBirth?: string | null
 }
 
 export interface AdminSetUserRolesRequest {

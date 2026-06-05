@@ -50,6 +50,8 @@ function buildProfileSchema(requireDepartment: boolean) {
     return z.object({
         displayName: z.string().trim().min(1, 'Display name is required.'),
         email: z.string().trim().min(1, 'Email is required.').email('Enter a valid email address.'),
+        phoneNumber: z.string().trim().max(30, 'Phone number is too long.').optional(),
+        dateOfBirth: z.string().optional(), // "yyyy-MM-dd" from the date input, or ''
         departmentId: requireDepartment
             ? z.number().int().positive('Department is required.')
             : z.number().int().nonnegative(),
@@ -104,7 +106,7 @@ const Sidebar = observer(function Sidebar() {
     )
     const { control, register, handleSubmit, reset, formState: { errors } } = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
-        defaultValues: { displayName: '', email: '', departmentId: 0 },
+        defaultValues: { displayName: '', email: '', phoneNumber: '', dateOfBirth: '', departmentId: 0 },
     })
 
     const { data: departments = [], isLoading: isLoadingDepartments, isError: isDepartmentsError } = useQuery({
@@ -125,6 +127,8 @@ const Sidebar = observer(function Sidebar() {
             authStore.setUserProfile({
                 displayName: result.displayName,
                 email: result.email,
+                phoneNumber: result.phoneNumber,
+                dateOfBirth: result.dateOfBirth,
                 departmentId: result.departmentId,
                 departmentName: result.departmentName,
             })
@@ -137,6 +141,8 @@ const Sidebar = observer(function Sidebar() {
         reset({
             displayName: authStore.user?.displayName ?? '',
             email: authStore.user?.email ?? '',
+            phoneNumber: authStore.user?.phoneNumber ?? '',
+            dateOfBirth: authStore.user?.dateOfBirth ?? '',
             departmentId: authStore.user?.departmentId ?? 0,
         })
         updateProfileMutation.reset()
@@ -150,6 +156,8 @@ const Sidebar = observer(function Sidebar() {
         reset({
             displayName: authStore.user?.displayName ?? '',
             email: authStore.user?.email ?? '',
+            phoneNumber: authStore.user?.phoneNumber ?? '',
+            dateOfBirth: authStore.user?.dateOfBirth ?? '',
             departmentId: authStore.user?.departmentId ?? 0,
         })
         // We intentionally re-init only when the dialog opens — reset is stable.
@@ -160,6 +168,8 @@ const Sidebar = observer(function Sidebar() {
         await updateProfileMutation.mutateAsync({
             displayName: values.displayName.trim(),
             email: values.email.trim(),
+            phoneNumber: values.phoneNumber?.trim() || null,
+            dateOfBirth: values.dateOfBirth || null,
             departmentId: values.departmentId,
         })
     })
@@ -263,7 +273,17 @@ const Sidebar = observer(function Sidebar() {
                 </Box>
 
                 {/* Nav */}
-                <Box sx={{ flex: 1, py: 1, overflowY: 'auto' }}>
+                <Box
+                    sx={{
+                        flex: 1,
+                        py: 1,
+                        overflowY: 'auto',
+                        // Keep scrolling functional but hide the scrollbar chrome.
+                        scrollbarWidth: 'none', // Firefox
+                        msOverflowStyle: 'none', // IE / legacy Edge
+                        '&::-webkit-scrollbar': { display: 'none' }, // Chrome / Safari / Edge
+                    }}
+                >
                     {navEntries.map((entry, i) => {
                         if (entry.kind === 'section') {
                             return (
@@ -416,6 +436,25 @@ const Sidebar = observer(function Sidebar() {
                             error={!!errors.email}
                             helperText={errors.email?.message}
                             required
+                            fullWidth
+                        />
+
+                        <TextField
+                            label="Phone number"
+                            type="tel"
+                            {...register('phoneNumber')}
+                            error={!!errors.phoneNumber}
+                            helperText={errors.phoneNumber?.message}
+                            fullWidth
+                        />
+
+                        <TextField
+                            label="Date of birth"
+                            type="date"
+                            {...register('dateOfBirth')}
+                            error={!!errors.dateOfBirth}
+                            helperText={errors.dateOfBirth?.message ?? 'Used for birthday reminders.'}
+                            slotProps={{ inputLabel: { shrink: true } }}
                             fullWidth
                         />
 

@@ -6,6 +6,11 @@ public class User : IdentityUser
 {
     public string DisplayName { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
+
+    // Date of birth (date only, no time). Used by the birthday reminder.
+    // PhoneNumber is inherited from IdentityUser.
+    public DateOnly? DateOfBirth { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<AnnualLeave> AnnualLeaves { get; set; } = new List<AnnualLeave>();

@@ -22,4 +22,10 @@ public class AdminCreateUserDto
     [Required]
     [Range(1, int.MaxValue, ErrorMessage = "Department is required.")]
     public int DepartmentId { get; set; }
+
+    [Phone]
+    [StringLength(30)]
+    public string? PhoneNumber { get; set; }
+
+    public DateOnly? DateOfBirth { get; set; }
 }
